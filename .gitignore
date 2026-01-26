@@ -3,3 +3,6 @@
 京东实习/train/Qwen3-Embedding-0.6B
 *.xml
 *.iml
+
+# CSV文件
+*.csv
