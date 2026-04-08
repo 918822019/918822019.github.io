@@ -1,0 +1,87 @@
+{
+  "name": "docs",
+  "type": "folder",
+  "children": [
+    {
+      "name": "AI搜索",
+      "type": "folder",
+      "children": [
+        {
+          "name": "起点读书.md",
+          "type": "file",
+          "path": "docs/AI搜索/起点读书.md"
+        }
+      ]
+    },
+    {
+      "name": "RAG",
+      "type": "folder",
+      "children": [
+        {
+          "name": "embedding",
+          "type": "folder",
+          "children": [
+            {
+              "name": "独热编码.md",
+              "type": "file",
+              "path": "docs/RAG/embedding/独热编码.md"
+            },
+            {
+              "name": "为什么在高维度空间中距离失效.md",
+              "type": "file",
+              "path": "docs/RAG/embedding/为什么在高维度空间中距离失效.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "模型相关的论文",
+      "type": "folder",
+      "children": [
+        {
+          "name": "Qwen3-TTS",
+          "type": "folder",
+          "children": [
+            {
+              "name": "image.png",
+              "type": "file",
+              "path": "docs/模型相关的论文/Qwen3-TTS/image.png"
+            },
+            {
+              "name": "image1.png",
+              "type": "file",
+              "path": "docs/模型相关的论文/Qwen3-TTS/image1.png"
+            },
+            {
+              "name": "Qwen3-TTS.md",
+              "type": "file",
+              "path": "docs/模型相关的论文/Qwen3-TTS/Qwen3-TTS.md"
+            }
+          ]
+        },
+        {
+          "name": "Qwen2.5-Omni.md",
+          "type": "file",
+          "path": "docs/模型相关的论文/Qwen2.5-Omni.md"
+        }
+      ]
+    },
+    {
+      "name": "数学",
+      "type": "folder",
+      "children": [
+        {
+          "name": "STE.md",
+          "type": "file",
+          "path": "docs/数学/STE.md"
+        }
+      ]
+    },
+    {
+      "name": "README.md",
+      "type": "file",
+      "path": "docs/README.md"
+    }
+  ]
+}
