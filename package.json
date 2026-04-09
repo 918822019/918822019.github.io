@@ -1,0 +1,9 @@
+{
+  "name": "918822019-docs-tools",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build-docs-index": "node build-docs-index.js",
+    "update-docs": "sh scripts/update-docs.sh"
+  }
+}

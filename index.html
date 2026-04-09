@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>918822019.github.io</title>
+    <style>
+      body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f4f4f4; color: #222; margin: 0; padding: 0; }
+      .container { max-width: 780px; margin: 40px auto; padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+      h1 { margin-top: 0; }
+      p { line-height: 1.7; }
+      a { color: #0366d6; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>欢迎来到 918822019.github.io</h1>
+      <p>这是你的 GitHub Pages 站点首页。页面会自动加载 <code>docs/index.json</code> 并根据目录结构可视化文档树。</p>
+
+      <div id="doc-tree" style="margin-top: 24px;"></div>
+
+      <h2>如何维护文档</h2>
+      <ol>
+        <li>在 <code>docs/</code> 下创建子目录并添加 Markdown 文档。</li>
+        <li>更新 <code>docs/index.json</code> 结构（见目前示例）。</li>
+        <li>Git 提交后，GitHub Pages 会自动更新站点。</li>
+      </ol>
+      <h2>示例文档</h2>
+      <ul>
+        <li><a href="docs/README.md">docs/README.md</a></li>
+        <li><a href="docs/architecture/system-design.md">docs/architecture/system-design.md</a></li>
+        <li><a href="docs/guides/coding-style.md">docs/guides/coding-style.md</a></li>
+        <li><a href="docs/faqs/deployment.md">docs/faqs/deployment.md</a></li>
+      </ul>
+    </div>
+
+    <script>
+      async function renderTree() {
+        const container = document.getElementById('doc-tree');
+        container.innerHTML = '<p>正在加载目录...</p>';
+
+        try {
+          const res = await fetch('docs/index.json', { cache: 'no-store' });
+          if (!res.ok) throw new Error('无法加载 docs/index.json');
+          const tree = await res.json();
+
+          function renderNode(node) {
+            if (node.type === 'folder') {
+              const ul = document.createElement('ul');
+              const title = document.createElement('li');
+              title.innerHTML = `📁 <strong>${node.name}</strong>`;
+              ul.appendChild(title);
+              if (node.children && node.children.length) {
+                const childUl = document.createElement('ul');
+                childUl.style.marginLeft = '18px';
+                node.children.forEach(child => childUl.appendChild(renderNode(child)));
+                ul.appendChild(childUl);
+              }
+              return ul;
+            }
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = node.path;
+            a.target = '_blank';
+            a.textContent = `📄 ${node.name}`;
+            li.appendChild(a);
+            return li;
+          }
+
+          container.innerHTML = '';
+          container.appendChild(renderNode(tree));
+
+        } catch (err) {
+          container.innerHTML = `<p style="color:#C00">加载目录失败：${err.message}</p>`;
+        }
+      }
+      renderTree();
+    </script>
+  </body>
+</html>
