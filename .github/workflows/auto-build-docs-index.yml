@@ -5,10 +5,15 @@ on:
     branches: [ main, doc ]
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   generate-docs-index:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -17,7 +22,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+
+      - name: Show Node/npm version
+        run: |
+          node -v
+          npm -v
 
       - name: Install dependencies (if any)
         run: |
