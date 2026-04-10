@@ -220,14 +220,23 @@
       .replace(/'/g, '&#39;');
   }
 
-  function renderInline(text) {
+  function resolveAssetPath(assetPath, docPath) {
+    if (!docPath || assetPath.startsWith('http://') || assetPath.startsWith('https://') || assetPath.startsWith('/')) {
+      return assetPath;
+    }
+    var docDir = docPath.substring(0, docPath.lastIndexOf('/'));
+    return docDir + '/' + assetPath;
+  }
+
+  function renderInline(text, docPath) {
     var result = text;
     var images = [];
     var links = [];
     
     // Extract images first
     result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(match, alt, src) {
-      images.push('<img src="' + src + '" alt="' + alt + '" />');
+      var resolvedSrc = resolveAssetPath(src, docPath);
+      images.push('<img src="' + resolvedSrc + '" alt="' + alt + '" />');
       return '\x00IMG' + (images.length - 1) + '\x00';
     });
     
@@ -257,7 +266,11 @@
       .replace(/\*([^*]+)\*/g, '<em>$1</em>');
   }
 
-  function renderMarkdown(markdown) {
+  function renderInlineWithoutPath(text) {
+    return renderInline(text, null);
+  }
+
+  function renderMarkdown(markdown, docPath) {
     const lines = markdown.replace(/\r\n/g, '\n').split('\n');
     const html = [];
     let inCode = false;
@@ -300,7 +313,7 @@
       if (heading) {
         closeList();
         const level = heading[1].length;
-        html.push('<h' + level + '>' + renderInline(heading[2]) + '</h' + level + '>');
+        html.push('<h' + level + '>' + renderInline(heading[2], docPath) + '</h' + level + '>');
         continue;
       }
 
@@ -311,7 +324,7 @@
           listType = 'ol';
           html.push('<ol>');
         }
-        html.push('<li>' + renderInline(ordered[1]) + '</li>');
+        html.push('<li>' + renderInline(ordered[1], docPath) + '</li>');
         continue;
       }
 
@@ -322,18 +335,18 @@
           listType = 'ul';
           html.push('<ul>');
         }
-        html.push('<li>' + renderInline(unordered[1]) + '</li>');
+        html.push('<li>' + renderInline(unordered[1], docPath) + '</li>');
         continue;
       }
 
       if (line.startsWith('> ')) {
         closeList();
-        html.push('<blockquote><p>' + renderInline(line.slice(2)) + '</p></blockquote>');
+        html.push('<blockquote><p>' + renderInline(line.slice(2), docPath) + '</p></blockquote>');
         continue;
       }
 
       closeList();
-      html.push('<p>' + renderInline(line) + '</p>');
+      html.push('<p>' + renderInline(line, docPath) + '</p>');
     }
 
     closeList();
@@ -368,7 +381,7 @@
       const markdown = await response.text();
       const title = markdown.match(/^#\s+(.+)$/m);
       readerTitle.textContent = title ? title[1] : docPath.split('/').pop();
-      readerContent.innerHTML = renderMarkdown(markdown);
+      readerContent.innerHTML = renderMarkdown(markdown, docPath);
       requestAnimationFrame(function () {
         readerPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
