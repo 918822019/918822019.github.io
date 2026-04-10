@@ -121,6 +121,14 @@ body {
   transform: translateY(-1px);
 }
 
+.menu-btn:focus-visible,
+.hero-btn:focus-visible,
+.tag-btn:focus-visible,
+.hero-link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .page {
   max-width: var(--max);
   margin: 0 auto;
@@ -397,6 +405,41 @@ body {
   padding: 10px 12px;
 }
 
+.cmd-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.to-top {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 70;
+}
+
+.to-top.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
 body[data-theme='dark'] .cmd-block {
   background: rgba(0, 0, 0, 0.24);
 }
@@ -441,6 +484,20 @@ body[data-theme='dark'] .cmd-block {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .post-card,
+  .menu-btn,
+  .to-top {
+    transition: none;
   }
 }
 

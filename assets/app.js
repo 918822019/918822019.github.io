@@ -10,6 +10,10 @@
   const overlay = document.getElementById('sidebar-overlay');
   const themeToggle = document.getElementById('theme-toggle');
   const randomPostBtn = document.getElementById('random-post');
+  const copyCmdBtn = document.getElementById('copy-cmd');
+  const copyTip = document.getElementById('copy-tip');
+  const toTopBtn = document.getElementById('to-top');
+  const publishCmd = document.getElementById('publish-cmd');
 
   let allFiles = [];
   let currentTag = '全部';
@@ -38,6 +42,12 @@
     const insideSidebar = sidebar.contains(event.target);
     const isToggleBtn = toggleBtn.contains(event.target);
     if (!insideSidebar && !isToggleBtn) {
+      toggleSidebar(false);
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
       toggleSidebar(false);
     }
   });
@@ -241,9 +251,41 @@
     });
   }
 
+  function setupCopyCommand() {
+    if (!copyCmdBtn || !publishCmd) return;
+
+    copyCmdBtn.addEventListener('click', async function () {
+      const text = publishCmd.innerText.trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        if (copyTip) copyTip.textContent = '已复制到剪贴板';
+      } catch (err) {
+        if (copyTip) copyTip.textContent = '复制失败，请手动复制';
+      }
+      setTimeout(function () {
+        if (copyTip) copyTip.textContent = '可直接粘贴到终端执行';
+      }, 1800);
+    });
+  }
+
+  function setupToTop() {
+    if (!toTopBtn) return;
+
+    window.addEventListener('scroll', function () {
+      const show = window.scrollY > 420;
+      toTopBtn.classList.toggle('show', show);
+    });
+
+    toTopBtn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
   async function init() {
     setupTheme();
     setupRandomPost();
+    setupCopyCommand();
+    setupToTop();
 
     try {
       const response = await fetch('docs/index.json', { cache: 'no-store' });

@@ -67,7 +67,11 @@
               <h2>一键更新命令</h2>
             </div>
             <p class="muted">在仓库根目录执行以下命令，可自动更新目录并推送到 <code>doc</code>：</p>
-            <pre class="cmd-block"><code>bash scripts/publish-doc.sh "docs: update notes"</code></pre>
+            <pre class="cmd-block" id="publish-cmd"><code>bash scripts/publish-doc.sh "docs: update notes"</code></pre>
+            <div class="cmd-actions">
+              <button class="menu-btn" id="copy-cmd">复制命令</button>
+              <span class="muted" id="copy-tip">可直接粘贴到终端执行</span>
+            </div>
           </div>
 
           <div class="panel reveal">
@@ -90,6 +94,7 @@
     </main>
 
     <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
+    <button id="to-top" class="to-top" aria-label="回到顶部">↑</button>
 
     <footer class="site-footer">
       <div class="footer-inner">© 2026 918822019 · Built with GitHub Pages</div>
