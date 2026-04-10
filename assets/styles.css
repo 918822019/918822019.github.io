@@ -13,6 +13,17 @@
   --max: 1120px;
 }
 
+body[data-theme='dark'] {
+  --bg: #111516;
+  --text: #e5ecef;
+  --muted: #97a8af;
+  --card: rgba(26, 34, 36, 0.82);
+  --line: rgba(176, 210, 219, 0.18);
+  --primary: #79c8d2;
+  --accent: #d49d67;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -83,6 +94,11 @@ body {
   justify-content: space-between;
 }
 
+.top-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
 .brand {
   text-decoration: none;
   color: var(--text);
@@ -99,6 +115,10 @@ body {
   border-radius: 999px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.menu-btn:hover {
+  transform: translateY(-1px);
 }
 
 .page {
@@ -133,6 +153,36 @@ body {
   color: var(--muted);
   font-size: 17px;
   line-height: 1.75;
+}
+
+.hero-actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-btn,
+.hero-link {
+  border-radius: 999px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.hero-btn {
+  background: var(--primary);
+  color: #fff;
+  border-color: transparent;
+  cursor: pointer;
+}
+
+.hero-link {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .stats {
@@ -173,6 +223,10 @@ body {
   box-shadow: var(--shadow);
   border-radius: var(--radius);
   padding: 18px;
+}
+
+.command-panel {
+  border-style: dashed;
 }
 
 .panel h2 {
@@ -263,6 +317,16 @@ body {
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
+.post-card::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  margin-bottom: 10px;
+}
+
 .post-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 28px rgba(18, 39, 43, 0.12);
@@ -322,6 +386,34 @@ body {
   max-width: var(--max);
   margin: 0 auto 26px;
   padding: 0 20px;
+}
+
+.cmd-block {
+  margin: 0;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+body[data-theme='dark'] .cmd-block {
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 13, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease;
+  z-index: 55;
+}
+
+.sidebar-overlay.show {
+  opacity: 1;
+  visibility: visible;
 }
 
 .footer-inner {
@@ -386,5 +478,14 @@ body {
 
   .page {
     padding-top: 22px;
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  .menu-btn {
+    padding: 7px 11px;
+    font-size: 12px;
   }
 }

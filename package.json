@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build-docs-index": "node build-docs-index.js",
-    "update-docs": "sh scripts/update-docs.sh"
+    "update-docs": "sh scripts/update-docs.sh",
+    "publish-doc": "sh scripts/publish-doc.sh"
   }
 }

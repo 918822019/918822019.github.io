@@ -7,22 +7,58 @@
   const feedCount = document.getElementById('feed-count');
   const sidebar = document.getElementById('sidebar');
   const toggleBtn = document.getElementById('sidebar-toggle');
+  const overlay = document.getElementById('sidebar-overlay');
+  const themeToggle = document.getElementById('theme-toggle');
+  const randomPostBtn = document.getElementById('random-post');
 
   let allFiles = [];
   let currentTag = '全部';
 
+  function toggleSidebar(force) {
+    const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
+    sidebar.classList.toggle('open', shouldOpen);
+    if (overlay) {
+      overlay.classList.toggle('show', shouldOpen);
+      overlay.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+    }
+  }
+
   toggleBtn.addEventListener('click', function () {
-    sidebar.classList.toggle('open');
+    toggleSidebar();
   });
+
+  if (overlay) {
+    overlay.addEventListener('click', function () {
+      toggleSidebar(false);
+    });
+  }
 
   document.addEventListener('click', function (event) {
     if (!sidebar.classList.contains('open')) return;
     const insideSidebar = sidebar.contains(event.target);
     const isToggleBtn = toggleBtn.contains(event.target);
     if (!insideSidebar && !isToggleBtn) {
-      sidebar.classList.remove('open');
+      toggleSidebar(false);
     }
   });
+
+  function setupTheme() {
+    const storageKey = 'blog-theme';
+    const saved = localStorage.getItem(storageKey);
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+
+    document.body.setAttribute('data-theme', theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === 'dark' ? '日间' : '夜间';
+      themeToggle.addEventListener('click', function () {
+        const next = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', next);
+        localStorage.setItem(storageKey, next);
+        themeToggle.textContent = next === 'dark' ? '日间' : '夜间';
+      });
+    }
+  }
 
   function collectFiles(node, bucket, parentPath) {
     if (!node) return;
@@ -193,7 +229,22 @@
     applyTreeSearch(searchInput.value || '');
   });
 
+  function setupRandomPost() {
+    if (!randomPostBtn) return;
+
+    randomPostBtn.addEventListener('click', function () {
+      const source = filterFiles();
+      const pool = source.length ? source : allFiles;
+      if (!pool.length) return;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      window.open(pick.path, '_blank', 'noopener,noreferrer');
+    });
+  }
+
   async function init() {
+    setupTheme();
+    setupRandomPost();
+
     try {
       const response = await fetch('docs/index.json', { cache: 'no-store' });
       if (!response.ok) {

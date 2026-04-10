@@ -14,7 +14,10 @@
     <header class="topbar">
       <div class="topbar-inner">
         <a class="brand" href="/">918822019</a>
-        <button id="sidebar-toggle" class="menu-btn" aria-label="打开目录">目录</button>
+        <div class="top-actions">
+          <button id="theme-toggle" class="menu-btn" aria-label="切换主题">夜间</button>
+          <button id="sidebar-toggle" class="menu-btn" aria-label="打开目录">目录</button>
+        </div>
       </div>
     </header>
 
@@ -25,6 +28,10 @@
         <p class="hero-desc">
           这里是我的技术笔记花园，持续沉淀模型、RAG、搜索与系统化学习过程。
         </p>
+        <div class="hero-actions">
+          <button id="random-post" class="hero-btn">随机看一篇</button>
+          <a class="hero-link" href="https://github.com/918822019/918822019.github.io" target="_blank" rel="noopener noreferrer">查看仓库</a>
+        </div>
         <div class="stats" id="stats">
           <div class="stat-card">
             <span class="stat-value" id="stat-files">-</span>
@@ -55,6 +62,14 @@
         </aside>
 
         <section class="main-feed">
+          <div class="panel reveal command-panel">
+            <div class="panel-head">
+              <h2>一键更新命令</h2>
+            </div>
+            <p class="muted">在仓库根目录执行以下命令，可自动更新目录并推送到 <code>doc</code>：</p>
+            <pre class="cmd-block"><code>bash scripts/publish-doc.sh "docs: update notes"</code></pre>
+          </div>
+
           <div class="panel reveal">
             <div class="panel-head">
               <h2>精选文章</h2>
@@ -73,6 +88,8 @@
         </section>
       </section>
     </main>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
 
     <footer class="site-footer">
       <div class="footer-inner">© 2026 918822019 · Built with GitHub Pages</div>
