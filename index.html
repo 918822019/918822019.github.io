@@ -4,78 +4,130 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>918822019.github.io</title>
-    <style>
-      body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f4f4f4; color: #222; margin: 0; padding: 0; }
-      .container { max-width: 780px; margin: 40px auto; padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
-      h1 { margin-top: 0; }
-      p { line-height: 1.7; }
-      a { color: #0366d6; text-decoration: none; }
-      a:hover { text-decoration: underline; }
-    </style>
+    <link rel="stylesheet" href="assets/styles.css">
   </head>
   <body>
-    <div class="container">
-      <h1>欢迎来到 918822019.github.io</h1>
-      <p>这是你的 GitHub Pages 站点首页。页面会自动加载 <code>docs/index.json</code> 并根据目录结构可视化文档树。</p>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/">918822019</a>
+        <button id="sidebar-toggle" aria-label="切换目录">☰</button>
+      </div>
+    </header>
 
-      <div id="doc-tree" style="margin-top: 24px;"></div>
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-inner">
+          <div class="search">
+            <input id="doc-search" placeholder="搜索文档..." aria-label="搜索文档">
+          </div>
+          <nav id="doc-tree" class="doc-tree" aria-label="文档目录">
+            <p class="loading">正在加载目录…</p>
+          </nav>
+        </div>
+      </aside>
 
-      <h2>如何维护文档</h2>
-      <ol>
-        <li>在 <code>docs/</code> 下创建子目录并添加 Markdown 文档。</li>
-        <li>更新 <code>docs/index.json</code> 结构（见目前示例）。</li>
-        <li>Git 提交后，GitHub Pages 会自动更新站点。</li>
-      </ol>
-      <h2>示例文档</h2>
-      <ul>
-        <li><a href="docs/README.md">docs/README.md</a></li>
-        <li><a href="docs/architecture/system-design.md">docs/architecture/system-design.md</a></li>
-        <li><a href="docs/guides/coding-style.md">docs/guides/coding-style.md</a></li>
-        <li><a href="docs/faqs/deployment.md">docs/faqs/deployment.md</a></li>
-      </ul>
+      <main class="content">
+        <div class="container">
+          <h1>欢迎来到 918822019.github.io</h1>
+          <p>这是你的 GitHub Pages 站点首页。页面会自动加载 <code>docs/index.json</code> 并根据目录结构可视化文档树。</p>
+
+          <h2>如何维护文档</h2>
+          <ol>
+            <li>在 <code>docs/</code> 下创建子目录并添加 Markdown 文档。</li>
+            <li>更新 <code>docs/index.json</code> 结构（见目前示例）。</li>
+            <li>Git 提交后，GitHub Pages 会自动更新站点。</li>
+          </ol>
+
+          <h2>自动生成目录</h2>
+          <p>本仓库包含自动生成 <code>docs/index.json</code> 的机制：</p>
+          <ol>
+            <li><code>build-docs-index.js</code> 会递归扫描 <code>docs/</code>，生成树状结构 JSON。</li>
+            <li>在 push 到 <code>doc</code> 时，GitHub Actions 工作流会执行并发布站点。</li>
+          </ol>
+
+          <h2>示例文档</h2>
+          <ul>
+            <li><a href="docs/README.md">docs/README.md</a></li>
+            <li><a href="docs/architecture/system-design.md">docs/architecture/system-design.md</a></li>
+            <li><a href="docs/guides/coding-style.md">docs/guides/coding-style.md</a></li>
+            <li><a href="docs/faqs/deployment.md">docs/faqs/deployment.md</a></li>
+          </ul>
+        </div>
+      </main>
     </div>
 
-    <script>
-      async function renderTree() {
-        const container = document.getElementById('doc-tree');
-        container.innerHTML = '<p>正在加载目录...</p>';
+    <footer class="site-footer">
+      <div class="footer-inner">© 918822019</div>
+    </footer>
+      <script>
+        document.getElementById('sidebar-toggle').addEventListener('click', function(){
+          document.getElementById('sidebar').classList.toggle('open');
+        });
 
-        try {
-          const res = await fetch('docs/index.json', { cache: 'no-store' });
-          if (!res.ok) throw new Error('无法加载 docs/index.json');
-          const tree = await res.json();
+        async function renderTree() {
+          const container = document.getElementById('doc-tree');
+          container.innerHTML = '<p class="loading">正在加载目录...</p>';
 
-          function renderNode(node) {
-            if (node.type === 'folder') {
-              const ul = document.createElement('ul');
-              const title = document.createElement('li');
-              title.innerHTML = `📁 <strong>${node.name}</strong>`;
-              ul.appendChild(title);
-              if (node.children && node.children.length) {
-                const childUl = document.createElement('ul');
-                childUl.style.marginLeft = '18px';
-                node.children.forEach(child => childUl.appendChild(renderNode(child)));
-                ul.appendChild(childUl);
+          try {
+            const res = await fetch('docs/index.json', { cache: 'no-store' });
+            if (!res.ok) throw new Error('无法加载 docs/index.json');
+            const tree = await res.json();
+
+            function buildNode(node) {
+              if (node.type === 'folder') {
+                const details = document.createElement('details');
+                const summary = document.createElement('summary');
+                summary.textContent = node.name;
+                details.appendChild(summary);
+                if (node.children && node.children.length) {
+                  const ul = document.createElement('ul');
+                  node.children.forEach(child => {
+                    const childEl = buildNode(child);
+                    ul.appendChild(childEl);
+                  });
+                  details.appendChild(ul);
+                }
+                return details;
               }
-              return ul;
+              const li = document.createElement('li');
+              li.className = 'file';
+              const a = document.createElement('a');
+              a.href = node.path;
+              a.target = '_blank';
+              a.textContent = node.name;
+              li.appendChild(a);
+              return li;
             }
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.href = node.path;
-            a.target = '_blank';
-            a.textContent = `📄 ${node.name}`;
-            li.appendChild(a);
-            return li;
+
+            container.innerHTML = '';
+            container.appendChild(buildNode(tree));
+
+            // wire up search
+            const search = document.getElementById('doc-search');
+            search.addEventListener('input', function(){
+              const term = this.value.trim().toLowerCase();
+              if (!term) {
+                container.querySelectorAll('details, li').forEach(el => { el.style.display=''; });
+                container.querySelectorAll('details').forEach(d => d.open = false);
+                return;
+              }
+              container.querySelectorAll('li.file').forEach(li => {
+                const show = li.textContent.toLowerCase().includes(term);
+                li.style.display = show ? '' : 'none';
+              });
+              container.querySelectorAll('details').forEach(d => {
+                const text = d.textContent.toLowerCase();
+                const show = text.includes(term);
+                d.style.display = show ? '' : 'none';
+                d.open = show;
+              });
+            });
+
+          } catch (err) {
+            container.innerHTML = `<p style="color:#C00">加载目录失败：${err.message}</p>`;
           }
-
-          container.innerHTML = '';
-          container.appendChild(renderNode(tree));
-
-        } catch (err) {
-          container.innerHTML = `<p style="color:#C00">加载目录失败：${err.message}</p>`;
         }
-      }
-      renderTree();
-    </script>
+        renderTree();
+      </script>
   </body>
 </html>
