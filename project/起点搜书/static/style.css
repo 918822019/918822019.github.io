@@ -1,0 +1,5 @@
+body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+h1 { color: #333; }
+input { padding: 8px; width: 200px; }
+button { padding: 8px 16px; margin-left: 8px; }
+#results > div { background: #fff; margin: 16px 0; padding: 16px; border-radius: 8px; box-shadow: 0 2px 8px #eee; }

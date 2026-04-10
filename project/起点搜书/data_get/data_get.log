@@ -1,0 +1,135 @@
+2026-04-10 23:29:03,996 - INFO - 示例-锚点型URL:
+2026-04-10 23:29:03,996 - INFO - https://7e0c.bqg504.cc/#/book/1/
+2026-04-10 23:29:03,996 - INFO - https://7e0c.bqg504.cc/#/book/2/
+2026-04-10 23:29:03,996 - INFO - https://7e0c.bqg504.cc/#/book/3/
+2026-04-10 23:29:03,996 - INFO - 待抓取URL数: 3
+2026-04-10 23:29:05,721 - INFO - 
+抓取结果:
+2026-04-10 23:29:05,721 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁
+2026-04-10 23:29:05,722 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁
+2026-04-10 23:29:05,722 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁
+2026-04-10 23:29:05,722 - INFO - 
+子链接示例:
+2026-04-10 23:29:05,722 - INFO - javascript:notify()
+2026-04-10 23:29:05,722 - INFO - https://7e0c.bqg504.cc/#/bookcase
+2026-04-10 23:29:05,722 - INFO - javascript:scrollTo(0,0)
+2026-04-10 23:29:05,723 - INFO - 
+全部完成，总耗时: 1.73 秒
+2026-04-10 23:34:51,791 - INFO - 示例-锚点型URL:
+2026-04-10 23:34:51,791 - INFO - https://7e0c.bqg504.cc/#/book/1/
+2026-04-10 23:34:51,791 - INFO - https://7e0c.bqg504.cc/#/book/2/
+2026-04-10 23:34:51,791 - INFO - https://7e0c.bqg504.cc/#/book/3/
+2026-04-10 23:34:51,791 - INFO - 待抓取URL数: 3
+2026-04-10 23:34:53,251 - INFO - 
+抓取结果:
+2026-04-10 23:34:53,251 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁
+2026-04-10 23:34:53,251 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁
+2026-04-10 23:34:53,251 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁
+2026-04-10 23:34:53,251 - INFO - 
+子链接示例:
+2026-04-10 23:34:53,251 - INFO - javascript:scrollTo(0,0)
+2026-04-10 23:34:53,251 - INFO - javascript:notify()
+2026-04-10 23:34:53,251 - INFO - https://7e0c.bqg504.cc/#/bookcase
+2026-04-10 23:34:53,252 - INFO - 
+全部完成，总耗时: 1.46 秒
+2026-04-10 23:36:41,592 - INFO - 示例-锚点型URL:
+2026-04-10 23:36:41,592 - INFO - https://7e0c.bqg504.cc/#/book/1/
+2026-04-10 23:36:41,593 - INFO - https://7e0c.bqg504.cc/#/book/2/
+2026-04-10 23:36:41,593 - INFO - https://7e0c.bqg504.cc/#/book/3/
+2026-04-10 23:36:41,593 - INFO - 待抓取URL数: 3
+2026-04-10 23:36:43,217 - INFO - 已保存HTML源码: page_976630963302880136.html
+2026-04-10 23:36:46,599 - INFO - 已保存HTML源码: page_2935432494314570816.html
+2026-04-10 23:36:46,940 - INFO - 已保存HTML源码: page_5484035750147664160.html
+2026-04-10 23:36:46,944 - INFO - 
+抓取结果:
+2026-04-10 23:36:46,944 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: page_2935432494314570816.html
+2026-04-10 23:36:46,944 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: page_5484035750147664160.html
+2026-04-10 23:36:46,944 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁 HTML: page_976630963302880136.html
+2026-04-10 23:36:46,944 - INFO - 
+子链接示例:
+2026-04-10 23:36:46,944 - INFO - javascript:scrollTo(0,0)
+2026-04-10 23:36:46,944 - INFO - javascript:notify()
+2026-04-10 23:36:46,944 - INFO - https://7e0c.bqg504.cc/#/bookcase
+2026-04-10 23:36:46,946 - INFO - 
+全部完成，总耗时: 5.35 秒
+2026-04-10 23:46:01,851 - INFO - 示例-锚点型URL:
+2026-04-10 23:46:01,852 - INFO - https://7e0c.bqg504.cc/#/book/1/
+2026-04-10 23:46:01,852 - INFO - https://7e0c.bqg504.cc/#/book/2/
+2026-04-10 23:46:01,852 - INFO - https://7e0c.bqg504.cc/#/book/3/
+2026-04-10 23:46:01,852 - INFO - 待抓取URL数: 3 (Playwright)
+2026-04-10 23:46:06,553 - INFO - 已保存HTML源码: page_221064342142321204.html
+2026-04-10 23:46:06,739 - INFO - 已保存HTML源码: page_8489678374178996610.html
+2026-04-10 23:46:13,534 - INFO - 已保存HTML源码: page_1079811487336429279.html
+2026-04-10 23:46:13,536 - INFO - 
+抓取结果:
+2026-04-10 23:46:13,536 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: page_1079811487336429279.html
+2026-04-10 23:46:13,536 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: page_221064342142321204.html
+2026-04-10 23:46:13,536 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁 HTML: page_8489678374178996610.html
+2026-04-10 23:46:13,536 - INFO - 
+子链接示例:
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/1005.html
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/1003.html
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/#/bookcase
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/1000.html
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/997.html
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/3/2195.html
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/3/2202.html
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/3/2201.html
+2026-04-10 23:46:13,536 - INFO - javascript:history.go(-1);
+2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/1006.html
+2026-04-10 23:46:13,536 - INFO - 
+全部完成，总耗时: 11.68 秒
+2026-04-10 23:48:05,721 - INFO - 示例-锚点型URL:
+2026-04-10 23:48:05,722 - INFO - https://7e0c.bqg504.cc/#/book/1/
+2026-04-10 23:48:05,722 - INFO - https://7e0c.bqg504.cc/#/book/2/
+2026-04-10 23:48:05,722 - INFO - https://7e0c.bqg504.cc/#/book/3/
+2026-04-10 23:48:05,722 - INFO - 待抓取URL数: 3 (Playwright)
+2026-04-10 23:48:16,857 - INFO - 已保存HTML源码: page_2059584190819107957.html
+2026-04-10 23:48:18,449 - INFO - 已保存HTML源码: page_702621172131165045.html
+2026-04-10 23:48:22,665 - INFO - 已保存HTML源码: page_8121262809502603197.html
+2026-04-10 23:48:22,667 - INFO - 
+抓取结果:
+2026-04-10 23:48:22,667 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: page_702621172131165045.html
+2026-04-10 23:48:22,667 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: page_2059584190819107957.html
+2026-04-10 23:48:22,667 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁 HTML: page_8121262809502603197.html
+2026-04-10 23:48:22,667 - INFO - 
+子链接示例:
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/3/2197.html
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/3/2199.html
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/2/570.html
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/1/998.html
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/3/2200.html
+2026-04-10 23:48:22,667 - INFO - javascript:booklist()
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/2/571.html
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/#/
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/3/2192.html
+2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/2/567.html
+2026-04-10 23:48:22,667 - INFO - 
+全部完成，总耗时: 16.95 秒
+2026-04-10 23:49:21,143 - INFO - 示例-锚点型URL:
+2026-04-10 23:49:21,143 - INFO - https://7e0c.bqg504.cc/#/book/1/
+2026-04-10 23:49:21,143 - INFO - https://7e0c.bqg504.cc/#/book/2/
+2026-04-10 23:49:21,143 - INFO - https://7e0c.bqg504.cc/#/book/3/
+2026-04-10 23:49:21,143 - INFO - 待抓取URL数: 3 (Playwright)
+2026-04-10 23:49:32,035 - INFO - 已保存HTML源码: page_2.html
+2026-04-10 23:49:45,119 - INFO - 已保存HTML源码: page_3.html
+2026-04-10 23:49:46,583 - INFO - 已保存HTML源码: page_1.html
+2026-04-10 23:49:46,584 - INFO - 
+抓取结果:
+2026-04-10 23:49:46,584 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: page_1.html
+2026-04-10 23:49:46,584 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: page_2.html
+2026-04-10 23:49:46,584 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁 HTML: page_3.html
+2026-04-10 23:49:46,584 - INFO - 
+子链接示例:
+2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/1/1001.html
+2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/2/571.html
+2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/2/562.html
+2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/3/2199.html
+2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/2/563.html
+2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/1/1004.html
+2026-04-10 23:49:46,585 - INFO - https://7e0c.bqg504.cc/book/1/999.html
+2026-04-10 23:49:46,585 - INFO - https://7e0c.bqg504.cc/book/3/2202.html
+2026-04-10 23:49:46,585 - INFO - https://7e0c.bqg504.cc/book/3/1.html
+2026-04-10 23:49:46,585 - INFO - https://7e0c.bqg504.cc/book/2/566.html
+2026-04-10 23:49:46,585 - INFO - 
+全部完成，总耗时: 25.44 秒

@@ -1,0 +1,3 @@
+[submodule "project/起点搜书/owllook"]
+	path = project/起点搜书/owllook
+	url = https://github.com/howie6879/owllook.git
