@@ -221,13 +221,40 @@
   }
 
   function renderInline(text) {
-    const escaped = escapeHtml(text);
+    var result = text;
+    var images = [];
+    var links = [];
+    
+    // Extract images first
+    result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(match, alt, src) {
+      images.push('<img src="' + src + '" alt="' + alt + '" />');
+      return '\x00IMG' + (images.length - 1) + '\x00';
+    });
+    
+    // Extract links
+    result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(match, text, url) {
+      links.push('<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + '</a>');
+      return '\x00LINK' + (links.length - 1) + '\x00';
+    });
+    
+    // Escape HTML
+    var escaped = escapeHtml(result);
+    
+    // Restore images
+    escaped = escaped.replace(/\x00IMG(\d+)\x00/g, function(match, index) {
+      return images[parseInt(index)];
+    });
+    
+    // Restore links
+    escaped = escaped.replace(/\x00LINK(\d+)\x00/g, function(match, index) {
+      return links[parseInt(index)];
+    });
+    
+    // Handle inline formatting
     return escaped
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>');
   }
 
   function renderMarkdown(markdown) {
