@@ -14,9 +14,18 @@
   const copyTip = document.getElementById('copy-tip');
   const toTopBtn = document.getElementById('to-top');
   const publishCmd = document.getElementById('publish-cmd');
+  const readerPanel = document.getElementById('reader-panel');
+  const readerTitle = document.getElementById('reader-title');
+  const readerPath = document.getElementById('reader-path');
+  const readerContent = document.getElementById('reader-content');
+  const readerBack = document.getElementById('reader-back');
 
   let allFiles = [];
   let currentTag = '全部';
+
+  function createDocHref(path) {
+    return '/?doc=' + encodeURIComponent(path);
+  }
 
   function toggleSidebar(force) {
     const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
@@ -114,7 +123,7 @@
 
     const item = document.createElement('li');
     const link = document.createElement('a');
-    link.href = node.path;
+    link.href = createDocHref(node.path);
     link.textContent = node.name;
     item.appendChild(link);
     return item;
@@ -146,7 +155,7 @@
       const card = document.createElement('article');
       card.className = 'post-card';
       card.innerHTML =
-        '<h3 class="post-title"><a href="' + file.path + '">' + file.name + '</a></h3>' +
+        '<h3 class="post-title"><a href="' + createDocHref(file.path) + '">' + file.name + '</a></h3>' +
         '<p class="post-meta">分类：' + file.category + '</p>' +
         '<p class="post-meta">路径：' + file.path + '</p>';
       featuredContainer.appendChild(card);
@@ -196,10 +205,149 @@
       const row = document.createElement('article');
       row.className = 'post-row';
       row.innerHTML =
-        '<h3 class="post-title"><a href="' + file.path + '">' + file.name + '</a></h3>' +
+        '<h3 class="post-title"><a href="' + createDocHref(file.path) + '">' + file.name + '</a></h3>' +
         '<p class="post-meta">' + file.category + ' · ' + file.path + '</p>';
       allPostsContainer.appendChild(row);
     });
+  }
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderInline(text) {
+    const escaped = escapeHtml(text);
+    return escaped
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  }
+
+  function renderMarkdown(markdown) {
+    const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+    const html = [];
+    let inCode = false;
+    let codeBuffer = [];
+    let listType = null;
+
+    function closeList() {
+      if (listType) {
+        html.push(listType === 'ol' ? '</ol>' : '</ul>');
+        listType = null;
+      }
+    }
+
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = lines[i];
+
+      if (line.trim().startsWith('```')) {
+        closeList();
+        if (!inCode) {
+          inCode = true;
+          codeBuffer = [];
+        } else {
+          html.push('<pre><code>' + escapeHtml(codeBuffer.join('\n')) + '</code></pre>');
+          inCode = false;
+        }
+        continue;
+      }
+
+      if (inCode) {
+        codeBuffer.push(line);
+        continue;
+      }
+
+      if (!line.trim()) {
+        closeList();
+        continue;
+      }
+
+      const heading = line.match(/^(#{1,4})\s+(.*)$/);
+      if (heading) {
+        closeList();
+        const level = heading[1].length;
+        html.push('<h' + level + '>' + renderInline(heading[2]) + '</h' + level + '>');
+        continue;
+      }
+
+      const ordered = line.match(/^\d+\.\s+(.*)$/);
+      if (ordered) {
+        if (listType !== 'ol') {
+          closeList();
+          listType = 'ol';
+          html.push('<ol>');
+        }
+        html.push('<li>' + renderInline(ordered[1]) + '</li>');
+        continue;
+      }
+
+      const unordered = line.match(/^[-*+]\s+(.*)$/);
+      if (unordered) {
+        if (listType !== 'ul') {
+          closeList();
+          listType = 'ul';
+          html.push('<ul>');
+        }
+        html.push('<li>' + renderInline(unordered[1]) + '</li>');
+        continue;
+      }
+
+      if (line.startsWith('> ')) {
+        closeList();
+        html.push('<blockquote><p>' + renderInline(line.slice(2)) + '</p></blockquote>');
+        continue;
+      }
+
+      closeList();
+      html.push('<p>' + renderInline(line) + '</p>');
+    }
+
+    closeList();
+    return html.join('');
+  }
+
+  async function renderReaderFromLocation() {
+    const params = new URLSearchParams(window.location.search);
+    const docPath = params.get('doc');
+
+    if (!docPath) {
+      if (readerPanel) {
+        readerPanel.hidden = true;
+      }
+      return;
+    }
+
+    if (!readerPanel || !readerTitle || !readerContent || !readerPath) {
+      return;
+    }
+
+    readerPanel.hidden = false;
+    readerTitle.textContent = '加载中...';
+    readerPath.textContent = docPath;
+    readerContent.innerHTML = '<p class="muted">正在加载文档...</p>';
+
+    try {
+      const response = await fetch(docPath, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('无法加载文档');
+      }
+      const markdown = await response.text();
+      const title = markdown.match(/^#\s+(.+)$/m);
+      readerTitle.textContent = title ? title[1] : docPath.split('/').pop();
+      readerContent.innerHTML = renderMarkdown(markdown);
+      requestAnimationFrame(function () {
+        readerPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    } catch (err) {
+      readerTitle.textContent = '加载失败';
+      readerContent.innerHTML = '<p class="muted">文档加载失败：' + err.message + '</p>';
+    }
   }
 
   function applyTreeSearch(term) {
@@ -245,7 +393,7 @@
       const pool = source.length ? source : allFiles;
       if (!pool.length) return;
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      window.location.href = pick.path;
+      window.location.href = createDocHref(pick.path);
     });
   }
 
@@ -279,11 +427,25 @@
     });
   }
 
+  function setupReaderBack() {
+    if (!readerBack) return;
+    readerBack.addEventListener('click', function () {
+      window.history.pushState({}, '', '/');
+      renderReaderFromLocation();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
   async function init() {
     setupTheme();
     setupRandomPost();
     setupCopyCommand();
     setupToTop();
+    setupReaderBack();
+
+    window.addEventListener('popstate', function () {
+      renderReaderFromLocation();
+    });
 
     try {
       const response = await fetch('docs/index.json', { cache: 'no-store' });
@@ -303,6 +465,7 @@
       renderTags(allFiles);
       renderFeatured(allFiles);
       renderAllPosts(allFiles);
+      renderReaderFromLocation();
     } catch (err) {
       treeContainer.innerHTML = '<p class="muted">目录加载失败：' + err.message + '</p>';
       featuredContainer.innerHTML = '<p class="muted">暂时无法加载文章列表。</p>';
