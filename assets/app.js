@@ -115,8 +115,6 @@
     const item = document.createElement('li');
     const link = document.createElement('a');
     link.href = node.path;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
     link.textContent = node.name;
     item.appendChild(link);
     return item;
@@ -148,7 +146,7 @@
       const card = document.createElement('article');
       card.className = 'post-card';
       card.innerHTML =
-        '<h3 class="post-title"><a href="' + file.path + '" target="_blank" rel="noopener noreferrer">' + file.name + '</a></h3>' +
+        '<h3 class="post-title"><a href="' + file.path + '">' + file.name + '</a></h3>' +
         '<p class="post-meta">分类：' + file.category + '</p>' +
         '<p class="post-meta">路径：' + file.path + '</p>';
       featuredContainer.appendChild(card);
@@ -198,7 +196,7 @@
       const row = document.createElement('article');
       row.className = 'post-row';
       row.innerHTML =
-        '<h3 class="post-title"><a href="' + file.path + '" target="_blank" rel="noopener noreferrer">' + file.name + '</a></h3>' +
+        '<h3 class="post-title"><a href="' + file.path + '">' + file.name + '</a></h3>' +
         '<p class="post-meta">' + file.category + ' · ' + file.path + '</p>';
       allPostsContainer.appendChild(row);
     });
@@ -247,7 +245,7 @@
       const pool = source.length ? source : allFiles;
       if (!pool.length) return;
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      window.open(pick.path, '_blank', 'noopener,noreferrer');
+      window.location.href = pick.path;
     });
   }
 
