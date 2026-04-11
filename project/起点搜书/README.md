@@ -2,15 +2,110 @@
 
 本模块实现基于用户查询的书籍推荐系统，包含查询处理、数据召回、推荐理由生成和结果展示等功能。
 
+当前抓取脚本已经改为直接请求站点真实接口，并将结果写入 SQLite，支持先抓目录、再抓正文、断点续抓。
+
 ## 目录结构
 
 - data/books.json 书籍数据
+- data/books.db SQLite 抓取数据库
 - query_processor.py 查询预处理
 - rag_retriever.py 数据召回
 - app.py 推荐API服务
+- data_get/main.py 抓取脚本
 
 ## 快速开始
 
 1. 准备书籍数据到 data/books.json
 2. 运行 app.py 启动服务
 3. 前端通过 API 获取推荐结果
+
+## 抓取命令
+
+在 project/起点搜书/data_get 目录执行：
+
+```bash
+python main.py crawl-books --start 1 --end 10000 --concurrency 12
+```
+
+先抓 1 到 10000 的书籍首页和章节目录，写入 data/books.db。
+
+```bash
+python main.py crawl-content --start 1 --end 10000 --concurrency 12 --batch-size 120
+```
+
+再基于数据库里的章节目录补全正文内容。
+
+更稳一些的正文抓取建议这样跑：
+
+```bash
+python main.py crawl-content --start 1 --end 10000 --concurrency 8 --batch-size 40 --chapter-progress-every 500 --sqlite-synchronous FULL --min-request-interval 0.03 --request-jitter 0.05 --retry-backoff-base 1.5 --retry-backoff-max 12
+```
+
+这组参数更适合长时间后台运行：
+
+- `sqlite-synchronous FULL` 提高断电场景下的落盘可靠性。
+- `min-request-interval` 和 `request-jitter` 会把请求节奏打散，减少固定频率特征。
+- 请求头会自动轮换 User-Agent，并按书籍页/章节页生成 Referer。
+- `crawl-content` 只会抓未完成章节，断掉后再次执行会继续补齐。
+- `chapter-progress-every` 会按章节输出进度，长任务更容易观察。
+
+```bash
+python main.py sync-all --start 1 --end 10000 --concurrency 12 --batch-size 120
+```
+
+按顺序执行目录抓取和正文抓取。
+
+```bash
+python main.py stats
+```
+
+查看当前数据库里的书籍数、章节数和正文完成进度。
+
+```bash
+python main.py crawl-content --start 1 --end 1 --max-pending-per-book 5 --batch-size 5
+```
+
+按每本书限制本次处理的未完成章节数，适合分批跑或小样本验证。
+
+## 说明
+
+- 默认数据库路径是 data/books.db。
+- crawl-books 会把书籍元信息写入 books 表，把章节目录写入 chapters 表。
+- crawl-content 只会抓还没完成的章节，可以重复执行。
+- 当前 SQLite 使用 WAL，配合 `--sqlite-synchronous FULL` 时更适合怕断电的长任务。
+- 当前 app.py 仍然读取 data/books.json，还没有切到 SQLite。如果你要，我可以下一步把推荐服务也改成直接读数据库。
+
+## 上传到 ModelScope
+
+先安装依赖：
+
+```bash
+pip install -r requirements.txt
+```
+
+设置 token 后，可以把当前项目里的 data 目录直接上传到 ModelScope dataset 仓库：
+
+```bash
+export MODELSCOPE_API_TOKEN="你的 token"
+python upload_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data \
+	--commit-message "upload dataset folder to repo"
+```
+
+如果只想上传默认的 data 目录，`--folder-path` 可以省略。
+
+脚本默认会尝试对 `data/books.db` 做一致性快照，再上传快照目录，而不是直接上传正在写入的活动数据库文件。
+
+如果你想保留这份临时快照，方便重复上传或人工检查，可以加上：
+
+```bash
+python upload_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--keep-snapshot
+```
+
+脚本位置：
+
+- `upload_modelscope_dataset.py` 负责登录 ModelScope 并执行 `upload_folder`
+- `requirements.txt` 包含 Flask 和 ModelScope SDK 的最小依赖

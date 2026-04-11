@@ -1,0 +1,34 @@
+# OS / Editor
+.DS_Store
+.vscode/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+
+# Virtual env
+.venv/
+venv/
+
+# Project secrets
+project/起点搜书/.env
+project/起点搜书/.env.*
+
+# Crawler runtime logs
+project/起点搜书/data_get/data_get.log
+
+# SQLite runtime artifacts (large/volatile)
+project/起点搜书/data/books.db
+project/起点搜书/data/books.db-shm
+project/起点搜书/data/books.db-wal
+
+# Optional crawler debug dumps
+project/起点搜书/data_get/page_*.html
+project/起点搜书/data_get/page_*.png
+project/起点搜书/data_get/page_*_raw_response.html
+project/起点搜书/data_get/page_*_network_debug.json
+project/起点搜书/data_get/page_*_dom_before_click.html
+project/起点搜书/data_get/page_*_dom_after_click.html
+project/起点搜书/data_get/xpath_result*.json

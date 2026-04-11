@@ -1,16 +1,62 @@
 [
-    {
-        "name": "书籍1",
-        "author": "作者1",
-        "description": "简介1",
-        "tags": ["玄幻", "连载"],
-        "link": "https://example.com/book1"
-    },
-    {
-        "name": "书籍2",
-        "author": "作者2",
-        "description": "简介2",
-        "tags": ["科幻", "完结"],
-        "link": "https://example.com/book2"
-    }
+  {
+    "name": "书名",
+    "author": "作者",
+    "description": "",
+    "tags": [
+      "分类",
+      "状态"
+    ],
+    "link": "https://7e0c.bqg504.cc/#/book/1/",
+    "first_chapter_url": null,
+    "chapters": []
+  },
+  {
+    "name": "书名",
+    "author": "作者",
+    "description": "",
+    "tags": [
+      "分类",
+      "状态"
+    ],
+    "link": "https://7e0c.bqg504.cc/#/book/2/",
+    "first_chapter_url": null,
+    "chapters": []
+  },
+  {
+    "name": "书名",
+    "author": "作者",
+    "description": "",
+    "tags": [
+      "分类",
+      "状态"
+    ],
+    "link": "https://7e0c.bqg504.cc/#/book/3/",
+    "first_chapter_url": null,
+    "chapters": []
+  },
+  {
+    "name": "书名",
+    "author": "作者",
+    "description": "",
+    "tags": [
+      "分类",
+      "状态"
+    ],
+    "link": "https://7e0c.bqg504.cc/#/book/4/",
+    "first_chapter_url": null,
+    "chapters": []
+  },
+  {
+    "name": "书名",
+    "author": "作者",
+    "description": "",
+    "tags": [
+      "分类",
+      "状态"
+    ],
+    "link": "https://7e0c.bqg504.cc/#/book/5/",
+    "first_chapter_url": null,
+    "chapters": []
+  }
 ]

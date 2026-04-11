@@ -1,135 +1,842 @@
-2026-04-10 23:29:03,996 - INFO - 示例-锚点型URL:
-2026-04-10 23:29:03,996 - INFO - https://7e0c.bqg504.cc/#/book/1/
-2026-04-10 23:29:03,996 - INFO - https://7e0c.bqg504.cc/#/book/2/
-2026-04-10 23:29:03,996 - INFO - https://7e0c.bqg504.cc/#/book/3/
-2026-04-10 23:29:03,996 - INFO - 待抓取URL数: 3
-2026-04-10 23:29:05,721 - INFO - 
+2026-04-11 19:05:29,561 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 19:05:29,561 - INFO - 待抓取URL数: 1 (Playwright)
+2026-04-11 19:05:35,959 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_raw_response.html
+2026-04-11 19:06:21,700 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:06:21,704 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_before_click.html
+2026-04-11 19:06:24,574 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 19:06:24,574 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 19:06:24,577 - INFO - https://7e0c.bqg504.cc/#/book/1/ XPath[target_xpath_url] -> None
+2026-04-11 19:06:24,578 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 19:06:24,612 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:06:24,612 - INFO - 
 抓取结果:
-2026-04-10 23:29:05,721 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁
-2026-04-10 23:29:05,722 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁
-2026-04-10 23:29:05,722 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁
-2026-04-10 23:29:05,722 - INFO - 
+2026-04-11 19:06:24,612 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:06:24,612 - INFO - 
 子链接示例:
-2026-04-10 23:29:05,722 - INFO - javascript:notify()
-2026-04-10 23:29:05,722 - INFO - https://7e0c.bqg504.cc/#/bookcase
-2026-04-10 23:29:05,722 - INFO - javascript:scrollTo(0,0)
-2026-04-10 23:29:05,723 - INFO - 
-全部完成，总耗时: 1.73 秒
-2026-04-10 23:34:51,791 - INFO - 示例-锚点型URL:
-2026-04-10 23:34:51,791 - INFO - https://7e0c.bqg504.cc/#/book/1/
-2026-04-10 23:34:51,791 - INFO - https://7e0c.bqg504.cc/#/book/2/
-2026-04-10 23:34:51,791 - INFO - https://7e0c.bqg504.cc/#/book/3/
-2026-04-10 23:34:51,791 - INFO - 待抓取URL数: 3
-2026-04-10 23:34:53,251 - INFO - 
+2026-04-11 19:06:24,612 - INFO - 
+全部完成，耗时: 55.05 秒
+2026-04-11 19:06:24,612 - INFO - 数据已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 19:14:58,513 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 19:14:58,513 - INFO - 待抓取URL数: 1 (Playwright)
+2026-04-11 19:15:00,826 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_raw_response.html
+2026-04-11 19:15:47,110 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:15:47,991 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 保存点击前DOM失败: Page.content: Unable to retrieve content because the page is navigating and changing the content.
+2026-04-11 19:15:53,988 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 19:15:53,988 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 19:15:53,991 - INFO - https://7e0c.bqg504.cc/#/book/1/ XPath[target_xpath_url] -> None
+2026-04-11 19:15:53,992 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 19:15:54,026 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:15:54,026 - INFO - 
 抓取结果:
-2026-04-10 23:34:53,251 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁
-2026-04-10 23:34:53,251 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁
-2026-04-10 23:34:53,251 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁
-2026-04-10 23:34:53,251 - INFO - 
+2026-04-11 19:15:54,026 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:15:54,026 - INFO - 
 子链接示例:
-2026-04-10 23:34:53,251 - INFO - javascript:scrollTo(0,0)
-2026-04-10 23:34:53,251 - INFO - javascript:notify()
-2026-04-10 23:34:53,251 - INFO - https://7e0c.bqg504.cc/#/bookcase
-2026-04-10 23:34:53,252 - INFO - 
-全部完成，总耗时: 1.46 秒
-2026-04-10 23:36:41,592 - INFO - 示例-锚点型URL:
-2026-04-10 23:36:41,592 - INFO - https://7e0c.bqg504.cc/#/book/1/
-2026-04-10 23:36:41,593 - INFO - https://7e0c.bqg504.cc/#/book/2/
-2026-04-10 23:36:41,593 - INFO - https://7e0c.bqg504.cc/#/book/3/
-2026-04-10 23:36:41,593 - INFO - 待抓取URL数: 3
-2026-04-10 23:36:43,217 - INFO - 已保存HTML源码: page_976630963302880136.html
-2026-04-10 23:36:46,599 - INFO - 已保存HTML源码: page_2935432494314570816.html
-2026-04-10 23:36:46,940 - INFO - 已保存HTML源码: page_5484035750147664160.html
-2026-04-10 23:36:46,944 - INFO - 
+2026-04-11 19:15:54,026 - INFO - 
+全部完成，耗时: 55.51 秒
+2026-04-11 19:15:54,026 - INFO - 数据已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 19:16:17,601 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 19:16:30,881 - INFO - XPath结果: https://7e0c.bqg504.cc/book/1/1.html
+2026-04-11 19:16:30,881 - INFO - 
+全部完成，耗时: 13.28 秒
+2026-04-11 19:16:30,881 - INFO - HTML已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:16:30,881 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 19:19:29,240 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 19:19:46,848 - INFO - XPath结果: https://7e0c.bqg504.cc/book/1/1.html
+2026-04-11 19:19:46,848 - INFO - 
+全部完成，耗时: 17.61 秒
+2026-04-11 19:19:46,848 - INFO - HTML已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:19:46,848 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 19:23:13,291 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 19:23:27,229 - INFO - XPath结果: https://7e0c.bqg504.cc/book/1/1.html
+2026-04-11 19:23:27,229 - INFO - 
+全部完成，耗时: 13.94 秒
+2026-04-11 19:23:27,229 - INFO - HTML已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:23:27,229 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 19:29:16,108 - INFO - 即将批量抓取 5 个页面，max_concurrent=3
+2026-04-11 19:29:16,109 - INFO - 待抓取URL数: 5 (Playwright)
+2026-04-11 19:29:18,349 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_raw_response.html
+2026-04-11 19:29:20,842 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:29:21,929 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_raw_response.html
+2026-04-11 19:30:03,822 - WARNING - https://7e0c.bqg504.cc/#/book/2/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:30:03,836 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_before_click.html
+2026-04-11 19:30:06,033 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:30:06,043 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_dom_before_click.html
+2026-04-11 19:30:07,090 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:30:07,094 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_before_click.html
+2026-04-11 19:30:08,652 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_after_click.html
+2026-04-11 19:30:08,652 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.png
+2026-04-11 19:30:08,655 - INFO - https://7e0c.bqg504.cc/#/book/2/ XPath[target_xpath_url] -> None
+2026-04-11 19:30:08,656 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_network_debug.json
+2026-04-11 19:30:08,687 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 19:30:10,590 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_raw_response.html
+2026-04-11 19:30:15,394 - ERROR - [Playwright]https://7e0c.bqg504.cc/#/book/1/ 请求异常: 页面持续处于导航状态，无法获取HTML，重试中...
+2026-04-11 19:30:17,183 - ERROR - [Playwright]https://7e0c.bqg504.cc/#/book/3/ 请求异常: 页面持续处于导航状态，无法获取HTML，重试中...
+2026-04-11 19:30:17,872 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_raw_response.html
+2026-04-11 19:30:22,487 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:30:55,791 - WARNING - https://7e0c.bqg504.cc/#/book/4/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:30:55,869 - WARNING - https://7e0c.bqg504.cc/#/book/4/ 保存点击前DOM失败: Page.content: Unable to retrieve content because the page is navigating and changing the content.
+2026-04-11 19:31:00,711 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_dom_after_click.html
+2026-04-11 19:31:00,711 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4.png
+2026-04-11 19:31:00,713 - INFO - https://7e0c.bqg504.cc/#/book/4/ XPath[target_xpath_url] -> None
+2026-04-11 19:31:00,716 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_network_debug.json
+2026-04-11 19:31:00,751 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4.html
+2026-04-11 19:31:03,365 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:31:03,372 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_before_click.html
+2026-04-11 19:31:06,591 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_raw_response.html
+2026-04-11 19:31:07,751 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:31:07,780 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 保存点击前DOM失败: Page.content: Unable to retrieve content because the page is navigating and changing the content.
+2026-04-11 19:31:08,093 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 19:31:08,093 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 19:31:08,094 - INFO - https://7e0c.bqg504.cc/#/book/1/ XPath[target_xpath_url] -> None
+2026-04-11 19:31:08,101 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 19:31:08,142 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:31:13,164 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_dom_after_click.html
+2026-04-11 19:31:13,164 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3.png
+2026-04-11 19:31:13,167 - INFO - https://7e0c.bqg504.cc/#/book/3/ XPath[target_xpath_url] -> None
+2026-04-11 19:31:13,173 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_network_debug.json
+2026-04-11 19:31:13,213 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3.html
+2026-04-11 19:32:20,514 - INFO - 即将批量抓取 5 个页面，max_concurrent=3
+2026-04-11 19:32:20,514 - INFO - 待抓取URL数: 5 (Playwright)
+2026-04-11 19:32:22,266 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_raw_response.html
+2026-04-11 19:32:22,267 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_raw_response.html
+2026-04-11 19:32:28,312 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_before_click.html
+2026-04-11 19:32:28,316 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_before_click.html
+2026-04-11 19:32:28,447 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:32:33,345 - INFO - https://7e0c.bqg504.cc/#/book/2/ 已点击展开按钮: .book_more a
+2026-04-11 19:32:33,346 - INFO - https://7e0c.bqg504.cc/#/book/1/ 已点击展开按钮: .book_more a
+2026-04-11 19:32:34,473 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_dom_before_click.html
+2026-04-11 19:32:35,388 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_after_click.html
+2026-04-11 19:32:35,388 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.png
+2026-04-11 19:32:35,391 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 19:32:35,391 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 19:32:35,391 - INFO - https://7e0c.bqg504.cc/#/book/2/ XPath[target_xpath_url] -> None
+2026-04-11 19:32:35,392 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_network_debug.json
+2026-04-11 19:32:35,393 - INFO - https://7e0c.bqg504.cc/#/book/1/ XPath[target_xpath_url] -> None
+2026-04-11 19:32:35,394 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 19:32:35,426 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 19:32:35,431 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:32:39,492 - INFO - https://7e0c.bqg504.cc/#/book/3/ 已点击展开按钮: .book_more a
+2026-04-11 19:32:41,918 - ERROR - [Playwright]https://7e0c.bqg504.cc/#/book/3/ 请求异常: Page.content: Unable to retrieve content because the page is navigating and changing the content.，重试中...
+2026-04-11 19:32:42,938 - WARNING - https://7e0c.bqg504.cc/#/book/4/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:32:43,052 - WARNING - https://7e0c.bqg504.cc/#/book/5/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:32:49,183 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:32:49,300 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_dom_before_click.html
+2026-04-11 19:32:49,591 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_dom_before_click.html
+2026-04-11 19:32:54,321 - INFO - https://7e0c.bqg504.cc/#/book/5/ 已点击展开按钮: .book_more a
+2026-04-11 19:32:54,612 - INFO - https://7e0c.bqg504.cc/#/book/4/ 已点击展开按钮: .book_more a
+2026-04-11 19:32:55,263 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 保存点击前DOM失败: Page.content: Unable to retrieve content because the page is navigating and changing the content.
+2026-04-11 19:32:56,657 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_dom_after_click.html
+2026-04-11 19:32:56,657 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4.png
+2026-04-11 19:32:56,659 - INFO - https://7e0c.bqg504.cc/#/book/4/ XPath[target_xpath_url] -> None
+2026-04-11 19:32:56,660 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_network_debug.json
+2026-04-11 19:32:56,686 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4.html
+2026-04-11 19:32:58,213 - ERROR - [Playwright]https://7e0c.bqg504.cc/#/book/5/ 请求异常: Page.content: Unable to retrieve content because the page is navigating and changing the content.，重试中...
+2026-04-11 19:33:00,294 - INFO - https://7e0c.bqg504.cc/#/book/3/ 已点击展开按钮: .book_more a
+2026-04-11 19:33:01,266 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_raw_response.html
+2026-04-11 19:33:02,342 - ERROR - [Playwright]https://7e0c.bqg504.cc/#/book/3/ 请求异常: Page.content: Unable to retrieve content because the page is navigating and changing the content.，重试中...
+2026-04-11 19:33:04,810 - ERROR - [Playwright]https://7e0c.bqg504.cc/#/book/3/ 最终失败，已达到最大重试次数。
+2026-04-11 19:33:07,304 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_dom_before_click.html
+2026-04-11 19:33:12,324 - INFO - https://7e0c.bqg504.cc/#/book/5/ 已点击展开按钮: .book_more a
+2026-04-11 19:33:14,391 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_dom_after_click.html
+2026-04-11 19:33:14,391 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5.png
+2026-04-11 19:33:14,393 - INFO - https://7e0c.bqg504.cc/#/book/5/ XPath[target_xpath_url] -> None
+2026-04-11 19:33:14,393 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_network_debug.json
+2026-04-11 19:33:14,421 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5.html
+2026-04-11 19:33:14,422 - INFO - 
 抓取结果:
-2026-04-10 23:36:46,944 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: page_2935432494314570816.html
-2026-04-10 23:36:46,944 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: page_5484035750147664160.html
-2026-04-10 23:36:46,944 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁 HTML: page_976630963302880136.html
-2026-04-10 23:36:46,944 - INFO - 
+2026-04-11 19:33:14,422 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:33:14,422 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 19:33:14,422 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Failed 标题:  HTML: 
+2026-04-11 19:33:14,422 - INFO - URL: https://7e0c.bqg504.cc/#/book/4/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4.html
+2026-04-11 19:33:14,422 - INFO - URL: https://7e0c.bqg504.cc/#/book/5/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5.html
+2026-04-11 19:33:14,422 - INFO - 
 子链接示例:
-2026-04-10 23:36:46,944 - INFO - javascript:scrollTo(0,0)
-2026-04-10 23:36:46,944 - INFO - javascript:notify()
-2026-04-10 23:36:46,944 - INFO - https://7e0c.bqg504.cc/#/bookcase
-2026-04-10 23:36:46,946 - INFO - 
-全部完成，总耗时: 5.35 秒
-2026-04-10 23:46:01,851 - INFO - 示例-锚点型URL:
-2026-04-10 23:46:01,852 - INFO - https://7e0c.bqg504.cc/#/book/1/
-2026-04-10 23:46:01,852 - INFO - https://7e0c.bqg504.cc/#/book/2/
-2026-04-10 23:46:01,852 - INFO - https://7e0c.bqg504.cc/#/book/3/
-2026-04-10 23:46:01,852 - INFO - 待抓取URL数: 3 (Playwright)
-2026-04-10 23:46:06,553 - INFO - 已保存HTML源码: page_221064342142321204.html
-2026-04-10 23:46:06,739 - INFO - 已保存HTML源码: page_8489678374178996610.html
-2026-04-10 23:46:13,534 - INFO - 已保存HTML源码: page_1079811487336429279.html
-2026-04-10 23:46:13,536 - INFO - 
+2026-04-11 19:33:14,422 - INFO - XPath提取成功数: 0/5
+2026-04-11 19:33:14,422 - INFO - 
+全部完成，耗时: 53.91 秒
+2026-04-11 19:33:14,422 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_results.json
+2026-04-11 19:33:52,438 - INFO - 即将批量抓取 5 个页面，max_concurrent=1
+2026-04-11 19:33:52,438 - INFO - 待抓取URL数: 5 (Playwright)
+2026-04-11 19:34:02,586 - INFO - 即将批量抓取 5 个页面，max_concurrent=1
+2026-04-11 19:34:02,586 - INFO - 待抓取URL数: 5 (Playwright)
+2026-04-11 19:34:05,446 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_raw_response.html
+2026-04-11 19:34:11,497 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_before_click.html
+2026-04-11 19:34:16,523 - INFO - https://7e0c.bqg504.cc/#/book/1/ 已点击展开按钮: .book_more a
+2026-04-11 19:34:21,316 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 19:34:21,316 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 19:34:21,319 - INFO - https://7e0c.bqg504.cc/#/book/1/ XPath[target_xpath_url] -> None
+2026-04-11 19:34:21,320 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 19:34:21,352 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:34:33,511 - WARNING - https://7e0c.bqg504.cc/#/book/2/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:34:39,548 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_before_click.html
+2026-04-11 19:34:44,569 - INFO - https://7e0c.bqg504.cc/#/book/2/ 已点击展开按钮: .book_more a
+2026-04-11 19:34:46,638 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_after_click.html
+2026-04-11 19:34:46,638 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.png
+2026-04-11 19:34:46,640 - INFO - https://7e0c.bqg504.cc/#/book/2/ XPath[target_xpath_url] -> None
+2026-04-11 19:34:46,640 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_network_debug.json
+2026-04-11 19:34:46,671 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 19:34:50,385 - WARNING - https://7e0c.bqg504.cc/#/book/3/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:34:52,391 - INFO - 即将批量抓取 5 个页面，max_concurrent=1
+2026-04-11 19:34:52,391 - INFO - 待抓取URL数: 5 (Playwright)
+2026-04-11 19:34:56,415 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_dom_before_click.html
+2026-04-11 19:34:58,081 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:35:01,433 - INFO - https://7e0c.bqg504.cc/#/book/3/ 已点击展开按钮: .book_more a
+2026-04-11 19:35:03,475 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_dom_after_click.html
+2026-04-11 19:35:03,475 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3.png
+2026-04-11 19:35:03,478 - INFO - https://7e0c.bqg504.cc/#/book/3/ XPath[target_xpath_url] -> None
+2026-04-11 19:35:03,479 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_network_debug.json
+2026-04-11 19:35:03,507 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3.html
+2026-04-11 19:35:04,231 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_before_click.html
+2026-04-11 19:35:06,278 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 19:35:06,278 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 19:35:06,281 - INFO - https://7e0c.bqg504.cc/#/book/1/ XPath[target_xpath_url] -> None
+2026-04-11 19:35:06,281 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 19:35:06,310 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:35:09,435 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_raw_response.html
+2026-04-11 19:35:15,661 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_before_click.html
+2026-04-11 19:35:17,711 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_after_click.html
+2026-04-11 19:35:17,711 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.png
+2026-04-11 19:35:17,713 - INFO - https://7e0c.bqg504.cc/#/book/2/ XPath[target_xpath_url] -> None
+2026-04-11 19:35:17,714 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_network_debug.json
+2026-04-11 19:35:17,742 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 19:35:23,002 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_raw_response.html
+2026-04-11 19:35:29,032 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_dom_before_click.html
+2026-04-11 19:35:32,435 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_dom_after_click.html
+2026-04-11 19:35:32,435 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3.png
+2026-04-11 19:35:32,437 - INFO - https://7e0c.bqg504.cc/#/book/3/ XPath[target_xpath_url] -> None
+2026-04-11 19:35:32,437 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3_network_debug.json
+2026-04-11 19:35:32,466 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3.html
+2026-04-11 19:36:03,174 - ERROR - [Playwright]https://7e0c.bqg504.cc/#/book/4/ 请求异常: Page.goto: net::ERR_TIMED_OUT at https://7e0c.bqg504.cc/#/book/4/
+Call log:
+  - navigating to "https://7e0c.bqg504.cc/#/book/4/", waiting until "load"
+，重试中...
+2026-04-11 19:36:10,814 - WARNING - https://7e0c.bqg504.cc/#/book/4/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:36:16,848 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_dom_before_click.html
+2026-04-11 19:36:18,905 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_dom_after_click.html
+2026-04-11 19:36:18,905 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4.png
+2026-04-11 19:36:18,907 - INFO - https://7e0c.bqg504.cc/#/book/4/ XPath[target_xpath_url] -> None
+2026-04-11 19:36:18,908 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4_network_debug.json
+2026-04-11 19:36:18,938 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4.html
+2026-04-11 19:36:19,971 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_raw_response.html
+2026-04-11 19:36:25,998 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_dom_before_click.html
+2026-04-11 19:36:28,050 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_dom_after_click.html
+2026-04-11 19:36:28,050 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5.png
+2026-04-11 19:36:28,052 - INFO - https://7e0c.bqg504.cc/#/book/5/ XPath[target_xpath_url] -> None
+2026-04-11 19:36:28,053 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5_network_debug.json
+2026-04-11 19:36:28,085 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5.html
+2026-04-11 19:36:28,085 - INFO - 
 抓取结果:
-2026-04-10 23:46:13,536 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: page_1079811487336429279.html
-2026-04-10 23:46:13,536 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: page_221064342142321204.html
-2026-04-10 23:46:13,536 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁 HTML: page_8489678374178996610.html
-2026-04-10 23:46:13,536 - INFO - 
+2026-04-11 19:36:28,086 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:36:28,086 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 19:36:28,086 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_3.html
+2026-04-11 19:36:28,086 - INFO - URL: https://7e0c.bqg504.cc/#/book/4/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_4.html
+2026-04-11 19:36:28,086 - INFO - URL: https://7e0c.bqg504.cc/#/book/5/ -> 状态: Success 标题:  HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_5.html
+2026-04-11 19:36:28,086 - INFO - 
 子链接示例:
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/1005.html
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/1003.html
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/#/bookcase
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/1000.html
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/997.html
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/3/2195.html
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/3/2202.html
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/3/2201.html
-2026-04-10 23:46:13,536 - INFO - javascript:history.go(-1);
-2026-04-10 23:46:13,536 - INFO - https://7e0c.bqg504.cc/book/1/1006.html
-2026-04-10 23:46:13,536 - INFO - 
-全部完成，总耗时: 11.68 秒
-2026-04-10 23:48:05,721 - INFO - 示例-锚点型URL:
-2026-04-10 23:48:05,722 - INFO - https://7e0c.bqg504.cc/#/book/1/
-2026-04-10 23:48:05,722 - INFO - https://7e0c.bqg504.cc/#/book/2/
-2026-04-10 23:48:05,722 - INFO - https://7e0c.bqg504.cc/#/book/3/
-2026-04-10 23:48:05,722 - INFO - 待抓取URL数: 3 (Playwright)
-2026-04-10 23:48:16,857 - INFO - 已保存HTML源码: page_2059584190819107957.html
-2026-04-10 23:48:18,449 - INFO - 已保存HTML源码: page_702621172131165045.html
-2026-04-10 23:48:22,665 - INFO - 已保存HTML源码: page_8121262809502603197.html
-2026-04-10 23:48:22,667 - INFO - 
+2026-04-11 19:36:28,086 - INFO - XPath提取成功数: 0/5
+2026-04-11 19:36:28,086 - INFO - 
+全部完成，耗时: 95.69 秒
+2026-04-11 19:36:28,086 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_results.json
+2026-04-11 19:37:07,440 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 19:37:20,187 - INFO - XPath结果: https://7e0c.bqg504.cc/book/1/1.html
+2026-04-11 19:37:20,188 - INFO - 
+全部完成，耗时: 12.75 秒
+2026-04-11 19:37:20,188 - INFO - HTML已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:37:20,188 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 19:42:42,238 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 19:42:42,238 - INFO - 待抓取URL数: 1 (ThreadPool + Playwright)
+2026-04-11 19:42:54,694 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 19:43:40,652 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 19:43:40,664 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_before_click.html
+2026-04-11 19:43:45,390 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 19:43:45,390 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 19:43:45,393 - INFO - https://7e0c.bqg504.cc/#/book/1/ XPath[xpath_url] -> None
+2026-04-11 19:43:45,395 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 19:43:45,434 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:43:45,436 - INFO - 
 抓取结果:
-2026-04-10 23:48:22,667 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: page_702621172131165045.html
-2026-04-10 23:48:22,667 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: page_2059584190819107957.html
-2026-04-10 23:48:22,667 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁 HTML: page_8121262809502603197.html
-2026-04-10 23:48:22,667 - INFO - 
+2026-04-11 19:43:45,436 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:43:45,436 - INFO - 
 子链接示例:
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/3/2197.html
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/3/2199.html
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/2/570.html
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/1/998.html
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/3/2200.html
-2026-04-10 23:48:22,667 - INFO - javascript:booklist()
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/2/571.html
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/#/
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/3/2192.html
-2026-04-10 23:48:22,667 - INFO - https://7e0c.bqg504.cc/book/2/567.html
-2026-04-10 23:48:22,667 - INFO - 
-全部完成，总耗时: 16.95 秒
-2026-04-10 23:49:21,143 - INFO - 示例-锚点型URL:
-2026-04-10 23:49:21,143 - INFO - https://7e0c.bqg504.cc/#/book/1/
-2026-04-10 23:49:21,143 - INFO - https://7e0c.bqg504.cc/#/book/2/
-2026-04-10 23:49:21,143 - INFO - https://7e0c.bqg504.cc/#/book/3/
-2026-04-10 23:49:21,143 - INFO - 待抓取URL数: 3 (Playwright)
-2026-04-10 23:49:32,035 - INFO - 已保存HTML源码: page_2.html
-2026-04-10 23:49:45,119 - INFO - 已保存HTML源码: page_3.html
-2026-04-10 23:49:46,583 - INFO - 已保存HTML源码: page_1.html
-2026-04-10 23:49:46,584 - INFO - 
+2026-04-11 19:43:45,436 - INFO - XPath结果: None
+2026-04-11 19:43:45,436 - INFO - 
+全部完成，耗时: 63.20 秒
+2026-04-11 19:43:45,436 - INFO - HTML已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:43:45,436 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 19:48:27,746 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 19:48:41,061 - INFO - XPath结果: https://7e0c.bqg504.cc/book/1/1.html
+2026-04-11 19:48:41,062 - INFO - 
+全部完成，耗时: 13.32 秒
+2026-04-11 19:48:41,062 - INFO - HTML已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 19:48:41,062 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 19:49:19,404 - INFO - 待抓取URL数: 5 (Playwright)
+2026-04-11 19:49:21,407 - INFO - 
 抓取结果:
-2026-04-10 23:49:46,584 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: page_1.html
-2026-04-10 23:49:46,584 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: page_2.html
-2026-04-10 23:49:46,584 - INFO - URL: https://7e0c.bqg504.cc/#/book/3/ -> 状态: Success 标题: 笔趣阁 HTML: page_3.html
-2026-04-10 23:49:46,584 - INFO - 
+2026-04-11 19:49:21,408 - INFO - URL: https://example.com/0 -> 状态: Success 标题:  HTML: 
+2026-04-11 19:49:21,408 - INFO - URL: https://example.com/1 -> 状态: Success 标题:  HTML: 
+2026-04-11 19:49:21,408 - INFO - URL: https://example.com/2 -> 状态: Success 标题:  HTML: 
+2026-04-11 19:49:21,408 - INFO - URL: https://example.com/3 -> 状态: Success 标题:  HTML: 
+2026-04-11 19:49:21,408 - INFO - URL: https://example.com/4 -> 状态: Success 标题:  HTML: 
+2026-04-11 19:49:21,408 - INFO - 
 子链接示例:
-2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/1/1001.html
-2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/2/571.html
-2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/2/562.html
-2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/3/2199.html
-2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/2/563.html
-2026-04-10 23:49:46,584 - INFO - https://7e0c.bqg504.cc/book/1/1004.html
-2026-04-10 23:49:46,585 - INFO - https://7e0c.bqg504.cc/book/1/999.html
-2026-04-10 23:49:46,585 - INFO - https://7e0c.bqg504.cc/book/3/2202.html
-2026-04-10 23:49:46,585 - INFO - https://7e0c.bqg504.cc/book/3/1.html
-2026-04-10 23:49:46,585 - INFO - https://7e0c.bqg504.cc/book/2/566.html
-2026-04-10 23:49:46,585 - INFO - 
-全部完成，总耗时: 25.44 秒
+2026-04-11 19:59:16,576 - INFO - 待抓取URL数: 2 (Playwright)
+2026-04-11 19:59:25,848 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 20:00:11,608 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 20:00:11,620 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_before_click.html
+2026-04-11 20:00:15,635 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 20:00:15,635 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 20:00:15,636 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 20:00:15,671 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 20:00:18,143 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_raw_response.html
+2026-04-11 20:01:04,054 - WARNING - https://7e0c.bqg504.cc/#/book/2/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 20:01:04,063 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_before_click.html
+2026-04-11 20:01:06,965 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_after_click.html
+2026-04-11 20:01:06,965 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.png
+2026-04-11 20:01:06,966 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_network_debug.json
+2026-04-11 20:01:06,997 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 20:01:06,998 - INFO - 
+抓取结果:
+2026-04-11 20:01:06,998 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 20:01:06,998 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 20:01:06,998 - INFO - 
+子链接示例:
+2026-04-11 20:01:06,998 - INFO - 待抓取URL数: 2 (Playwright)
+2026-04-11 20:01:08,948 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_raw_response.html
+2026-04-11 20:01:19,915 - WARNING - https://7e0c.bqg504.cc/#/book/2/ 保存原始响应HTML失败: Response.text: Protocol error (Network.getResponseBody): No resource with given identifier found
+2026-04-11 20:01:54,486 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 20:01:54,550 - WARNING - https://7e0c.bqg504.cc/#/book/1/ 保存点击前DOM失败: Page.content: Unable to retrieve content because the page is navigating and changing the content.
+2026-04-11 20:01:59,179 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_dom_after_click.html
+2026-04-11 20:01:59,180 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.png
+2026-04-11 20:01:59,181 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1_network_debug.json
+2026-04-11 20:01:59,211 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 20:02:06,019 - WARNING - https://7e0c.bqg504.cc/#/book/2/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 20:02:06,027 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_before_click.html
+2026-04-11 20:02:15,655 - ERROR - [Playwright]https://7e0c.bqg504.cc/#/book/2/ 请求异常: 页面持续处于导航状态，无法获取HTML，重试中...
+2026-04-11 20:02:18,779 - INFO - 已保存原始响应HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_raw_response.html
+2026-04-11 20:03:04,556 - WARNING - https://7e0c.bqg504.cc/#/book/2/ 45s内仍未加载真实数据，继续抓取并落盘调试文件
+2026-04-11 20:03:04,569 - INFO - 已保存点击前DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_before_click.html
+2026-04-11 20:03:10,347 - INFO - 已保存点击后DOM: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_dom_after_click.html
+2026-04-11 20:03:10,347 - INFO - 已保存页面截图: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.png
+2026-04-11 20:03:10,349 - INFO - 已保存网络诊断: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2_network_debug.json
+2026-04-11 20:03:10,380 - INFO - 已保存HTML源码: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 20:03:10,381 - INFO - 
+抓取结果:
+2026-04-11 20:03:10,381 - INFO - URL: https://7e0c.bqg504.cc/#/book/1/ -> 状态: Success 标题: 笔趣阁 HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 20:03:10,381 - INFO - URL: https://7e0c.bqg504.cc/#/book/2/ -> 状态: Success 标题: 笔趣阁 HTML: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_2.html
+2026-04-11 20:03:10,381 - INFO - 
+子链接示例:
+2026-04-11 20:35:21,438 - INFO - 即将抓取单页: https://7e0c.bqg504.cc/#/book/1/
+2026-04-11 20:35:35,296 - INFO - XPath结果: https://7e0c.bqg504.cc/book/1/1006.html
+2026-04-11 20:35:35,297 - INFO - 
+全部完成，耗时: 13.86 秒
+2026-04-11 20:35:35,297 - INFO - HTML已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/page_1.html
+2026-04-11 20:35:35,297 - INFO - 结果已保存至: /Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data_get/xpath_result.json
+2026-04-11 21:44:56,458 - INFO - 目录阶段启动: range=1-3 targets=3 concurrency=4
+2026-04-11 21:45:02,135 - INFO - 目录进度: 1/3 success=1 failure=0 elapsed=5.68s
+2026-04-11 21:45:05,115 - INFO - 目录进度: 2/3 success=2 failure=0 elapsed=8.66s
+2026-04-11 21:45:20,734 - INFO - 目录阶段启动: range=1-3 targets=1 concurrency=4
+2026-04-11 21:45:21,202 - INFO - 目录进度: 1/1 success=1 failure=0 elapsed=0.47s
+2026-04-11 21:45:24,488 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/booklist?id=2 attempt=1/3 error=The read operation timed out
+2026-04-11 21:45:26,550 - INFO - 目录进度: 3/3 success=3 failure=0 elapsed=30.09s
+2026-04-11 21:45:26,715 - INFO - 正文阶段启动: range=1-1 books=1 concurrency=4 batch_size=5
+2026-04-11 21:45:26,717 - INFO - 开始抓正文: book_id=1 title=海贼之银狐大将 pending=1006
+2026-04-11 21:45:41,977 - INFO - 目录阶段启动: range=1-3 targets=3 concurrency=4
+2026-04-11 21:45:42,306 - INFO - 目录进度: 1/3 success=1 failure=0 elapsed=0.33s
+2026-04-11 21:45:42,627 - INFO - 目录进度: 2/3 success=2 failure=0 elapsed=0.65s
+2026-04-11 21:45:42,758 - INFO - 目录进度: 3/3 success=3 failure=0 elapsed=0.78s
+2026-04-11 21:46:25,197 - INFO - 目录阶段启动: range=1-1 targets=1 concurrency=4
+2026-04-11 21:46:25,520 - INFO - 目录进度: 1/1 success=1 failure=0 elapsed=0.32s
+2026-04-11 21:46:25,655 - INFO - 正文阶段启动: range=1-1 books=1 concurrency=4 batch_size=5
+2026-04-11 21:46:25,657 - INFO - 开始抓正文: book_id=1 title=海贼之银狐大将 pending=5
+2026-04-11 21:46:25,952 - INFO - 正文书籍进度: 1/1 elapsed=0.30s
+2026-04-11 21:47:52,518 - INFO - 正文书籍进度: 1/1 elapsed=145.80s
+2026-04-11 21:48:05,680 - INFO - 目录阶段启动: range=1-10000 targets=10000 concurrency=12
+2026-04-11 21:48:27,498 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/book?id=8 attempt=1/3 error=The read operation timed out
+2026-04-11 21:48:27,679 - INFO - 目录进度: 200/10000 success=200 failure=0 elapsed=22.00s
+2026-04-11 21:48:32,850 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/booklist?id=2 attempt=1/3 error=The read operation timed out
+2026-04-11 21:48:42,524 - INFO - 目录进度: 400/10000 success=400 failure=0 elapsed=36.84s
+2026-04-11 21:48:57,053 - INFO - 目录进度: 600/10000 success=600 failure=0 elapsed=51.37s
+2026-04-11 21:49:10,230 - INFO - 目录进度: 800/10000 success=800 failure=0 elapsed=64.55s
+2026-04-11 21:49:23,179 - INFO - 目录进度: 1000/10000 success=1000 failure=0 elapsed=77.50s
+2026-04-11 21:49:36,789 - INFO - 目录进度: 1200/10000 success=1200 failure=0 elapsed=91.11s
+2026-04-11 21:49:50,417 - INFO - 目录进度: 1400/10000 success=1400 failure=0 elapsed=104.74s
+2026-04-11 21:50:06,297 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/book?id=1354 attempt=1/3 error=HTTP Error 522: <none>
+2026-04-11 21:50:06,505 - INFO - 目录进度: 1600/10000 success=1600 failure=0 elapsed=120.83s
+2026-04-11 21:50:08,858 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/book?id=1393 attempt=1/3 error=HTTP Error 522: <none>
+2026-04-11 21:50:19,522 - INFO - 目录进度: 1800/10000 success=1800 failure=0 elapsed=133.84s
+2026-04-11 21:50:31,669 - INFO - 目录进度: 2000/10000 success=2000 failure=0 elapsed=145.99s
+2026-04-11 21:50:44,229 - INFO - 目录进度: 2200/10000 success=2200 failure=0 elapsed=158.55s
+2026-04-11 21:50:57,578 - INFO - 目录进度: 2400/10000 success=2400 failure=0 elapsed=171.90s
+2026-04-11 21:51:10,188 - INFO - 目录进度: 2600/10000 success=2600 failure=0 elapsed=184.51s
+2026-04-11 21:51:22,346 - INFO - 目录进度: 2800/10000 success=2800 failure=0 elapsed=196.67s
+2026-04-11 21:51:34,798 - INFO - 目录进度: 3000/10000 success=3000 failure=0 elapsed=209.12s
+2026-04-11 21:51:46,417 - INFO - 目录进度: 3200/10000 success=3200 failure=0 elapsed=220.74s
+2026-04-11 21:51:58,106 - INFO - 目录进度: 3400/10000 success=3400 failure=0 elapsed=232.43s
+2026-04-11 21:52:09,752 - INFO - 目录进度: 3600/10000 success=3600 failure=0 elapsed=244.07s
+2026-04-11 21:52:22,119 - INFO - 目录进度: 3800/10000 success=3800 failure=0 elapsed=256.44s
+2026-04-11 21:52:34,399 - INFO - 目录进度: 4000/10000 success=4000 failure=0 elapsed=268.72s
+2026-04-11 21:52:46,730 - INFO - 目录进度: 4200/10000 success=4200 failure=0 elapsed=281.05s
+2026-04-11 21:52:58,662 - INFO - 目录进度: 4400/10000 success=4400 failure=0 elapsed=292.98s
+2026-04-11 21:53:10,337 - INFO - 目录进度: 4600/10000 success=4600 failure=0 elapsed=304.66s
+2026-04-11 21:53:21,511 - INFO - 目录进度: 4800/10000 success=4800 failure=0 elapsed=315.83s
+2026-04-11 21:53:33,365 - INFO - 目录进度: 5000/10000 success=5000 failure=0 elapsed=327.68s
+2026-04-11 21:53:45,488 - INFO - 目录进度: 5200/10000 success=5200 failure=0 elapsed=339.81s
+2026-04-11 21:53:57,570 - INFO - 目录进度: 5400/10000 success=5400 failure=0 elapsed=351.89s
+2026-04-11 21:54:09,675 - INFO - 目录进度: 5600/10000 success=5600 failure=0 elapsed=363.99s
+2026-04-11 21:54:21,529 - INFO - 目录进度: 5800/10000 success=5800 failure=0 elapsed=375.85s
+2026-04-11 21:54:33,570 - INFO - 目录进度: 6000/10000 success=6000 failure=0 elapsed=387.89s
+2026-04-11 21:54:45,997 - INFO - 目录进度: 6200/10000 success=6200 failure=0 elapsed=400.32s
+2026-04-11 21:54:57,597 - INFO - 目录进度: 6400/10000 success=6400 failure=0 elapsed=411.92s
+2026-04-11 21:55:09,895 - INFO - 目录进度: 6600/10000 success=6600 failure=0 elapsed=424.21s
+2026-04-11 21:55:21,449 - INFO - 目录进度: 6800/10000 success=6800 failure=0 elapsed=435.77s
+2026-04-11 21:55:33,207 - INFO - 目录进度: 7000/10000 success=7000 failure=0 elapsed=447.53s
+2026-04-11 21:55:45,093 - INFO - 目录进度: 7200/10000 success=7200 failure=0 elapsed=459.41s
+2026-04-11 21:55:57,042 - INFO - 目录进度: 7400/10000 success=7400 failure=0 elapsed=471.36s
+2026-04-11 21:56:08,499 - INFO - 目录进度: 7600/10000 success=7600 failure=0 elapsed=482.82s
+2026-04-11 21:56:19,989 - INFO - 目录进度: 7800/10000 success=7800 failure=0 elapsed=494.31s
+2026-04-11 21:56:31,336 - INFO - 目录进度: 8000/10000 success=8000 failure=0 elapsed=505.66s
+2026-04-11 21:56:43,127 - INFO - 目录进度: 8200/10000 success=8200 failure=0 elapsed=517.45s
+2026-04-11 21:56:54,660 - INFO - 目录进度: 8400/10000 success=8400 failure=0 elapsed=528.98s
+2026-04-11 21:57:06,248 - INFO - 目录进度: 8600/10000 success=8600 failure=0 elapsed=540.57s
+2026-04-11 21:57:17,825 - INFO - 目录进度: 8800/10000 success=8800 failure=0 elapsed=552.14s
+2026-04-11 21:57:29,179 - INFO - 目录进度: 9000/10000 success=9000 failure=0 elapsed=563.50s
+2026-04-11 21:57:40,757 - INFO - 目录进度: 9200/10000 success=9200 failure=0 elapsed=575.08s
+2026-04-11 21:57:52,579 - INFO - 目录进度: 9400/10000 success=9400 failure=0 elapsed=586.90s
+2026-04-11 21:58:04,091 - INFO - 目录进度: 9600/10000 success=9600 failure=0 elapsed=598.41s
+2026-04-11 21:58:15,456 - INFO - 目录进度: 9800/10000 success=9800 failure=0 elapsed=609.78s
+2026-04-11 21:58:26,885 - INFO - 目录进度: 10000/10000 success=10000 failure=0 elapsed=621.20s
+2026-04-11 22:37:32,529 - INFO - 正文阶段启动: range=1-1 books=1 pending_chapters=4 concurrency=4 batch_size=4 interval=0.030s jitter=0.050s
+2026-04-11 22:37:32,533 - INFO - 开始抓正文: book_id=1 title=海贼之银狐大将 pending=4
+2026-04-11 22:37:34,700 - INFO - 正文章节进度: 2/4 success=2 failure=0 current_book=1 elapsed=2.17s
+2026-04-11 22:37:55,091 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=1&chapterid=1 attempt=1/5 error=The read operation timed out
+2026-04-11 22:37:57,641 - INFO - 正文章节进度: 4/4 success=4 failure=0 current_book=1 elapsed=25.11s
+2026-04-11 22:37:57,644 - INFO - 正文书籍进度: 1/1 chapters=4/4 elapsed=25.11s
+2026-04-11 22:38:45,012 - INFO - 正文阶段启动: range=1-10000 books=10000 pending_chapters=9635984 concurrency=8 batch_size=40 interval=0.030s jitter=0.050s
+2026-04-11 22:38:45,018 - INFO - 开始抓正文: book_id=1 title=海贼之银狐大将 pending=1002
+2026-04-11 22:39:08,609 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=1&chapterid=16 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-11 22:39:46,670 - INFO - 正文章节进度: 500/9635984 success=500 failure=0 current_book=1 elapsed=61.66s
+2026-04-11 22:40:20,284 - INFO - 正文章节进度: 1000/9635984 success=1000 failure=0 current_book=1 elapsed=95.27s
+2026-04-11 22:40:20,695 - INFO - 开始抓正文: book_id=2 title=我的导演时代 pending=572
+2026-04-11 22:40:53,033 - INFO - 正文章节进度: 1500/9635984 success=1500 failure=0 current_book=2 elapsed=128.02s
+2026-04-11 22:40:58,016 - INFO - 开始抓正文: book_id=3 title=我有一群地球玩家 pending=2203
+2026-04-11 22:41:25,442 - INFO - 正文章节进度: 2000/9635984 success=2000 failure=0 current_book=3 elapsed=160.43s
+2026-04-11 22:41:57,139 - INFO - 正文章节进度: 2500/9635984 success=2500 failure=0 current_book=3 elapsed=192.13s
+2026-04-11 22:42:29,184 - INFO - 正文章节进度: 3000/9635984 success=3000 failure=0 current_book=3 elapsed=224.17s
+2026-04-11 22:43:01,407 - INFO - 正文章节进度: 3500/9635984 success=3500 failure=0 current_book=3 elapsed=256.40s
+2026-04-11 22:43:23,676 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=3&chapterid=1965 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:43:50,468 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=3&chapterid=1965 attempt=2/5 error=The read operation timed out
+2026-04-11 22:44:10,983 - INFO - 开始抓正文: book_id=4 title=混在海贼世界的日子 pending=765
+2026-04-11 22:44:25,584 - INFO - 正文章节进度: 4000/9635984 success=4000 failure=0 current_book=4 elapsed=340.57s
+2026-04-11 22:44:58,207 - INFO - 正文章节进度: 4500/9635984 success=4500 failure=0 current_book=4 elapsed=373.20s
+2026-04-11 22:45:01,260 - INFO - 开始抓正文: book_id=5 title=农家小福女 pending=3536
+2026-04-11 22:45:30,354 - INFO - 正文章节进度: 5000/9635984 success=5000 failure=0 current_book=5 elapsed=405.34s
+2026-04-11 22:46:02,456 - INFO - 正文章节进度: 5500/9635984 success=5500 failure=0 current_book=5 elapsed=437.44s
+2026-04-11 22:46:20,044 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=5&chapterid=931 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:47:08,224 - INFO - 正文章节进度: 6000/9635984 success=6000 failure=0 current_book=5 elapsed=503.21s
+2026-04-11 22:47:40,752 - INFO - 正文章节进度: 6500/9635984 success=6500 failure=0 current_book=5 elapsed=535.74s
+2026-04-11 22:48:11,146 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=5&chapterid=2125 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:48:57,740 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=5&chapterid=2335 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:49:34,363 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=5&chapterid=2363 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-11 22:49:41,975 - INFO - 正文章节进度: 7000/9635984 success=7000 failure=0 current_book=5 elapsed=656.96s
+2026-04-11 22:50:15,276 - INFO - 正文章节进度: 7500/9635984 success=7500 failure=0 current_book=5 elapsed=690.26s
+2026-04-11 22:50:42,459 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=5&chapterid=3078 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:51:13,267 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=5&chapterid=3078 attempt=2/5 error=The read operation timed out
+2026-04-11 22:51:53,115 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=5&chapterid=3317 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:52:11,876 - INFO - 正文章节进度: 8000/9635984 success=8000 failure=0 current_book=5 elapsed=806.86s
+2026-04-11 22:52:17,354 - INFO - 开始抓正文: book_id=6 title=快穿女配冷静点 pending=5814
+2026-04-11 22:52:44,317 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=6&chapterid=119 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:53:12,384 - INFO - 正文章节进度: 8500/9635984 success=8500 failure=0 current_book=6 elapsed=867.37s
+2026-04-11 22:53:45,207 - INFO - 正文章节进度: 9000/9635984 success=9000 failure=0 current_book=6 elapsed=900.20s
+2026-04-11 22:54:17,929 - INFO - 正文章节进度: 9500/9635984 success=9500 failure=0 current_book=6 elapsed=932.92s
+2026-04-11 22:54:50,376 - INFO - 正文章节进度: 10000/9635984 success=10000 failure=0 current_book=6 elapsed=965.36s
+2026-04-11 22:55:40,171 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=6&chapterid=2398 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:55:48,933 - INFO - 正文章节进度: 10500/9635984 success=10500 failure=0 current_book=6 elapsed=1023.92s
+2026-04-11 22:56:22,198 - INFO - 正文章节进度: 11000/9635984 success=11000 failure=0 current_book=6 elapsed=1057.19s
+2026-04-11 22:56:43,147 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=6&chapterid=2952 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:57:22,329 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=6&chapterid=3136 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 22:57:48,843 - INFO - 正文章节进度: 11500/9635984 success=11500 failure=0 current_book=6 elapsed=1143.83s
+2026-04-11 22:58:22,318 - INFO - 正文章节进度: 12000/9635984 success=12000 failure=0 current_book=6 elapsed=1177.31s
+2026-04-11 22:58:55,047 - INFO - 正文章节进度: 12500/9635984 success=12500 failure=0 current_book=6 elapsed=1210.04s
+2026-04-11 22:59:28,321 - INFO - 正文章节进度: 13000/9635984 success=13000 failure=0 current_book=6 elapsed=1243.31s
+2026-04-11 23:00:00,883 - INFO - 正文章节进度: 13500/9635984 success=13500 failure=0 current_book=6 elapsed=1275.87s
+2026-04-11 23:00:26,839 - INFO - 开始抓正文: book_id=7 title=你的小可爱黑化了 pending=1575
+2026-04-11 23:00:33,587 - INFO - 正文章节进度: 14000/9635984 success=14000 failure=0 current_book=7 elapsed=1308.58s
+2026-04-11 23:01:20,649 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=7&chapterid=537 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:01:48,302 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=7&chapterid=537 attempt=2/5 error=The read operation timed out
+2026-04-11 23:01:55,866 - INFO - 正文章节进度: 14500/9635984 success=14500 failure=0 current_book=7 elapsed=1390.85s
+2026-04-11 23:02:35,162 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=7&chapterid=901 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:03:04,587 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=7&chapterid=923 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-11 23:03:28,455 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=7&chapterid=923 attempt=2/5 error=The read operation timed out
+2026-04-11 23:03:53,291 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=7&chapterid=981 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:04:07,229 - INFO - 正文章节进度: 15000/9635984 success=15000 failure=0 current_book=7 elapsed=1522.22s
+2026-04-11 23:04:39,274 - INFO - 开始抓正文: book_id=8 title=影视世界当神探 pending=2236
+2026-04-11 23:04:41,452 - INFO - 正文章节进度: 15500/9635984 success=15500 failure=0 current_book=8 elapsed=1556.44s
+2026-04-11 23:05:11,836 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=8&chapterid=197 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:05:26,472 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=8&chapterid=212 attempt=1/5 error=<urlopen error [Errno 54] Connection reset by peer>
+2026-04-11 23:05:48,526 - INFO - 正文章节进度: 16000/9635984 success=16000 failure=0 current_book=8 elapsed=1623.51s
+2026-04-11 23:06:20,941 - INFO - 正文章节进度: 16500/9635984 success=16500 failure=0 current_book=8 elapsed=1655.93s
+2026-04-11 23:06:53,915 - INFO - 正文章节进度: 17000/9635984 success=17000 failure=0 current_book=8 elapsed=1688.90s
+2026-04-11 23:07:25,863 - INFO - 正文章节进度: 17500/9635984 success=17500 failure=0 current_book=8 elapsed=1720.85s
+2026-04-11 23:07:38,625 - INFO - 开始抓正文: book_id=9 title=全属性武道 pending=3117
+2026-04-11 23:07:57,652 - INFO - 正文章节进度: 18000/9635984 success=18000 failure=0 current_book=9 elapsed=1752.64s
+2026-04-11 23:08:29,968 - INFO - 正文章节进度: 18500/9635984 success=18500 failure=0 current_book=9 elapsed=1784.96s
+2026-04-11 23:09:02,571 - INFO - 正文章节进度: 19000/9635984 success=19000 failure=0 current_book=9 elapsed=1817.56s
+2026-04-11 23:09:34,236 - INFO - 正文章节进度: 19500/9635984 success=19500 failure=0 current_book=9 elapsed=1849.22s
+2026-04-11 23:10:06,931 - INFO - 正文章节进度: 20000/9635984 success=20000 failure=0 current_book=9 elapsed=1881.92s
+2026-04-11 23:10:38,413 - INFO - 正文章节进度: 20500/9635984 success=20500 failure=0 current_book=9 elapsed=1913.40s
+2026-04-11 23:10:59,015 - INFO - 开始抓正文: book_id=10 title=瘟疫医生 pending=796
+2026-04-11 23:11:10,527 - INFO - 正文章节进度: 21000/9635984 success=21000 failure=0 current_book=10 elapsed=1945.52s
+2026-04-11 23:11:42,598 - INFO - 正文章节进度: 21500/9635984 success=21500 failure=0 current_book=10 elapsed=1977.59s
+2026-04-11 23:11:50,005 - INFO - 开始抓正文: book_id=11 title=青莲之巅 pending=5015
+2026-04-11 23:12:15,957 - INFO - 正文章节进度: 22000/9635984 success=22000 failure=0 current_book=11 elapsed=2010.95s
+2026-04-11 23:12:50,339 - INFO - 正文章节进度: 22500/9635984 success=22500 failure=0 current_book=11 elapsed=2045.33s
+2026-04-11 23:13:27,117 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=11&chapterid=1144 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:13:54,458 - INFO - 正文章节进度: 23000/9635984 success=23000 failure=0 current_book=11 elapsed=2109.45s
+2026-04-11 23:14:30,132 - INFO - 正文章节进度: 23500/9635984 success=23500 failure=0 current_book=11 elapsed=2145.12s
+2026-04-11 23:15:05,081 - INFO - 正文章节进度: 24000/9635984 success=24000 failure=0 current_book=11 elapsed=2180.07s
+2026-04-11 23:15:39,212 - INFO - 正文章节进度: 24500/9635984 success=24500 failure=0 current_book=11 elapsed=2214.20s
+2026-04-11 23:16:13,122 - INFO - 正文章节进度: 25000/9635984 success=25000 failure=0 current_book=11 elapsed=2248.11s
+2026-04-11 23:16:48,855 - INFO - 正文章节进度: 25500/9635984 success=25500 failure=0 current_book=11 elapsed=2283.84s
+2026-04-11 23:17:23,533 - INFO - 正文章节进度: 26000/9635984 success=26000 failure=0 current_book=11 elapsed=2318.52s
+2026-04-11 23:17:57,456 - INFO - 正文章节进度: 26500/9635984 success=26500 failure=0 current_book=11 elapsed=2352.44s
+2026-04-11 23:18:06,831 - INFO - 开始抓正文: book_id=12 title=我只想安静地打游戏 pending=1913
+2026-04-11 23:18:32,781 - INFO - 正文章节进度: 27000/9635984 success=27000 failure=0 current_book=12 elapsed=2387.77s
+2026-04-11 23:19:06,477 - INFO - 正文章节进度: 27500/9635984 success=27500 failure=0 current_book=12 elapsed=2421.47s
+2026-04-11 23:19:40,474 - INFO - 正文章节进度: 28000/9635984 success=28000 failure=0 current_book=12 elapsed=2455.46s
+2026-04-11 23:20:14,078 - INFO - 正文章节进度: 28500/9635984 success=28500 failure=0 current_book=12 elapsed=2489.07s
+2026-04-11 23:20:17,203 - INFO - 开始抓正文: book_id=13 title=我有无数神剑 pending=1082
+2026-04-11 23:20:48,494 - INFO - 正文章节进度: 29000/9635984 success=29000 failure=0 current_book=13 elapsed=2523.48s
+2026-04-11 23:21:22,244 - INFO - 正文章节进度: 29500/9635984 success=29500 failure=0 current_book=13 elapsed=2557.23s
+2026-04-11 23:21:31,277 - INFO - 开始抓正文: book_id=14 title=我的混沌城 pending=1242
+2026-04-11 23:21:57,720 - INFO - 正文章节进度: 30000/9635984 success=30000 failure=0 current_book=14 elapsed=2592.71s
+2026-04-11 23:22:20,102 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=14&chapterid=419 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:23:05,586 - INFO - 正文章节进度: 30500/9635984 success=30500 failure=0 current_book=14 elapsed=2660.57s
+2026-04-11 23:23:31,252 - INFO - 开始抓正文: book_id=15 title=夫人每天都在线打脸 pending=1110
+2026-04-11 23:23:40,777 - INFO - 正文章节进度: 31000/9635984 success=31000 failure=0 current_book=15 elapsed=2695.77s
+2026-04-11 23:24:15,451 - INFO - 正文章节进度: 31500/9635984 success=31500 failure=0 current_book=15 elapsed=2730.44s
+2026-04-11 23:24:48,615 - INFO - 开始抓正文: book_id=16 title=阿斯加德的圣骑士 pending=634
+2026-04-11 23:24:50,185 - INFO - 正文章节进度: 32000/9635984 success=32000 failure=0 current_book=16 elapsed=2765.17s
+2026-04-11 23:25:24,940 - INFO - 正文章节进度: 32500/9635984 success=32500 failure=0 current_book=16 elapsed=2799.93s
+2026-04-11 23:25:32,325 - INFO - 开始抓正文: book_id=17 title=我夺舍了太阳神 pending=557
+2026-04-11 23:25:58,465 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=17&chapterid=99 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:26:33,352 - INFO - 正文章节进度: 33000/9635984 success=33000 failure=0 current_book=17 elapsed=2868.34s
+2026-04-11 23:26:44,503 - INFO - 开始抓正文: book_id=18 title=全球影帝 pending=561
+2026-04-11 23:27:10,656 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=18&chapterid=101 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:27:42,110 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=18&chapterid=128 attempt=1/5 error=The read operation timed out
+2026-04-11 23:27:42,616 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=18&chapterid=126 attempt=1/5 error=The read operation timed out
+2026-04-11 23:27:59,932 - INFO - 正文章节进度: 33500/9635984 success=33500 failure=0 current_book=18 elapsed=2954.92s
+2026-04-11 23:28:15,879 - INFO - 开始抓正文: book_id=19 title=超神宠兽店 pending=1433
+2026-04-11 23:28:33,418 - INFO - 正文章节进度: 34000/9635984 success=34000 failure=0 current_book=19 elapsed=2988.41s
+2026-04-11 23:29:05,753 - INFO - 正文章节进度: 34500/9635984 success=34500 failure=0 current_book=19 elapsed=3020.74s
+2026-04-11 23:29:37,500 - INFO - 正文章节进度: 35000/9635984 success=35000 failure=0 current_book=19 elapsed=3052.49s
+2026-04-11 23:29:48,061 - INFO - 开始抓正文: book_id=20 title=大国战隼 pending=720
+2026-04-11 23:30:10,135 - INFO - 正文章节进度: 35500/9635984 success=35500 failure=0 current_book=20 elapsed=3085.12s
+2026-04-11 23:30:34,048 - INFO - 正文书籍进度: 20/10000 chapters=35883/9635984 elapsed=3109.04s
+2026-04-11 23:30:34,057 - INFO - 开始抓正文: book_id=21 title=太古龙象诀 pending=11274
+2026-04-11 23:30:42,055 - INFO - 正文章节进度: 36000/9635984 success=36000 failure=0 current_book=21 elapsed=3117.04s
+2026-04-11 23:31:14,964 - INFO - 正文章节进度: 36500/9635984 success=36500 failure=0 current_book=21 elapsed=3149.95s
+2026-04-11 23:31:47,548 - INFO - 正文章节进度: 37000/9635984 success=37000 failure=0 current_book=21 elapsed=3182.54s
+2026-04-11 23:32:20,971 - INFO - 正文章节进度: 37500/9635984 success=37500 failure=0 current_book=21 elapsed=3215.96s
+2026-04-11 23:32:53,557 - INFO - 正文章节进度: 38000/9635984 success=38000 failure=0 current_book=21 elapsed=3248.55s
+2026-04-11 23:33:37,448 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=2480 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:34:08,101 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=2483 attempt=1/5 error=The read operation timed out
+2026-04-11 23:34:08,313 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=2486 attempt=1/5 error=The read operation timed out
+2026-04-11 23:34:08,642 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=2482 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-11 23:34:30,946 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=2483 attempt=2/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-11 23:34:45,602 - INFO - 正文章节进度: 38500/9635984 success=38500 failure=0 current_book=21 elapsed=3360.59s
+2026-04-11 23:35:06,830 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=2647 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:35:33,921 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=2685 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-11 23:36:04,222 - INFO - 正文章节进度: 39000/9635984 success=39000 failure=0 current_book=21 elapsed=3439.21s
+2026-04-11 23:36:37,515 - INFO - 正文章节进度: 39500/9635984 success=39500 failure=0 current_book=21 elapsed=3472.50s
+2026-04-11 23:37:10,694 - INFO - 正文章节进度: 40000/9635984 success=40000 failure=0 current_book=21 elapsed=3505.68s
+2026-04-11 23:37:44,027 - INFO - 正文章节进度: 40500/9635984 success=40500 failure=0 current_book=21 elapsed=3539.02s
+2026-04-11 23:38:31,331 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=5047 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:38:47,291 - INFO - 正文章节进度: 41000/9635984 success=41000 failure=0 current_book=21 elapsed=3602.28s
+2026-04-11 23:39:20,754 - INFO - 正文章节进度: 41500/9635984 success=41500 failure=0 current_book=21 elapsed=3635.74s
+2026-04-11 23:39:53,788 - INFO - 正文章节进度: 42000/9635984 success=42000 failure=0 current_book=21 elapsed=3668.78s
+2026-04-11 23:40:27,150 - INFO - 正文章节进度: 42500/9635984 success=42500 failure=0 current_book=21 elapsed=3702.14s
+2026-04-11 23:40:59,961 - INFO - 正文章节进度: 43000/9635984 success=43000 failure=0 current_book=21 elapsed=3734.95s
+2026-04-11 23:41:32,466 - INFO - 正文章节进度: 43500/9635984 success=43500 failure=0 current_book=21 elapsed=3767.45s
+2026-04-11 23:41:54,385 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=7657 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:42:30,085 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=7682 attempt=1/5 error=The read operation timed out
+2026-04-11 23:42:31,127 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=21&chapterid=7683 attempt=1/5 error=The read operation timed out
+2026-04-11 23:43:03,156 - INFO - 正文章节进度: 44000/9635984 success=44000 failure=0 current_book=21 elapsed=3858.14s
+2026-04-11 23:43:36,476 - INFO - 正文章节进度: 44500/9635984 success=44500 failure=0 current_book=21 elapsed=3891.46s
+2026-04-11 23:44:09,357 - INFO - 正文章节进度: 45000/9635984 success=45000 failure=0 current_book=21 elapsed=3924.35s
+2026-04-11 23:44:42,576 - INFO - 正文章节进度: 45500/9635984 success=45500 failure=0 current_book=21 elapsed=3957.56s
+2026-04-11 23:45:15,375 - INFO - 正文章节进度: 46000/9635984 success=46000 failure=0 current_book=21 elapsed=3990.36s
+2026-04-11 23:45:48,063 - INFO - 正文章节进度: 46500/9635984 success=46500 failure=0 current_book=21 elapsed=4023.05s
+2026-04-11 23:46:20,837 - INFO - 正文章节进度: 47000/9635984 success=47000 failure=0 current_book=21 elapsed=4055.83s
+2026-04-11 23:46:31,598 - INFO - 开始抓正文: book_id=22 title=荒野之活着就变强 pending=741
+2026-04-11 23:46:53,475 - INFO - 正文章节进度: 47500/9635984 success=47500 failure=0 current_book=22 elapsed=4088.46s
+2026-04-11 23:47:19,708 - INFO - 开始抓正文: book_id=23 title=斗武乾坤 pending=2941
+2026-04-11 23:47:26,213 - INFO - 正文章节进度: 48000/9635984 success=48000 failure=0 current_book=23 elapsed=4121.20s
+2026-04-11 23:47:58,172 - INFO - 正文章节进度: 48500/9635984 success=48500 failure=0 current_book=23 elapsed=4153.16s
+2026-04-11 23:48:30,089 - INFO - 正文章节进度: 49000/9635984 success=49000 failure=0 current_book=23 elapsed=4185.08s
+2026-04-11 23:49:03,005 - INFO - 正文章节进度: 49500/9635984 success=49500 failure=0 current_book=23 elapsed=4217.99s
+2026-04-11 23:49:35,607 - INFO - 正文章节进度: 50000/9635984 success=50000 failure=0 current_book=23 elapsed=4250.60s
+2026-04-11 23:50:08,572 - INFO - 正文章节进度: 50500/9635984 success=50500 failure=0 current_book=23 elapsed=4283.56s
+2026-04-11 23:50:49,388 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=23&chapterid=2930 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:51:02,537 - INFO - 开始抓正文: book_id=24 title=我师兄实在太稳健了 pending=813
+2026-04-11 23:51:28,417 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=24&chapterid=4 attempt=1/5 error=The read operation timed out
+2026-04-11 23:51:42,658 - INFO - 正文章节进度: 51000/9635984 success=51000 failure=0 current_book=24 elapsed=4377.65s
+2026-04-11 23:52:16,083 - INFO - 正文章节进度: 51500/9635984 success=51500 failure=0 current_book=24 elapsed=4411.07s
+2026-04-11 23:52:26,247 - INFO - 开始抓正文: book_id=25 title=从召唤哥布林开始 pending=342
+2026-04-11 23:52:48,253 - INFO - 开始抓正文: book_id=26 title=我真的是反派啊 pending=2855
+2026-04-11 23:52:48,879 - INFO - 正文章节进度: 52000/9635984 success=52000 failure=0 current_book=26 elapsed=4443.87s
+2026-04-11 23:53:21,462 - INFO - 正文章节进度: 52500/9635984 success=52500 failure=0 current_book=26 elapsed=4476.45s
+2026-04-11 23:53:53,774 - INFO - 正文章节进度: 53000/9635984 success=53000 failure=0 current_book=26 elapsed=4508.76s
+2026-04-11 23:54:25,607 - INFO - 正文章节进度: 53500/9635984 success=53500 failure=0 current_book=26 elapsed=4540.60s
+2026-04-11 23:54:58,018 - INFO - 正文章节进度: 54000/9635984 success=54000 failure=0 current_book=26 elapsed=4573.01s
+2026-04-11 23:55:30,269 - INFO - 正文章节进度: 54500/9635984 success=54500 failure=0 current_book=26 elapsed=4605.26s
+2026-04-11 23:55:58,871 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=26&chapterid=2650 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:56:26,753 - INFO - 开始抓正文: book_id=27 title=逍遥派 pending=3758
+2026-04-11 23:56:37,063 - INFO - 正文章节进度: 55000/9635984 success=55000 failure=0 current_book=27 elapsed=4672.05s
+2026-04-11 23:57:09,627 - INFO - 正文章节进度: 55500/9635984 success=55500 failure=0 current_book=27 elapsed=4704.62s
+2026-04-11 23:57:42,191 - INFO - 正文章节进度: 56000/9635984 success=56000 failure=0 current_book=27 elapsed=4737.18s
+2026-04-11 23:58:14,101 - INFO - 正文章节进度: 56500/9635984 success=56500 failure=0 current_book=27 elapsed=4769.09s
+2026-04-11 23:58:45,267 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=27&chapterid=1830 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:59:22,642 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=27&chapterid=1882 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-11 23:59:48,820 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=27&chapterid=1882 attempt=2/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:00:11,277 - INFO - 正文章节进度: 57000/9635984 success=57000 failure=0 current_book=27 elapsed=4886.27s
+2026-04-12 00:00:33,572 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=27&chapterid=2195 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:01:02,118 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=27&chapterid=2206 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:01:25,818 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=27&chapterid=2206 attempt=2/5 error=The read operation timed out
+2026-04-12 00:02:00,965 - INFO - 正文章节进度: 57500/9635984 success=57500 failure=0 current_book=27 elapsed=4995.95s
+2026-04-12 00:02:34,151 - INFO - 正文章节进度: 58000/9635984 success=58000 failure=0 current_book=27 elapsed=5029.14s
+2026-04-12 00:03:06,076 - INFO - 正文章节进度: 58500/9635984 success=58500 failure=0 current_book=27 elapsed=5061.06s
+2026-04-12 00:03:12,902 - INFO - 开始抓正文: book_id=28 title=永恒圣王 pending=3381
+2026-04-12 00:03:37,825 - INFO - 正文章节进度: 59000/9635984 success=59000 failure=0 current_book=28 elapsed=5092.81s
+2026-04-12 00:04:10,342 - INFO - 正文章节进度: 59500/9635984 success=59500 failure=0 current_book=28 elapsed=5125.33s
+2026-04-12 00:04:54,984 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=28&chapterid=1294 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:05:26,280 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=28&chapterid=1324 attempt=1/5 error=The read operation timed out
+2026-04-12 00:05:32,880 - INFO - 正文章节进度: 60000/9635984 success=60000 failure=0 current_book=28 elapsed=5207.87s
+2026-04-12 00:06:18,205 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=28&chapterid=1790 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:06:51,621 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=28&chapterid=1790 attempt=2/5 error=The read operation timed out
+2026-04-12 00:07:08,399 - INFO - 正文章节进度: 60500/9635984 success=60500 failure=0 current_book=28 elapsed=5303.39s
+2026-04-12 00:07:39,749 - INFO - 正文章节进度: 61000/9635984 success=61000 failure=0 current_book=28 elapsed=5334.74s
+2026-04-12 00:08:11,451 - INFO - 正文章节进度: 61500/9635984 success=61500 failure=0 current_book=28 elapsed=5366.44s
+2026-04-12 00:08:44,630 - INFO - 开始抓正文: book_id=29 title=夫人你马甲又掉了 pending=745
+2026-04-12 00:08:45,573 - INFO - 正文章节进度: 62000/9635984 success=62000 failure=0 current_book=29 elapsed=5400.56s
+2026-04-12 00:09:17,567 - INFO - 正文章节进度: 62500/9635984 success=62500 failure=0 current_book=29 elapsed=5432.56s
+2026-04-12 00:09:33,184 - INFO - 开始抓正文: book_id=30 title=神豪从吹牛纳税开始 pending=737
+2026-04-12 00:09:50,730 - INFO - 正文章节进度: 63000/9635984 success=63000 failure=0 current_book=30 elapsed=5465.72s
+2026-04-12 00:10:20,627 - INFO - 开始抓正文: book_id=31 title=我在诸夏当大王 pending=1062
+2026-04-12 00:10:22,692 - INFO - 正文章节进度: 63500/9635984 success=63500 failure=0 current_book=31 elapsed=5497.68s
+2026-04-12 00:10:48,266 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=31&chapterid=125 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:11:21,438 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=31&chapterid=166 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:11:24,226 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=31&chapterid=162 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:11:46,845 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=31&chapterid=166 attempt=2/5 error=The read operation timed out
+2026-04-12 00:12:12,955 - INFO - 正文章节进度: 64000/9635984 success=64000 failure=0 current_book=31 elapsed=5607.94s
+2026-04-12 00:12:54,491 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=31&chapterid=879 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:13:10,948 - INFO - 正文章节进度: 64500/9635984 success=64500 failure=0 current_book=31 elapsed=5665.94s
+2026-04-12 00:13:13,204 - INFO - 开始抓正文: book_id=32 title=从洪荒登录玄幻 pending=389
+2026-04-12 00:13:38,478 - INFO - 开始抓正文: book_id=33 title=武侠之最强BOSS只种田 pending=541
+2026-04-12 00:13:43,721 - INFO - 正文章节进度: 65000/9635984 success=65000 failure=0 current_book=33 elapsed=5698.71s
+2026-04-12 00:14:13,688 - INFO - 开始抓正文: book_id=34 title=诸天尽头 pending=1398
+2026-04-12 00:14:16,229 - INFO - 正文章节进度: 65500/9635984 success=65500 failure=0 current_book=34 elapsed=5731.22s
+2026-04-12 00:14:48,458 - INFO - 正文章节进度: 66000/9635984 success=66000 failure=0 current_book=34 elapsed=5763.45s
+2026-04-12 00:15:20,151 - INFO - 正文章节进度: 66500/9635984 success=66500 failure=0 current_book=34 elapsed=5795.14s
+2026-04-12 00:15:43,288 - INFO - 开始抓正文: book_id=35 title=我的一天有48小时 pending=1471
+2026-04-12 00:15:52,501 - INFO - 正文章节进度: 67000/9635984 success=67000 failure=0 current_book=35 elapsed=5827.49s
+2026-04-12 00:16:25,026 - INFO - 正文章节进度: 67500/9635984 success=67500 failure=0 current_book=35 elapsed=5860.01s
+2026-04-12 00:16:57,496 - INFO - 正文章节进度: 68000/9635984 success=68000 failure=0 current_book=35 elapsed=5892.48s
+2026-04-12 00:17:18,921 - INFO - 开始抓正文: book_id=36 title=联盟之上单魔王 pending=375
+2026-04-12 00:17:29,799 - INFO - 正文章节进度: 68500/9635984 success=68500 failure=0 current_book=36 elapsed=5924.79s
+2026-04-12 00:18:01,179 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=36&chapterid=360 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:18:09,981 - INFO - 开始抓正文: book_id=37 title=世界树的游戏 pending=988
+2026-04-12 00:18:29,741 - INFO - 正文章节进度: 69000/9635984 success=69000 failure=0 current_book=37 elapsed=5984.73s
+2026-04-12 00:19:02,220 - INFO - 正文章节进度: 69500/9635984 success=69500 failure=0 current_book=37 elapsed=6017.21s
+2026-04-12 00:19:14,695 - INFO - 开始抓正文: book_id=38 title=神医如倾 pending=2275
+2026-04-12 00:19:34,137 - INFO - 正文章节进度: 70000/9635984 success=70000 failure=0 current_book=38 elapsed=6049.13s
+2026-04-12 00:20:21,196 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=38&chapterid=729 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:20:33,951 - INFO - 正文章节进度: 70500/9635984 success=70500 failure=0 current_book=38 elapsed=6108.94s
+2026-04-12 00:21:06,290 - INFO - 正文章节进度: 71000/9635984 success=71000 failure=0 current_book=38 elapsed=6141.28s
+2026-04-12 00:21:39,401 - INFO - 正文章节进度: 71500/9635984 success=71500 failure=0 current_book=38 elapsed=6174.39s
+2026-04-12 00:22:09,061 - INFO - 开始抓正文: book_id=39 title=我成了五个大佬的祖宗 pending=1022
+2026-04-12 00:22:11,013 - INFO - 正文章节进度: 72000/9635984 success=72000 failure=0 current_book=39 elapsed=6206.00s
+2026-04-12 00:22:43,634 - INFO - 正文章节进度: 72500/9635984 success=72500 failure=0 current_book=39 elapsed=6238.62s
+2026-04-12 00:23:14,958 - INFO - 开始抓正文: book_id=40 title=诸天苟仙 pending=999
+2026-04-12 00:23:15,756 - INFO - 正文章节进度: 73000/9635984 success=73000 failure=0 current_book=40 elapsed=6270.74s
+2026-04-12 00:23:47,246 - INFO - 正文章节进度: 73500/9635984 success=73500 failure=0 current_book=40 elapsed=6302.23s
+2026-04-12 00:24:25,413 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=40&chapterid=785 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:24:52,021 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=40&chapterid=785 attempt=2/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:25:11,140 - INFO - 正文书籍进度: 40/10000 chapters=73990/9635984 elapsed=6386.13s
+2026-04-12 00:25:11,142 - INFO - 开始抓正文: book_id=41 title=我真是实习医生 pending=526
+2026-04-12 00:25:12,076 - INFO - 正文章节进度: 74000/9635984 success=74000 failure=0 current_book=41 elapsed=6387.06s
+2026-04-12 00:25:46,411 - INFO - 目录阶段启动: range=1-1 targets=1 concurrency=2
+2026-04-12 00:25:47,099 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=41&chapterid=242 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:25:53,523 - INFO - 目录进度: 1/1 success=1 failure=0 elapsed=7.11s
+2026-04-12 00:25:53,633 - INFO - 正文阶段启动: range=1-1 books=1 pending_chapters=3 concurrency=2 batch_size=3 interval=0.010s jitter=0.010s
+2026-04-12 00:25:53,635 - INFO - 开始抓正文: book_id=1 title=海贼之银狐大将 pending=3
+2026-04-12 00:25:53,953 - INFO - 正文章节进度: 1/3 success=1 failure=0 current_book=1 elapsed=0.32s
+2026-04-12 00:25:53,981 - INFO - 正文章节进度: 2/3 success=2 failure=0 current_book=1 elapsed=0.35s
+2026-04-12 00:25:54,410 - INFO - 正文章节进度: 3/3 success=3 failure=0 current_book=1 elapsed=0.78s
+2026-04-12 00:25:54,410 - INFO - 正文书籍进度: 1/1 chapters=3/3 elapsed=0.78s
+2026-04-12 00:25:54,518 - INFO - 正文阶段启动: range=1-1 books=1 pending_chapters=3 concurrency=2 batch_size=3 interval=0.010s jitter=0.010s
+2026-04-12 00:25:54,520 - INFO - 开始抓正文: book_id=1 title=海贼之银狐大将 pending=3
+2026-04-12 00:25:54,841 - INFO - 正文章节进度: 1/3 success=1 failure=0 current_book=1 elapsed=0.32s
+2026-04-12 00:25:54,973 - INFO - 正文章节进度: 2/3 success=2 failure=0 current_book=1 elapsed=0.45s
+2026-04-12 00:25:55,138 - INFO - 正文章节进度: 3/3 success=3 failure=0 current_book=1 elapsed=0.62s
+2026-04-12 00:25:55,138 - INFO - 正文书籍进度: 1/1 chapters=3/3 elapsed=0.62s
+2026-04-12 00:26:14,230 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=41&chapterid=310 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:26:36,970 - INFO - 正文章节进度: 74500/9635984 success=74500 failure=0 current_book=41 elapsed=6471.96s
+2026-04-12 00:26:38,225 - INFO - 开始抓正文: book_id=42 title=凌天战尊 pending=4712
+2026-04-12 00:27:10,362 - INFO - 正文章节进度: 75000/9635984 success=75000 failure=0 current_book=42 elapsed=6505.35s
+2026-04-12 00:27:42,495 - INFO - 正文章节进度: 75500/9635984 success=75500 failure=0 current_book=42 elapsed=6537.48s
+2026-04-12 00:28:14,979 - INFO - 正文章节进度: 76000/9635984 success=76000 failure=0 current_book=42 elapsed=6569.97s
+2026-04-12 00:28:24,942 - INFO - 正文阶段启动: range=1-10000 books=10000 pending_chapters=9559903 concurrency=12 batch_size=80 interval=0.010s jitter=0.020s
+2026-04-12 00:28:25,532 - INFO - 正文书籍进度: 20/10000 elapsed=0.59s
+2026-04-12 00:28:26,239 - INFO - 正文书籍进度: 40/10000 elapsed=1.30s
+2026-04-12 00:28:26,254 - INFO - 开始抓正文: book_id=42 title=凌天战尊 pending=3147
+2026-04-12 00:29:01,047 - INFO - 正文章节进度: 1000/9559903 success=1000 failure=0 current_book=42 elapsed=36.11s
+2026-04-12 00:29:33,772 - INFO - 正文章节进度: 2000/9559903 success=2000 failure=0 current_book=42 elapsed=68.83s
+2026-04-12 00:30:07,229 - INFO - 正文章节进度: 3000/9559903 success=3000 failure=0 current_book=42 elapsed=102.29s
+2026-04-12 00:30:11,960 - INFO - 开始抓正文: book_id=43 title=诸天最强学院 pending=600
+2026-04-12 00:30:31,756 - INFO - 开始抓正文: book_id=44 title=大道纪 pending=996
+2026-04-12 00:30:43,858 - INFO - 正文章节进度: 4000/9559903 success=4000 failure=0 current_book=44 elapsed=138.92s
+2026-04-12 00:31:10,943 - INFO - 开始抓正文: book_id=45 title=无双庶子 pending=1186
+2026-04-12 00:31:20,126 - INFO - 正文章节进度: 5000/9559903 success=5000 failure=0 current_book=45 elapsed=175.18s
+2026-04-12 00:31:26,672 - INFO - 正文阶段启动: range=1-10000 books=10000 pending_chapters=9554851 concurrency=16 batch_size=120 interval=0.010s jitter=0.020s
+2026-04-12 00:31:27,227 - INFO - 正文书籍进度: 20/10000 elapsed=0.56s
+2026-04-12 00:31:27,905 - INFO - 正文书籍进度: 40/10000 elapsed=1.23s
+2026-04-12 00:31:28,012 - INFO - 开始抓正文: book_id=45 title=无双庶子 pending=877
+2026-04-12 00:31:56,992 - INFO - 开始抓正文: book_id=46 title=从火影开始卖罐子 pending=1130
+2026-04-12 00:32:00,449 - INFO - 正文章节进度: 1000/9554851 success=1000 failure=0 current_book=46 elapsed=33.78s
+2026-04-12 00:32:26,051 - INFO - 正文章节进度: 2000/9554851 success=2000 failure=0 current_book=46 elapsed=59.38s
+2026-04-12 00:32:26,292 - INFO - 开始抓正文: book_id=47 title=黑龙法典 pending=671
+2026-04-12 00:32:43,566 - INFO - 开始抓正文: book_id=48 title=召唤万界之神话帝皇 pending=731
+2026-04-12 00:32:51,925 - INFO - 正文章节进度: 3000/9554851 success=3000 failure=0 current_book=48 elapsed=85.25s
+2026-04-12 00:33:02,346 - INFO - 开始抓正文: book_id=49 title=新白蛇问仙 pending=1874
+2026-04-12 00:33:17,531 - INFO - 正文章节进度: 4000/9554851 success=4000 failure=0 current_book=49 elapsed=110.86s
+2026-04-12 00:33:43,252 - INFO - 正文章节进度: 5000/9554851 success=5000 failure=0 current_book=49 elapsed=136.58s
+2026-04-12 00:33:50,795 - INFO - 开始抓正文: book_id=50 title=从道果开始 pending=550
+2026-04-12 00:34:04,373 - INFO - 开始抓正文: book_id=51 title=美食供应商 pending=2794
+2026-04-12 00:34:08,697 - INFO - 正文章节进度: 6000/9554851 success=6000 failure=0 current_book=51 elapsed=162.02s
+2026-04-12 00:34:40,379 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=51&chapterid=672 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:35:06,853 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=51&chapterid=672 attempt=2/5 error=The read operation timed out
+2026-04-12 00:35:22,821 - INFO - 正文章节进度: 7000/9554851 success=7000 failure=0 current_book=51 elapsed=236.15s
+2026-04-12 00:35:50,238 - INFO - 正文章节进度: 8000/9554851 success=8000 failure=0 current_book=51 elapsed=263.57s
+2026-04-12 00:36:06,563 - INFO - 开始抓正文: book_id=52 title=临渊行 pending=988
+2026-04-12 00:36:16,983 - INFO - 正文章节进度: 9000/9554851 success=9000 failure=0 current_book=52 elapsed=290.31s
+2026-04-12 00:36:32,894 - INFO - 开始抓正文: book_id=53 title=秘战 pending=1102
+2026-04-12 00:36:42,824 - INFO - 正文章节进度: 10000/9554851 success=10000 failure=0 current_book=53 elapsed=316.15s
+2026-04-12 00:37:01,109 - INFO - 开始抓正文: book_id=54 title=我和黑粉结婚了 pending=1807
+2026-04-12 00:37:08,235 - INFO - 正文章节进度: 11000/9554851 success=11000 failure=0 current_book=54 elapsed=341.56s
+2026-04-12 00:37:33,599 - INFO - 正文章节进度: 12000/9554851 success=12000 failure=0 current_book=54 elapsed=366.93s
+2026-04-12 00:37:47,269 - INFO - 开始抓正文: book_id=55 title=从士兵突击开始的人生 pending=1072
+2026-04-12 00:37:59,330 - INFO - 正文章节进度: 13000/9554851 success=13000 failure=0 current_book=55 elapsed=392.66s
+2026-04-12 00:38:14,453 - INFO - 开始抓正文: book_id=56 title=重生之日本投资家 pending=834
+2026-04-12 00:38:25,026 - INFO - 正文章节进度: 14000/9554851 success=14000 failure=0 current_book=56 elapsed=418.35s
+2026-04-12 00:38:35,769 - INFO - 开始抓正文: book_id=57 title=跟乔爷撒个娇 pending=9011
+2026-04-12 00:38:50,174 - INFO - 正文章节进度: 15000/9554851 success=15000 failure=0 current_book=57 elapsed=443.50s
+2026-04-12 00:39:15,767 - INFO - 正文章节进度: 16000/9554851 success=16000 failure=0 current_book=57 elapsed=469.10s
+2026-04-12 00:39:41,318 - INFO - 正文章节进度: 17000/9554851 success=17000 failure=0 current_book=57 elapsed=494.65s
+2026-04-12 00:40:06,527 - INFO - 正文章节进度: 18000/9554851 success=18000 failure=0 current_book=57 elapsed=519.86s
+2026-04-12 00:40:32,912 - INFO - 正文章节进度: 19000/9554851 success=19000 failure=0 current_book=57 elapsed=546.24s
+2026-04-12 00:40:58,029 - INFO - 正文章节进度: 20000/9554851 success=20000 failure=0 current_book=57 elapsed=571.36s
+2026-04-12 00:41:23,497 - INFO - 正文章节进度: 21000/9554851 success=21000 failure=0 current_book=57 elapsed=596.82s
+2026-04-12 00:41:48,929 - INFO - 正文章节进度: 22000/9554851 success=22000 failure=0 current_book=57 elapsed=622.26s
+2026-04-12 00:42:13,977 - INFO - 正文章节进度: 23000/9554851 success=23000 failure=0 current_book=57 elapsed=647.30s
+2026-04-12 00:42:25,633 - INFO - 开始抓正文: book_id=58 title=我全家都是穿来的 pending=920
+2026-04-12 00:42:39,733 - INFO - 正文章节进度: 24000/9554851 success=24000 failure=0 current_book=58 elapsed=673.06s
+2026-04-12 00:42:48,925 - INFO - 开始抓正文: book_id=59 title=隋末之大夏龙雀 pending=2468
+2026-04-12 00:43:05,243 - INFO - 正文章节进度: 25000/9554851 success=25000 failure=0 current_book=59 elapsed=698.57s
+2026-04-12 00:43:37,981 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=59&chapterid=1182 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:44:11,968 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=59&chapterid=1205 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:44:15,927 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=59&chapterid=1204 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:44:26,849 - INFO - 正文章节进度: 26000/9554851 success=26000 failure=0 current_book=59 elapsed=780.18s
+2026-04-12 00:44:49,719 - INFO - 开始抓正文: book_id=60 title=纵横诸天的武者 pending=1206
+2026-04-12 00:44:54,112 - INFO - 正文章节进度: 27000/9554851 success=27000 failure=0 current_book=60 elapsed=807.44s
+2026-04-12 00:45:19,815 - INFO - 正文章节进度: 28000/9554851 success=28000 failure=0 current_book=60 elapsed=833.14s
+2026-04-12 00:45:20,885 - INFO - 正文书籍进度: 60/10000 chapters=28035/9554851 elapsed=834.21s
+2026-04-12 00:45:20,892 - INFO - 开始抓正文: book_id=61 title=万古神帝 pending=4215
+2026-04-12 00:45:45,571 - INFO - 正文章节进度: 29000/9554851 success=29000 failure=0 current_book=61 elapsed=858.90s
+2026-04-12 00:46:10,800 - INFO - 正文章节进度: 30000/9554851 success=30000 failure=0 current_book=61 elapsed=884.13s
+2026-04-12 00:46:36,363 - INFO - 正文章节进度: 31000/9554851 success=31000 failure=0 current_book=61 elapsed=909.69s
+2026-04-12 00:47:01,885 - INFO - 正文章节进度: 32000/9554851 success=32000 failure=0 current_book=61 elapsed=935.21s
+2026-04-12 00:47:08,193 - INFO - 开始抓正文: book_id=62 title=洪荒历 pending=1937
+2026-04-12 00:47:27,142 - INFO - 正文章节进度: 33000/9554851 success=33000 failure=0 current_book=62 elapsed=960.47s
+2026-04-12 00:47:59,638 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=62&chapterid=1266 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:48:28,376 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=62&chapterid=1335 attempt=1/5 error=The read operation timed out
+2026-04-12 00:48:28,802 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=62&chapterid=1334 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:48:29,364 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=62&chapterid=1332 attempt=1/5 error=The read operation timed out
+2026-04-12 00:48:30,131 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=62&chapterid=1325 attempt=1/5 error=The read operation timed out
+2026-04-12 00:48:31,032 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=62&chapterid=1326 attempt=1/5 error=The read operation timed out
+2026-04-12 00:48:31,617 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=62&chapterid=1323 attempt=1/5 error=The read operation timed out
+2026-04-12 00:48:37,185 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=62&chapterid=1333 attempt=1/5 error=The read operation timed out
+2026-04-12 00:48:47,815 - INFO - 正文章节进度: 34000/9554851 success=34000 failure=0 current_book=62 elapsed=1041.14s
+2026-04-12 00:48:53,358 - INFO - 开始抓正文: book_id=63 title=通幽大圣 pending=589
+2026-04-12 00:49:13,644 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=63&chapterid=35 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:49:41,319 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=63&chapterid=125 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:49:42,237 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=63&chapterid=132 attempt=1/5 error=The read operation timed out
+2026-04-12 00:49:43,292 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=63&chapterid=126 attempt=1/5 error=<urlopen error _ssl.c:1063: The handshake operation timed out>
+2026-04-12 00:49:56,046 - INFO - 开始抓正文: book_id=64 title=影后的嘴开过光 pending=2922
+2026-04-12 00:50:02,231 - INFO - 正文章节进度: 35000/9554851 success=35000 failure=0 current_book=64 elapsed=1115.56s
+2026-04-12 00:50:28,577 - INFO - 正文章节进度: 36000/9554851 success=36000 failure=0 current_book=64 elapsed=1141.91s
+2026-04-12 00:50:54,034 - INFO - 正文章节进度: 37000/9554851 success=37000 failure=0 current_book=64 elapsed=1167.36s
+2026-04-12 00:51:11,445 - INFO - 开始抓正文: book_id=65 title=这个大佬画风不对 pending=2655
+2026-04-12 00:51:18,999 - INFO - 正文章节进度: 38000/9554851 success=38000 failure=0 current_book=65 elapsed=1192.33s
+2026-04-12 00:51:43,971 - INFO - 正文章节进度: 39000/9554851 success=39000 failure=0 current_book=65 elapsed=1217.30s
+2026-04-12 00:52:09,647 - INFO - 正文章节进度: 40000/9554851 success=40000 failure=0 current_book=65 elapsed=1242.98s
+2026-04-12 00:52:18,521 - INFO - 开始抓正文: book_id=66 title=女战神的黑包群 pending=3311
+2026-04-12 00:52:34,919 - INFO - 正文章节进度: 41000/9554851 success=41000 failure=0 current_book=66 elapsed=1268.25s
+2026-04-12 00:53:00,777 - INFO - 正文章节进度: 42000/9554851 success=42000 failure=0 current_book=66 elapsed=1294.11s
+2026-04-12 00:53:26,805 - INFO - 正文章节进度: 43000/9554851 success=43000 failure=0 current_book=66 elapsed=1320.13s
+2026-04-12 00:53:43,693 - INFO - 开始抓正文: book_id=67 title=神医弃女 pending=6870
+2026-04-12 00:53:52,184 - INFO - 正文章节进度: 44000/9554851 success=44000 failure=0 current_book=67 elapsed=1345.51s
+2026-04-12 00:54:17,890 - INFO - 正文章节进度: 45000/9554851 success=45000 failure=0 current_book=67 elapsed=1371.22s
+2026-04-12 00:54:43,422 - INFO - 正文章节进度: 46000/9554851 success=46000 failure=0 current_book=67 elapsed=1396.75s
+2026-04-12 00:55:09,023 - INFO - 正文章节进度: 47000/9554851 success=47000 failure=0 current_book=67 elapsed=1422.35s
+2026-04-12 00:55:35,102 - INFO - 正文章节进度: 48000/9554851 success=48000 failure=0 current_book=67 elapsed=1448.43s
+2026-04-12 00:56:00,336 - INFO - 正文章节进度: 49000/9554851 success=49000 failure=0 current_book=67 elapsed=1473.66s
+2026-04-12 00:56:25,410 - INFO - 正文章节进度: 50000/9554851 success=50000 failure=0 current_book=67 elapsed=1498.74s
+2026-04-12 00:56:39,291 - INFO - 开始抓正文: book_id=68 title=快穿反派老公有点苏 pending=2575
+2026-04-12 00:56:50,980 - INFO - 正文章节进度: 51000/9554851 success=51000 failure=0 current_book=68 elapsed=1524.31s
+2026-04-12 00:57:16,656 - INFO - 正文章节进度: 52000/9554851 success=52000 failure=0 current_book=68 elapsed=1549.98s
+2026-04-12 00:57:41,926 - INFO - 正文章节进度: 53000/9554851 success=53000 failure=0 current_book=68 elapsed=1575.25s
+2026-04-12 00:57:44,606 - INFO - 开始抓正文: book_id=69 title=大明最后一个狠人 pending=1378
+2026-04-12 00:58:07,065 - INFO - 正文章节进度: 54000/9554851 success=54000 failure=0 current_book=69 elapsed=1600.39s
+2026-04-12 00:58:19,213 - INFO - 开始抓正文: book_id=70 title=龙神至尊 pending=4266
+2026-04-12 00:58:32,322 - INFO - 正文章节进度: 55000/9554851 success=55000 failure=0 current_book=70 elapsed=1625.65s
+2026-04-12 00:59:12,927 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=70&chapterid=1362 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 00:59:23,287 - INFO - 正文章节进度: 56000/9554851 success=56000 failure=0 current_book=70 elapsed=1676.62s
+2026-04-12 00:59:49,299 - INFO - 正文章节进度: 57000/9554851 success=57000 failure=0 current_book=70 elapsed=1702.63s
+2026-04-12 01:00:15,619 - INFO - 正文章节进度: 58000/9554851 success=58000 failure=0 current_book=70 elapsed=1728.95s
+2026-04-12 01:00:34,711 - INFO - 开始抓正文: book_id=71 title=从火影开始掌控时间 pending=866
+2026-04-12 01:00:40,946 - INFO - 正文章节进度: 59000/9554851 success=59000 failure=0 current_book=71 elapsed=1754.27s
+2026-04-12 01:01:04,816 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=71&chapterid=429 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 01:01:25,449 - INFO - 开始抓正文: book_id=72 title=泡面首富 pending=167
+2026-04-12 01:01:30,097 - INFO - 开始抓正文: book_id=73 title=我要退圈 pending=751
+2026-04-12 01:01:35,675 - INFO - 正文章节进度: 60000/9554851 success=60000 failure=0 current_book=73 elapsed=1809.00s
+2026-04-12 01:01:50,089 - INFO - 开始抓正文: book_id=74 title=我娘子天下第一 pending=4301
+2026-04-12 01:02:02,027 - INFO - 正文章节进度: 61000/9554851 success=61000 failure=0 current_book=74 elapsed=1835.36s
+2026-04-12 01:02:27,672 - INFO - 正文章节进度: 62000/9554851 success=62000 failure=0 current_book=74 elapsed=1861.00s
+2026-04-12 01:02:52,766 - INFO - 正文章节进度: 63000/9554851 success=63000 failure=0 current_book=74 elapsed=1886.09s
+2026-04-12 01:03:17,952 - INFO - 正文章节进度: 64000/9554851 success=64000 failure=0 current_book=74 elapsed=1911.28s
+2026-04-12 01:03:39,436 - INFO - 开始抓正文: book_id=75 title=星际工业时代 pending=982
+2026-04-12 01:03:43,571 - INFO - 正文章节进度: 65000/9554851 success=65000 failure=0 current_book=75 elapsed=1936.90s
+2026-04-12 01:04:04,381 - INFO - 开始抓正文: book_id=76 title=医妃惊世 pending=10626
+2026-04-12 01:04:08,933 - INFO - 正文章节进度: 66000/9554851 success=66000 failure=0 current_book=76 elapsed=1962.26s
+2026-04-12 01:04:40,502 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=76&chapterid=930 attempt=1/5 error=<urlopen error [Errno 54] Connection reset by peer>
+2026-04-12 01:04:47,547 - INFO - 正文章节进度: 67000/9554851 success=67000 failure=0 current_book=76 elapsed=2000.88s
+2026-04-12 01:05:13,460 - INFO - 正文章节进度: 68000/9554851 success=68000 failure=0 current_book=76 elapsed=2026.79s
+2026-04-12 01:05:38,852 - INFO - 正文章节进度: 69000/9554851 success=69000 failure=0 current_book=76 elapsed=2052.18s
+2026-04-12 01:06:04,593 - INFO - 正文章节进度: 70000/9554851 success=70000 failure=0 current_book=76 elapsed=2077.92s
+2026-04-12 01:06:30,625 - INFO - 正文章节进度: 71000/9554851 success=71000 failure=0 current_book=76 elapsed=2103.95s
+2026-04-12 01:06:56,088 - INFO - 正文章节进度: 72000/9554851 success=72000 failure=0 current_book=76 elapsed=2129.42s
+2026-04-12 01:07:21,636 - INFO - 正文章节进度: 73000/9554851 success=73000 failure=0 current_book=76 elapsed=2154.96s
+2026-04-12 01:07:46,839 - INFO - 正文章节进度: 74000/9554851 success=74000 failure=0 current_book=76 elapsed=2180.17s
+2026-04-12 01:08:13,031 - INFO - 正文章节进度: 75000/9554851 success=75000 failure=0 current_book=76 elapsed=2206.36s
+2026-04-12 01:08:38,031 - INFO - 正文章节进度: 76000/9554851 success=76000 failure=0 current_book=76 elapsed=2231.36s
+2026-04-12 01:08:49,965 - INFO - 开始抓正文: book_id=77 title=女主是个钱罐子精 pending=2115
+2026-04-12 01:09:03,654 - INFO - 正文章节进度: 77000/9554851 success=77000 failure=0 current_book=77 elapsed=2256.98s
+2026-04-12 01:09:28,509 - INFO - 正文章节进度: 78000/9554851 success=78000 failure=0 current_book=77 elapsed=2281.84s
+2026-04-12 01:09:42,343 - INFO - 开始抓正文: book_id=78 title=第一侯 pending=613
+2026-04-12 01:09:53,281 - INFO - 正文章节进度: 79000/9554851 success=79000 failure=0 current_book=78 elapsed=2306.61s
+2026-04-12 01:09:57,915 - INFO - 开始抓正文: book_id=79 title=萌萌小甜妃 pending=700
+2026-04-12 01:10:15,208 - INFO - 开始抓正文: book_id=80 title=快穿之女配功德无量 pending=1571
+2026-04-12 01:10:36,973 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=80&chapterid=88 attempt=1/5 error=HTTP Error 522: <none>
+2026-04-12 01:10:45,624 - INFO - 正文章节进度: 80000/9554851 success=80000 failure=0 current_book=80 elapsed=2358.95s
+2026-04-12 01:11:04,134 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=80&chapterid=125 attempt=1/5 error=The read operation timed out
+2026-04-12 01:11:05,548 - WARNING - 请求失败，稍后重试: url=https://apibi.cc/api/chapter?id=80&chapterid=132 attempt=1/5 error=The read operation timed out
