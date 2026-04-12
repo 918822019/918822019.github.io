@@ -1,3 +1,36 @@
+"""
+用法说明：
+====================
+本脚本用于爬取起点小说数据、导出分片等，支持多种命令行参数。
+
+【常用命令】
+1. 爬取书籍目录：
+    python main.py crawl-books --start 1 --end 10000 --concurrency 5 --progress-every 100
+    - --start, --end：指定书籍ID范围
+    - --concurrency：并发数
+    - --progress-every：每爬取多少本书输出一次进度
+
+2. 爬取章节内容：
+    python main.py crawl-content --start 1 --end 10000 --concurrency 5 --batch-size 10 --chapter-progress-every 50 --max-pending-per-book 5
+    - --batch-size：每次爬取的章节数
+    - --chapter-progress-every：每爬取多少章节输出一次进度
+    - --max-pending-per-book：每本书允许的最大未完成章节数
+
+3. 导出分片：
+    python main.py export-shards --start 1 --end 10000 --output-dir ../data/shards --auto-continue
+    - --output-dir：分片输出目录
+    - --auto-continue：自动继续未完成任务
+
+【依赖环境】
+- 需先准备好 data/books.db 数据库
+- 依赖 requirements.txt 中的包
+- 日志输出到 data_get.log
+
+【更多参数说明】
+可通过 python main.py --help 查看所有命令和参数。
+====================
+"""
+
 from __future__ import annotations
 
 import argparse

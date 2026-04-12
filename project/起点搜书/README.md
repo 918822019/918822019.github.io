@@ -174,3 +174,39 @@ python upload_modelscope_dataset.py \
 - 增量模式会在待上传目录旁边生成一个本地 manifest，用于判断哪些文件发生了变化。
 - 当前增量模式只处理新增和更新文件，不自动删除远端已存在但本地已删除的文件。
 - 如果 shard 文件没变，就不会重复上传它。
+
+## 从 ModelScope 下载数据
+
+如果你需要在新机器或中断后继续爬取，可以先把 ModelScope 上的数据下载到本地：
+
+```bash
+cd project/起点搜书
+python download_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--repo-type dataset \
+	--revision master \
+	--output-dir data/modelscope_download
+```
+
+常见用法：
+
+```bash
+# 只下载分片和索引
+python download_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--allow-pattern '*.db' \
+	--allow-pattern 'index.json' \
+	--output-dir data/shards
+
+# 下载前先清空目标目录（谨慎）
+python download_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--output-dir data/shards \
+	--clean-output
+```
+
+说明：
+
+- 脚本会先下载到本地缓存，再同步到 `--output-dir`。
+- `--token` 可省略，默认读取 `MODELSCOPE_API_TOKEN` 或 `MODELSCOPE_TOKEN`。
+- 下载后可继续执行 `data_get/main.py` 的 `crawl-content` 或 `export-shards --only-changed`。
