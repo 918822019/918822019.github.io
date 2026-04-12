@@ -175,6 +175,52 @@ python upload_modelscope_dataset.py \
 - 当前增量模式只处理新增和更新文件，不自动删除远端已存在但本地已删除的文件。
 - 如果 shard 文件没变，就不会重复上传它。
 
+## 跨服务器断点续跑（建议流程）
+
+如果你希望在新服务器上继续 `crawl-content`、`export-shards --auto-continue`、
+以及 `upload_modelscope_dataset.py --incremental` 的断点状态，建议把 `data` 目录全量上传。
+
+先在旧服务器执行 dry-run，确认上传列表里包含隐藏状态文件：
+
+```bash
+cd project/起点搜书
+python upload_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data \
+	--include-hidden \
+	--dry-run
+```
+
+确认后执行全量上传：
+
+```bash
+cd project/起点搜书
+python upload_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data \
+	--include-hidden \
+	--commit-message "full data upload for resume"
+```
+
+然后在新服务器下载到同样路径：
+
+```bash
+cd project/起点搜书
+python download_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--repo-type dataset \
+	--revision master \
+	--output-dir data
+```
+
+说明：
+
+- `crawl-content` 的断点在 `data/books.db` 里的 `is_content_fetched` 状态。
+- `export-shards --auto-continue` 依赖 `data/shards/index.json`。
+- `upload_modelscope_dataset.py --incremental` 依赖本地 manifest，
+  例如 `data/.shards.modelscope-upload-manifest.json`。
+- `--include-hidden` 用于确保上述隐藏状态文件也被上传。
+
 ## 从 ModelScope 下载数据
 
 如果你需要在新机器或中断后继续爬取，可以先把 ModelScope 上的数据下载到本地：

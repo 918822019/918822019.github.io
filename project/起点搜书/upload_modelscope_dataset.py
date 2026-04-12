@@ -76,7 +76,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--incremental",
         action="store_true",
-        help="启用基于本地 manifest 的增量上传，只上传变化文件（默认行为）",
+        help="启用基于本地 manifest 的增量上传，只上传变化文件",
+    )
+    parser.add_argument(
+        "--include-hidden",
+        action="store_true",
+        help="上传时包含隐藏文件（例如 .shards.modelscope-upload-manifest.json）",
     )
     parser.add_argument(
         "--manifest-path",
@@ -166,6 +171,29 @@ def collect_folder_state(folder: Path) -> dict[str, dict[str, int | str]]:
     return state
 
 
+def collect_folder_files(
+    folder: Path,
+    include_hidden: bool,
+) -> list[str]:
+    """
+    收集要上传的相对文件路径。
+    - 默认跳过隐藏文件与 .tmp
+    - include_hidden=True 时会包含隐藏文件
+    """
+    files: list[str] = []
+    for path in sorted(folder.rglob("*")):
+        if not path.is_file():
+            continue
+        relative_path = path.relative_to(folder).as_posix()
+        path_parts = path.relative_to(folder).parts
+        if not include_hidden and any(part.startswith(".") for part in path_parts):
+            continue
+        if path.suffix == ".tmp":
+            continue
+        files.append(relative_path)
+    return files
+
+
 def load_manifest(path: Path) -> dict[str, dict[str, int | str]]:
     """
     加载本地 manifest 文件，返回 {相对路径: {sha256, size}}
@@ -227,12 +255,25 @@ def incremental_upload(
     token: str,
     commit_message: str,
     manifest_path: Path,
+    include_hidden: bool,
     dry_run: bool,
 ) -> None:
     """
     执行增量上传：只上传有变化的文件，上传后保存 manifest。
     """
-    current_files = collect_folder_state(folder)
+    if include_hidden:
+        current_files: dict[str, dict[str, int | str]] = {
+            relative_path: {
+                "sha256": compute_file_sha256(folder / relative_path),
+                "size": (folder / relative_path).stat().st_size,
+            }
+            for relative_path in collect_folder_files(
+                folder=folder,
+                include_hidden=True,
+            )
+        }
+    else:
+        current_files = collect_folder_state(folder)
     manifest_files = load_manifest(manifest_path)
     changed_files, removed_files = diff_folder_state(
         current_files,
@@ -281,6 +322,58 @@ def incremental_upload(
     )
 
 
+def full_upload(
+    api: object,
+    repo_id: str,
+    repo_type: str,
+    folder: Path,
+    token: str,
+    commit_message: str,
+    include_hidden: bool,
+    dry_run: bool,
+) -> None:
+    """
+    执行全量上传：遍历目录中文件逐个上传。
+    """
+    files = collect_folder_files(
+        folder=folder,
+        include_hidden=include_hidden,
+    )
+
+    summary = {
+        "folder": str(folder),
+        "mode": "full",
+        "include_hidden": include_hidden,
+        "upload_files": files,
+        "upload_count": len(files),
+    }
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+
+    if dry_run:
+        return
+
+    if not files:
+        print("目录中没有可上传文件。")
+        return
+
+    upload_file = getattr(api, "upload_file")
+    for relative_path in files:
+        local_path = folder / relative_path
+        upload_file(
+            repo_id=repo_id,
+            path_or_fileobj=str(local_path),
+            path_in_repo=relative_path,
+            commit_message=f"{commit_message}: {relative_path}",
+            repo_type=repo_type,
+            token=token,
+        )
+
+    print(
+        f"全量上传完成: repo_id={repo_id} folder_path={folder} "
+        f"uploaded_files={len(files)}"
+    )
+
+
 def main() -> None:
     """
     命令行入口。自动登录、参数校验、执行增量上传。
@@ -295,7 +388,7 @@ def main() -> None:
         raise NotADirectoryError(f"给定路径不是目录: {folder}")
 
     try:
-        from modelscope.hub.api import HubApi  # type: ignore[import-not-found]
+        from modelscope.hub.api import HubApi  # type: ignore[import-untyped]
     except ImportError as exc:
         raise RuntimeError(
             "未安装 modelscope。请先执行: pip install modelscope"
@@ -311,16 +404,29 @@ def main() -> None:
         else default_manifest_path(folder)
     )
 
-    incremental_upload(
-        api=api,
-        repo_id=args.repo_id,
-        repo_type=args.repo_type,
-        folder=folder,
-        token=token,
-        commit_message=args.commit_message,
-        manifest_path=manifest_path,
-        dry_run=args.dry_run,
-    )
+    if args.incremental:
+        incremental_upload(
+            api=api,
+            repo_id=args.repo_id,
+            repo_type=args.repo_type,
+            folder=folder,
+            token=token,
+            commit_message=args.commit_message,
+            manifest_path=manifest_path,
+            include_hidden=args.include_hidden,
+            dry_run=args.dry_run,
+        )
+    else:
+        full_upload(
+            api=api,
+            repo_id=args.repo_id,
+            repo_type=args.repo_type,
+            folder=folder,
+            token=token,
+            commit_message=args.commit_message,
+            include_hidden=args.include_hidden,
+            dry_run=args.dry_run,
+        )
 
 
 if __name__ == "__main__":
