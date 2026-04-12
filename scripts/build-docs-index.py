@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import os
 import json
-import sys
 import locale
+import os
+import sys
 
 
 def build_tree(current_path, root_dir):

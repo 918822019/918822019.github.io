@@ -6,45 +6,45 @@ const docsRoot = path.resolve(__dirname, 'docs');
 const outputFile = path.join(docsRoot, 'index.json');
 
 function buildTree(currentPath) {
-  const stat = fs.statSync(currentPath);
-  const name = path.basename(currentPath);
+    const stat = fs.statSync(currentPath);
+    const name = path.basename(currentPath);
 
-  if (stat.isDirectory()) {
-    const children = fs.readdirSync(currentPath)
-      .filter(item => item !== 'index.json' && item !== '.DS_Store')
-      .map(item => buildTree(path.join(currentPath, item)))
-      .sort((a, b) => {
-        if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
-        return a.name.localeCompare(b.name, 'zh-CN');
-      });
+    if (stat.isDirectory()) {
+        const children = fs.readdirSync(currentPath)
+            .filter(item => item !== 'index.json' && item !== '.DS_Store')
+            .map(item => buildTree(path.join(currentPath, item)))
+            .sort((a, b) => {
+                if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+                return a.name.localeCompare(b.name, 'zh-CN');
+            });
 
-    return {
-      name,
-      type: 'folder',
-      children,
-    };
-  }
+        return {
+            name,
+            type: 'folder',
+            children,
+        };
+    }
 
-  if (stat.isFile()) {
-    return {
-      name,
-      type: 'file',
-      path: path.relative(path.resolve(__dirname), currentPath).replaceAll('\\', '/'),
-    };
-  }
+    if (stat.isFile()) {
+        return {
+            name,
+            type: 'file',
+            path: path.relative(path.resolve(__dirname), currentPath).replaceAll('\\', '/'),
+        };
+    }
 
-  return null;
+    return null;
 }
 
 function main() {
-  if (!fs.existsSync(docsRoot)) {
-    console.error('错误：docs 目录不存在。');
-    process.exit(1);
-  }
+    if (!fs.existsSync(docsRoot)) {
+        console.error('错误：docs 目录不存在。');
+        process.exit(1);
+    }
 
-  const tree = buildTree(docsRoot);
-  fs.writeFileSync(outputFile, JSON.stringify(tree, null, 2), 'utf-8');
-  console.log(`已生成 ${outputFile}`);
+    const tree = buildTree(docsRoot);
+    fs.writeFileSync(outputFile, JSON.stringify(tree, null, 2), 'utf-8');
+    console.log(`已生成 ${outputFile}`);
 }
 
 main();

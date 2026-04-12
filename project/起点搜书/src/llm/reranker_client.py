@@ -5,31 +5,33 @@ Reranker 客户端模块
 
 from typing import List, Tuple, Optional
 
+from .env import config
+
 
 class RerankerClient:
     """Reranker 客户端类，统一管理重排序模型调用"""
-    
-    def __init__(self, model_name: str = "default", api_key: Optional[str] = None, base_url: Optional[str] = None):
+
+    def __init__(self, model_name: Optional[str] = None, api_key: Optional[str] = None, base_url: Optional[str] = None):
         """
         初始化 Reranker 客户端
         
         Args:
-            model_name: 模型名称
-            api_key: API 密钥
-            base_url: API 基础 URL
+            model_name: 模型名称（默认从配置读取）
+            api_key: API 密钥（默认从配置读取）
+            base_url: API 基础 URL（默认从配置读取）
         """
-        self.model_name = model_name
-        self.api_key = api_key
-        self.base_url = base_url
+        self.model_name = model_name or config.RERANKER_MODEL_NAME
+        self.api_key = api_key or config.RERANKER_API_KEY
+        self.base_url = base_url or config.RERANKER_BASE_URL
         self.client = None
         self._initialize_client()
-    
+
     def _initialize_client(self):
         """初始化具体的 Reranker 客户端"""
         # TODO: 根据配置初始化不同的 Reranker 客户端
         # 例如：BGE Reranker, Cohere Rerank 等
         pass
-    
+
     def rerank(self, query: str, documents: List[str], top_k: Optional[int] = None) -> List[Tuple[int, float]]:
         """
         对文档列表进行重排序
@@ -46,16 +48,16 @@ class RerankerClient:
         # 这里返回示例结果
         scores = [(idx, 0.5) for idx in range(len(documents))]
         scores.sort(key=lambda x: x[1], reverse=True)
-        
+
         if top_k is not None:
             scores = scores[:top_k]
-        
+
         return scores
-    
-    def rerank_with_metadata(self, query: str, 
-                            documents: List[dict], 
-                            text_field: str = "text",
-                            top_k: Optional[int] = None) -> List[Tuple[int, float, dict]]:
+
+    def rerank_with_metadata(self, query: str,
+                             documents: List[dict],
+                             text_field: str = "text",
+                             top_k: Optional[int] = None) -> List[Tuple[int, float, dict]]:
         """
         对带元数据的文档列表进行重排序
         
@@ -70,9 +72,9 @@ class RerankerClient:
         """
         texts = [doc.get(text_field, "") for doc in documents]
         scores = self.rerank(query, texts, top_k)
-        
+
         result = []
         for idx, score in scores:
             result.append((idx, score, documents[idx]))
-        
+
         return result

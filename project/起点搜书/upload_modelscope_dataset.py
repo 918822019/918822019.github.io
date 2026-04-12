@@ -32,7 +32,6 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-
 DEFAULT_MANIFEST_NAME = ".modelscope-upload-manifest.json"
 
 
@@ -180,9 +179,9 @@ def load_manifest(path: Path) -> dict[str, dict[str, int | str]]:
 
 
 def save_manifest(
-    path: Path,
-    folder: Path,
-    files: dict[str, dict[str, int | str]],
+        path: Path,
+        folder: Path,
+        files: dict[str, dict[str, int | str]],
 ) -> None:
     """
     保存 manifest，记录本次上传后所有文件的 sha256 和大小。
@@ -199,8 +198,8 @@ def save_manifest(
 
 
 def diff_folder_state(
-    current_files: dict[str, dict[str, int | str]],
-    manifest_files: dict[str, dict[str, int | str]],
+        current_files: dict[str, dict[str, int | str]],
+        manifest_files: dict[str, dict[str, int | str]],
 ) -> tuple[list[str], list[str]]:
     """
     比较当前目录和 manifest，返回变化/新增文件列表，以及本地已删文件列表。
@@ -220,14 +219,14 @@ def diff_folder_state(
 
 
 def incremental_upload(
-    api: object,
-    repo_id: str,
-    repo_type: str,
-    folder: Path,
-    token: str,
-    commit_message: str,
-    manifest_path: Path,
-    dry_run: bool,
+        api: object,
+        repo_id: str,
+        repo_type: str,
+        folder: Path,
+        token: str,
+        commit_message: str,
+        manifest_path: Path,
+        dry_run: bool,
 ) -> None:
     """
     执行增量上传：只上传有变化的文件，上传后保存 manifest。

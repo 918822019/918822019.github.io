@@ -35,19 +35,18 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import hashlib
 import json
 import logging
 import os
-from pathlib import Path
 import random
 import sqlite3
 import threading
 import time
 from datetime import datetime
-import hashlib
+from pathlib import Path
 from typing import Any, Iterator
 from urllib import error, parse, request
-
 
 BASE_SITE_URL = "https://7e0c.bqg504.cc"
 BOOK_HOME_URL = BASE_SITE_URL + "/#/book/{book_id}/"
@@ -102,7 +101,6 @@ DEFAULT_DB_PATH = os.path.join(DATA_DIR, "books.db")
 DEFAULT_SHARDS_DIR = os.path.join(DATA_DIR, "shards")
 LOG_FILE = os.path.join(BASE_DIR, "data_get.log")
 
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -140,7 +138,7 @@ def ensure_parent_dir(path: str) -> None:
 
 def chunked(items: list[Any], size: int) -> Iterator[list[Any]]:
     for index in range(0, len(items), size):
-        yield items[index : index + size]
+        yield items[index: index + size]
 
 
 def validate_range(start: int, end: int) -> None:
@@ -232,13 +230,13 @@ class RequestPacer:
 
 class BookApiClient:
     def __init__(
-        self,
-        timeout: int,
-        retries: int,
-        min_request_interval: float,
-        request_jitter: float,
-        retry_backoff_base: float,
-        retry_backoff_max: float,
+            self,
+            timeout: int,
+            retries: int,
+            min_request_interval: float,
+            request_jitter: float,
+            retry_backoff_base: float,
+            retry_backoff_max: float,
     ) -> None:
         self.timeout = timeout
         self.retries = retries
@@ -278,11 +276,11 @@ class BookApiClient:
                     raise RuntimeError(f"接口返回不是对象: {url}")
                 return data
             except (
-                error.HTTPError,
-                error.URLError,
-                TimeoutError,
-                json.JSONDecodeError,
-                RuntimeError,
+                    error.HTTPError,
+                    error.URLError,
+                    TimeoutError,
+                    json.JSONDecodeError,
+                    RuntimeError,
             ) as exc:
                 last_error = exc
                 if attempt == self.retries:
@@ -299,7 +297,7 @@ class BookApiClient:
         raise RuntimeError(f"请求失败: {url} -> {last_error}")
 
     def fetch_book_bundle(
-        self, book_id: int
+            self, book_id: int
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         book_url = make_book_api_url(book_id)
         catalog_url = make_booklist_api_url(book_id)
@@ -360,9 +358,9 @@ class BookApiClient:
         return book_record, chapter_records
 
     def fetch_chapter_content(
-        self,
-        book_id: int,
-        chapter_id: int,
+            self,
+            book_id: int,
+            chapter_id: int,
     ) -> dict[str, Any]:
         api_url = make_chapter_api_url(book_id, chapter_id)
         payload = self.fetch_json(api_url)
@@ -400,51 +398,132 @@ def open_database(db_path: str, synchronous_mode: str) -> sqlite3.Connection:
 def ensure_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(
         """
-        CREATE TABLE IF NOT EXISTS books (
-            book_id INTEGER PRIMARY KEY,
-            title TEXT NOT NULL,
-            category TEXT,
-            author TEXT,
-            serial_status TEXT,
-            intro TEXT,
-            last_chapter_id INTEGER,
-            last_chapter_title TEXT,
-            last_update TEXT,
-            dir_id TEXT,
-            chapter_count INTEGER NOT NULL DEFAULT 0,
-            homepage_url TEXT NOT NULL,
-            source_book_api TEXT NOT NULL,
-            source_catalog_api TEXT NOT NULL,
-            catalog_fetched_at TEXT,
-            content_fetched_chapters INTEGER NOT NULL DEFAULT 0,
-            content_completed INTEGER NOT NULL DEFAULT 0,
-            last_error TEXT
+        CREATE TABLE IF NOT EXISTS books
+        (
+            book_id
+            INTEGER
+            PRIMARY
+            KEY,
+            title
+            TEXT
+            NOT
+            NULL,
+            category
+            TEXT,
+            author
+            TEXT,
+            serial_status
+            TEXT,
+            intro
+            TEXT,
+            last_chapter_id
+            INTEGER,
+            last_chapter_title
+            TEXT,
+            last_update
+            TEXT,
+            dir_id
+            TEXT,
+            chapter_count
+            INTEGER
+            NOT
+            NULL
+            DEFAULT
+            0,
+            homepage_url
+            TEXT
+            NOT
+            NULL,
+            source_book_api
+            TEXT
+            NOT
+            NULL,
+            source_catalog_api
+            TEXT
+            NOT
+            NULL,
+            catalog_fetched_at
+            TEXT,
+            content_fetched_chapters
+            INTEGER
+            NOT
+            NULL
+            DEFAULT
+            0,
+            content_completed
+            INTEGER
+            NOT
+            NULL
+            DEFAULT
+            0,
+            last_error
+            TEXT
         );
 
-        CREATE TABLE IF NOT EXISTS chapters (
-            book_id INTEGER NOT NULL,
-            chapter_id INTEGER NOT NULL,
-            chapter_name TEXT NOT NULL,
-            chapter_url TEXT NOT NULL,
-            source_api_url TEXT NOT NULL,
-            content TEXT,
-            content_length INTEGER NOT NULL DEFAULT 0,
-            is_content_fetched INTEGER NOT NULL DEFAULT 0,
-            fetched_at TEXT,
-            last_error TEXT,
-            PRIMARY KEY (book_id, chapter_id),
-            FOREIGN KEY (book_id) REFERENCES books(book_id) ON DELETE CASCADE
-        );
+        CREATE TABLE IF NOT EXISTS chapters
+        (
+            book_id
+            INTEGER
+            NOT
+            NULL,
+            chapter_id
+            INTEGER
+            NOT
+            NULL,
+            chapter_name
+            TEXT
+            NOT
+            NULL,
+            chapter_url
+            TEXT
+            NOT
+            NULL,
+            source_api_url
+            TEXT
+            NOT
+            NULL,
+            content
+            TEXT,
+            content_length
+            INTEGER
+            NOT
+            NULL
+            DEFAULT
+            0,
+            is_content_fetched
+            INTEGER
+            NOT
+            NULL
+            DEFAULT
+            0,
+            fetched_at
+            TEXT,
+            last_error
+            TEXT,
+            PRIMARY
+            KEY
+        (
+            book_id,
+            chapter_id
+        ),
+            FOREIGN KEY
+        (
+            book_id
+        ) REFERENCES books
+        (
+            book_id
+        ) ON DELETE CASCADE
+            );
 
         CREATE INDEX IF NOT EXISTS idx_chapters_pending
-        ON chapters(is_content_fetched, book_id, chapter_id);
+            ON chapters(is_content_fetched, book_id, chapter_id);
         """
     )
     conn.commit()
 
 
 def get_existing_catalog_ids(
-    conn: sqlite3.Connection, start: int, end: int
+        conn: sqlite3.Connection, start: int, end: int
 ) -> set[int]:
     rows = conn.execute(
         """
@@ -459,32 +538,31 @@ def get_existing_catalog_ids(
 
 
 def upsert_book_catalog(
-    conn: sqlite3.Connection,
-    book_record: dict[str, Any],
-    chapter_records: list[dict[str, Any]],
+        conn: sqlite3.Connection,
+        book_record: dict[str, Any],
+        chapter_records: list[dict[str, Any]],
 ) -> None:
     with conn:
         conn.execute(
             """
-            INSERT INTO books (
-                book_id,
-                title,
-                category,
-                author,
-                serial_status,
-                intro,
-                last_chapter_id,
-                last_chapter_title,
-                last_update,
-                dir_id,
-                chapter_count,
-                homepage_url,
-                source_book_api,
-                source_catalog_api,
-                catalog_fetched_at,
-                last_error
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
-            ON CONFLICT(book_id) DO UPDATE SET
+            INSERT INTO books (book_id,
+                               title,
+                               category,
+                               author,
+                               serial_status,
+                               intro,
+                               last_chapter_id,
+                               last_chapter_title,
+                               last_update,
+                               dir_id,
+                               chapter_count,
+                               homepage_url,
+                               source_book_api,
+                               source_catalog_api,
+                               catalog_fetched_at,
+                               last_error)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL) ON CONFLICT(book_id) DO
+            UPDATE SET
                 title = excluded.title,
                 category = excluded.category,
                 author = excluded.author,
@@ -523,14 +601,13 @@ def upsert_book_catalog(
         if chapter_records:
             conn.executemany(
                 """
-                INSERT INTO chapters (
-                    book_id,
-                    chapter_id,
-                    chapter_name,
-                    chapter_url,
-                    source_api_url
-                ) VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(book_id, chapter_id) DO UPDATE SET
+                INSERT INTO chapters (book_id,
+                                      chapter_id,
+                                      chapter_name,
+                                      chapter_url,
+                                      source_api_url)
+                VALUES (?, ?, ?, ?, ?) ON CONFLICT(book_id, chapter_id) DO
+                UPDATE SET
                     chapter_name = excluded.chapter_name,
                     chapter_url = excluded.chapter_url,
                     source_api_url = excluded.source_api_url
@@ -549,30 +626,29 @@ def upsert_book_catalog(
 
 
 def record_catalog_error(
-    conn: sqlite3.Connection, book_id: int, error_message: str
+        conn: sqlite3.Connection, book_id: int, error_message: str
 ) -> None:
     with conn:
         conn.execute(
             """
-            INSERT INTO books (
-                book_id,
-                title,
-                category,
-                author,
-                serial_status,
-                intro,
-                last_chapter_id,
-                last_chapter_title,
-                last_update,
-                dir_id,
-                chapter_count,
-                homepage_url,
-                source_book_api,
-                source_catalog_api,
-                catalog_fetched_at,
-                last_error
-            ) VALUES (?, '', '', '', '', '', 0, '', '', '', 0, ?, ?, ?, ?, ?)
-            ON CONFLICT(book_id) DO UPDATE SET
+            INSERT INTO books (book_id,
+                               title,
+                               category,
+                               author,
+                               serial_status,
+                               intro,
+                               last_chapter_id,
+                               last_chapter_title,
+                               last_update,
+                               dir_id,
+                               chapter_count,
+                               homepage_url,
+                               source_book_api,
+                               source_catalog_api,
+                               catalog_fetched_at,
+                               last_error)
+            VALUES (?, '', '', '', '', '', 0, '', '', '', 0, ?, ?, ?, ?, ?) ON CONFLICT(book_id) DO
+            UPDATE SET
                 last_error = excluded.last_error,
                 catalog_fetched_at = excluded.catalog_fetched_at
             """,
@@ -588,16 +664,15 @@ def record_catalog_error(
 
 
 def get_books_in_range(
-    conn: sqlite3.Connection, start: int, end: int
+        conn: sqlite3.Connection, start: int, end: int
 ) -> list[sqlite3.Row]:
     return conn.execute(
         """
-        SELECT
-            book_id,
-            title,
-            chapter_count,
-            content_fetched_chapters,
-            content_completed
+        SELECT book_id,
+               title,
+               chapter_count,
+               content_fetched_chapters,
+               content_completed
         FROM books
         WHERE book_id BETWEEN ? AND ?
         ORDER BY book_id
@@ -607,15 +682,15 @@ def get_books_in_range(
 
 
 def get_pending_chapters(
-    conn: sqlite3.Connection, book_id: int, limit: int = 0
+        conn: sqlite3.Connection, book_id: int, limit: int = 0
 ) -> list[sqlite3.Row]:
     sql = """
-        SELECT book_id, chapter_id, chapter_name, source_api_url
-        FROM chapters
-        WHERE book_id = ?
-          AND is_content_fetched = 0
-        ORDER BY chapter_id
-    """
+          SELECT book_id, chapter_id, chapter_name, source_api_url
+          FROM chapters
+          WHERE book_id = ?
+            AND is_content_fetched = 0
+          ORDER BY chapter_id \
+          """
     params: tuple[int, ...] | tuple[int, int]
     params = (book_id,)
     if limit > 0:
@@ -625,7 +700,7 @@ def get_pending_chapters(
 
 
 def count_pending_chapters_in_range(
-    conn: sqlite3.Connection, start: int, end: int
+        conn: sqlite3.Connection, start: int, end: int
 ) -> int:
     row = conn.execute(
         """
@@ -640,24 +715,23 @@ def count_pending_chapters_in_range(
 
 
 def upsert_chapter_content(
-    conn: sqlite3.Connection, chapter_record: dict[str, Any]
+        conn: sqlite3.Connection, chapter_record: dict[str, Any]
 ) -> None:
     with conn:
         conn.execute(
             """
-            INSERT INTO chapters (
-                book_id,
-                chapter_id,
-                chapter_name,
-                chapter_url,
-                source_api_url,
-                content,
-                content_length,
-                is_content_fetched,
-                fetched_at,
-                last_error
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NULL)
-            ON CONFLICT(book_id, chapter_id) DO UPDATE SET
+            INSERT INTO chapters (book_id,
+                                  chapter_id,
+                                  chapter_name,
+                                  chapter_url,
+                                  source_api_url,
+                                  content,
+                                  content_length,
+                                  is_content_fetched,
+                                  fetched_at,
+                                  last_error)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NULL) ON CONFLICT(book_id, chapter_id) DO
+            UPDATE SET
                 chapter_name = excluded.chapter_name,
                 source_api_url = excluded.source_api_url,
                 content = excluded.content,
@@ -682,29 +756,30 @@ def upsert_chapter_content(
 
 
 def record_chapter_error(
-    conn: sqlite3.Connection,
-    book_id: int,
-    chapter_id: int,
-    error_message: str,
+        conn: sqlite3.Connection,
+        book_id: int,
+        chapter_id: int,
+        error_message: str,
 ) -> None:
     with conn:
         conn.execute(
             """
             UPDATE chapters
             SET last_error = ?
-            WHERE book_id = ? AND chapter_id = ?
+            WHERE book_id = ?
+              AND chapter_id = ?
             """,
             (error_message, book_id, chapter_id),
         )
 
 
 def refresh_book_content_progress(
-    conn: sqlite3.Connection,
-    book_id: int,
+        conn: sqlite3.Connection,
+        book_id: int,
 ) -> None:
     row = conn.execute(
         """
-        SELECT COUNT(*) AS total,
+        SELECT COUNT(*)                             AS total,
                COALESCE(SUM(is_content_fetched), 0) AS fetched
         FROM chapters
         WHERE book_id = ?
@@ -718,11 +793,11 @@ def refresh_book_content_progress(
             """
             UPDATE books
             SET content_fetched_chapters = ?,
-                content_completed = ?,
-                last_error = CASE
-                    WHEN last_error = '' THEN NULL
-                    ELSE last_error
-                END
+                content_completed        = ?,
+                last_error               = CASE
+                                               WHEN last_error = '' THEN NULL
+                                               ELSE last_error
+                    END
             WHERE book_id = ?
             """,
             (fetched, 1 if total > 0 and fetched == total else 0, book_id),
@@ -730,13 +805,13 @@ def refresh_book_content_progress(
 
 
 def crawl_books_stage(
-    conn: sqlite3.Connection,
-    client: BookApiClient,
-    start: int,
-    end: int,
-    concurrency: int,
-    progress_every: int,
-    refresh_existing: bool,
+        conn: sqlite3.Connection,
+        client: BookApiClient,
+        start: int,
+        end: int,
+        concurrency: int,
+        progress_every: int,
+        refresh_existing: bool,
 ) -> None:
     existing_ids = set()
     if not refresh_existing:
@@ -769,7 +844,7 @@ def crawl_books_stage(
             for book_id in targets
         }
         for index, future in enumerate(
-            concurrent.futures.as_completed(future_to_book), start=1
+                concurrent.futures.as_completed(future_to_book), start=1
         ):
             book_id = future_to_book[future]
             try:
@@ -793,15 +868,15 @@ def crawl_books_stage(
 
 
 def crawl_content_stage(
-    conn: sqlite3.Connection,
-    client: BookApiClient,
-    start: int,
-    end: int,
-    concurrency: int,
-    progress_every: int,
-    batch_size: int,
-    chapter_progress_every: int,
-    max_pending_per_book: int,
+        conn: sqlite3.Connection,
+        client: BookApiClient,
+        start: int,
+        end: int,
+        concurrency: int,
+        progress_every: int,
+        batch_size: int,
+        chapter_progress_every: int,
+        max_pending_per_book: int,
 ) -> None:
     books = get_books_in_range(conn, start, end)
     if not books:
@@ -904,8 +979,8 @@ def crawl_content_stage(
                         chapter_processed_count += 1
 
                     if (
-                        chapter_processed_count % chapter_progress_every == 0
-                        or chapter_processed_count == pending_chapter_total
+                            chapter_processed_count % chapter_progress_every == 0
+                            or chapter_processed_count == pending_chapter_total
                     ):
                         logger.info(
                             (
@@ -937,18 +1012,18 @@ def crawl_content_stage(
 def print_stats(conn: sqlite3.Connection, db_path: str) -> None:
     book_row = conn.execute(
         """
-        SELECT COUNT(*) AS total_books,
+        SELECT COUNT(*)                            AS total_books,
                COALESCE(
-                   SUM(CASE WHEN chapter_count > 0 THEN 1 ELSE 0 END),
-                   0
-               ) AS catalog_ready_books,
+                       SUM(CASE WHEN chapter_count > 0 THEN 1 ELSE 0 END),
+                       0
+               )                                   AS catalog_ready_books,
                COALESCE(SUM(content_completed), 0) AS content_completed_books
         FROM books
         """
     ).fetchone()
     chapter_row = conn.execute(
         """
-        SELECT COUNT(*) AS total_chapters,
+        SELECT COUNT(*)                             AS total_chapters,
                COALESCE(SUM(is_content_fetched), 0) AS fetched_chapters
         FROM chapters
         """
@@ -964,16 +1039,16 @@ def print_stats(conn: sqlite3.Connection, db_path: str) -> None:
             "total": int(chapter_row["total_chapters"]),
             "fetched": int(chapter_row["fetched_chapters"]),
             "pending": int(chapter_row["total_chapters"])
-            - int(chapter_row["fetched_chapters"]),
+                       - int(chapter_row["fetched_chapters"]),
         },
     }
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
 def iter_shard_ranges(
-    start: int,
-    end: int,
-    shard_size: int,
+        start: int,
+        end: int,
+        shard_size: int,
 ) -> Iterator[tuple[int, int]]:
     if shard_size <= 0:
         raise ValueError("shard_size 必须大于 0")
@@ -991,7 +1066,7 @@ def make_shard_file_name(start_book_id: int, end_book_id: int) -> str:
 
 
 def load_existing_shard_manifest(
-    output_root: Path,
+        output_root: Path,
 ) -> dict[str, dict[str, Any]]:
     manifest_path = output_root / "index.json"
     if not manifest_path.exists():
@@ -1044,9 +1119,9 @@ def load_manifest_range_end(output_root: Path) -> int | None:
 
 
 def compute_shard_source_fingerprint(
-    source_db_path: str,
-    range_start: int,
-    range_end: int,
+        source_db_path: str,
+        range_start: int,
+        range_end: int,
 ) -> dict[str, Any]:
     source_db = Path(source_db_path).expanduser().resolve()
     conn = sqlite3.connect(f"file:{source_db}?mode=ro", uri=True)
@@ -1054,13 +1129,12 @@ def compute_shard_source_fingerprint(
     try:
         book_row = conn.execute(
             """
-            SELECT
-                COUNT(*) AS book_count,
-                COALESCE(SUM(chapter_count), 0) AS chapter_count_in_books,
-                COALESCE(SUM(content_fetched_chapters), 0)
-                    AS fetched_chapters_in_books,
-                COALESCE(MAX(catalog_fetched_at), '') AS max_catalog_fetched_at,
-                COALESCE(MAX(last_update), '') AS max_book_last_update
+            SELECT COUNT(*)                              AS book_count,
+                   COALESCE(SUM(chapter_count), 0)       AS chapter_count_in_books,
+                   COALESCE(SUM(content_fetched_chapters), 0)
+                                                         AS fetched_chapters_in_books,
+                   COALESCE(MAX(catalog_fetched_at), '') AS max_catalog_fetched_at,
+                   COALESCE(MAX(last_update), '')        AS max_book_last_update
             FROM books
             WHERE book_id BETWEEN ? AND ?
             """,
@@ -1069,11 +1143,10 @@ def compute_shard_source_fingerprint(
 
         chapter_row = conn.execute(
             """
-            SELECT
-                COUNT(*) AS chapter_count,
-                COALESCE(SUM(is_content_fetched), 0) AS fetched_chapter_count,
-                COALESCE(SUM(content_length), 0) AS content_length_sum,
-                COALESCE(MAX(fetched_at), '') AS max_chapter_fetched_at
+            SELECT COUNT(*)                             AS chapter_count,
+                   COALESCE(SUM(is_content_fetched), 0) AS fetched_chapter_count,
+                   COALESCE(SUM(content_length), 0)     AS content_length_sum,
+                   COALESCE(MAX(fetched_at), '')        AS max_chapter_fetched_at
             FROM chapters
             WHERE book_id BETWEEN ? AND ?
             """,
@@ -1115,11 +1188,11 @@ def compute_shard_source_fingerprint(
 
 
 def export_shard_range(
-    source_db_path: str,
-    output_dir: str,
-    range_start: int,
-    range_end: int,
-    source_fingerprint: dict[str, Any] | None = None,
+        source_db_path: str,
+        output_dir: str,
+        range_start: int,
+        range_end: int,
+        source_fingerprint: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     source_db = Path(source_db_path).expanduser().resolve()
     output_root = Path(output_dir).expanduser().resolve()
@@ -1160,45 +1233,42 @@ def export_shard_range(
         with write_conn:
             write_conn.execute(
                 """
-                INSERT INTO books (
-                    book_id,
-                    title,
-                    category,
-                    author,
-                    serial_status,
-                    intro,
-                    last_chapter_id,
-                    last_chapter_title,
-                    last_update,
-                    dir_id,
-                    chapter_count,
-                    homepage_url,
-                    source_book_api,
-                    source_catalog_api,
-                    catalog_fetched_at,
-                    content_fetched_chapters,
-                    content_completed,
-                    last_error
-                )
-                SELECT
-                    book_id,
-                    title,
-                    category,
-                    author,
-                    serial_status,
-                    intro,
-                    last_chapter_id,
-                    last_chapter_title,
-                    last_update,
-                    dir_id,
-                    chapter_count,
-                    homepage_url,
-                    source_book_api,
-                    source_catalog_api,
-                    catalog_fetched_at,
-                    content_fetched_chapters,
-                    content_completed,
-                    last_error
+                INSERT INTO books (book_id,
+                                   title,
+                                   category,
+                                   author,
+                                   serial_status,
+                                   intro,
+                                   last_chapter_id,
+                                   last_chapter_title,
+                                   last_update,
+                                   dir_id,
+                                   chapter_count,
+                                   homepage_url,
+                                   source_book_api,
+                                   source_catalog_api,
+                                   catalog_fetched_at,
+                                   content_fetched_chapters,
+                                   content_completed,
+                                   last_error)
+                SELECT book_id,
+                       title,
+                       category,
+                       author,
+                       serial_status,
+                       intro,
+                       last_chapter_id,
+                       last_chapter_title,
+                       last_update,
+                       dir_id,
+                       chapter_count,
+                       homepage_url,
+                       source_book_api,
+                       source_catalog_api,
+                       catalog_fetched_at,
+                       content_fetched_chapters,
+                       content_completed,
+                       last_error
                 FROM src.books
                 WHERE book_id BETWEEN ? AND ?
                 """,
@@ -1206,29 +1276,26 @@ def export_shard_range(
             )
             write_conn.execute(
                 """
-                INSERT INTO chapters (
-                    book_id,
-                    chapter_id,
-                    chapter_name,
-                    chapter_url,
-                    source_api_url,
-                    content,
-                    content_length,
-                    is_content_fetched,
-                    fetched_at,
-                    last_error
-                )
-                SELECT
-                    book_id,
-                    chapter_id,
-                    chapter_name,
-                    chapter_url,
-                    source_api_url,
-                    content,
-                    content_length,
-                    is_content_fetched,
-                    fetched_at,
-                    last_error
+                INSERT INTO chapters (book_id,
+                                      chapter_id,
+                                      chapter_name,
+                                      chapter_url,
+                                      source_api_url,
+                                      content,
+                                      content_length,
+                                      is_content_fetched,
+                                      fetched_at,
+                                      last_error)
+                SELECT book_id,
+                       chapter_id,
+                       chapter_name,
+                       chapter_url,
+                       source_api_url,
+                       content,
+                       content_length,
+                       is_content_fetched,
+                       fetched_at,
+                       last_error
                 FROM src.chapters
                 WHERE book_id BETWEEN ? AND ?
                 """,
@@ -1268,13 +1335,13 @@ def export_shard_range(
 
 
 def export_shards(
-    db_path: str,
-    output_dir: str,
-    start: int,
-    end: int,
-    shard_size: int,
-    only_changed: bool,
-    auto_continue: bool,
+        db_path: str,
+        output_dir: str,
+        start: int,
+        end: int,
+        shard_size: int,
+        only_changed: bool,
+        auto_continue: bool,
 ) -> None:
     validate_range(start, end)
     if shard_size <= 0:
@@ -1309,8 +1376,8 @@ def export_shards(
     total_ranges = len(shard_ranges)
     shard_summaries: list[dict[str, Any]] = []
     for range_index, (range_start, range_end) in enumerate(
-        shard_ranges,
-        start=1,
+            shard_ranges,
+            start=1,
     ):
         shard_name = make_shard_file_name(range_start, range_end)
         source_fingerprint = compute_shard_source_fingerprint(
@@ -1329,10 +1396,10 @@ def export_shards(
         if only_changed:
             existing_summary = existing_manifest.get(shard_name)
             if (
-                existing_summary
-                and existing_summary.get("source_fingerprint")
-                == source_fingerprint["source_fingerprint"]
-                and (output_root / shard_name).exists()
+                    existing_summary
+                    and existing_summary.get("source_fingerprint")
+                    == source_fingerprint["source_fingerprint"]
+                    and (output_root / shard_name).exists()
             ):
                 logger.info(
                     "分片未变化，跳过重导出: %s",
