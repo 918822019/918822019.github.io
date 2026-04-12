@@ -1,0 +1,210 @@
+{
+  "folder": "/Users/wangzeyu.67/Downloads/918822019.github.io/project/起点搜书/data/shards",
+  "generated_at": "2026-04-12T22:37:15",
+  "files": {
+    "books_000001_000200.db": {
+      "sha256": "4996bc876561a822646f4e4e5636266b24b1c7c14f291f11932b44fad8264a4a",
+      "size": 2477379584
+    },
+    "books_000201_000400.db": {
+      "sha256": "77fcbb773e8b57b816edc8b7032c965d2fcbefe48254088a0ce357fe66c4d426",
+      "size": 2902519808
+    },
+    "books_000401_000600.db": {
+      "sha256": "4e3bbefd9bce97c5422d7757794f589d8ff9ed5015051e2dd19cf837d2334efd",
+      "size": 4014309376
+    },
+    "books_000601_000800.db": {
+      "sha256": "523e39f766c3c60e6efada8426a2bc293079b87c39c57ea6ed181d6d414e3806",
+      "size": 2826366976
+    },
+    "books_000801_001000.db": {
+      "sha256": "6435eff9f9fd4270fd02b5050f25f60b1bbedddfa005e20d8d2bbbf7f5947065",
+      "size": 2432905216
+    },
+    "books_001001_001200.db": {
+      "sha256": "070819e092822040b38507b0b6b5db2666c40574e9d00fd77c48f70d3127b16a",
+      "size": 3599466496
+    },
+    "books_001201_001400.db": {
+      "sha256": "245dca0abceec883268705cb99c6ffbd025676a1a15f0596fdd8e6f7f99b62c8",
+      "size": 73170944
+    },
+    "books_001401_001600.db": {
+      "sha256": "555c93e1e8daafff38fa8cda34ea8ed50e214d363496c64cb703362aab719fa3",
+      "size": 57286656
+    },
+    "books_001601_001800.db": {
+      "sha256": "ee96c93c78551c5a7a8daf0490787cd09857d9912c2b16a0e3d2bd7b3cd1927b",
+      "size": 41721856
+    },
+    "books_001801_002000.db": {
+      "sha256": "f8f3d18984181d5cab8942b990fa7dbd3ffc194331ed9e426f850a1a3c7cac0a",
+      "size": 36941824
+    },
+    "books_002001_002200.db": {
+      "sha256": "747556b92d91bfc5651c80cad74015915b8134514288fddb13bef27bc0f2596f",
+      "size": 41881600
+    },
+    "books_002201_002400.db": {
+      "sha256": "c7ee64cf7e0f672603fa110ada4c6e12fe971e0348f9a120b623085ed260df3c",
+      "size": 71786496
+    },
+    "books_002401_002600.db": {
+      "sha256": "b771ad8e83128b04147ce05d013f6b0b88f0649592de35c67e29420fc396eeec",
+      "size": 44490752
+    },
+    "books_002601_002800.db": {
+      "sha256": "52fa1769eea0ecfe8543b27807ba03c0759e7d39f5f6c5262a6f1b43d2f835b1",
+      "size": 31002624
+    },
+    "books_002801_003000.db": {
+      "sha256": "6e6b64a70c4e8f548e5e348fd327b254d36b3a505cde360048813a8baeebb8ba",
+      "size": 46440448
+    },
+    "books_003001_003200.db": {
+      "sha256": "18930ced6cb3d438bda214fb2e3132ffb9c128a743f383f7f51445e54b601bdb",
+      "size": 22462464
+    },
+    "books_003201_003400.db": {
+      "sha256": "47af54bedaab49dd00246aa638203cf63e58a27c0cce7885a72e0d9a822e4e76",
+      "size": 25681920
+    },
+    "books_003401_003600.db": {
+      "sha256": "b5ca139c908afacfa5b8347fba9947b5fe77d15f880bfb34043f5825e1d8c12e",
+      "size": 29597696
+    },
+    "books_003601_003800.db": {
+      "sha256": "d2068bb5060d223f9e23a4f77ab9ffb7e437081c6524ac453db0ab0c43e1eb3f",
+      "size": 35528704
+    },
+    "books_003801_004000.db": {
+      "sha256": "5a0c05bca004dd8e51d40dca40fcbafddb7adb0d36786cceeb0f5afed0f64395",
+      "size": 36503552
+    },
+    "books_004001_004200.db": {
+      "sha256": "0f99a7899ef4c31f1419633bbe69f45e0594591cd784435329e69fcf77b05f80",
+      "size": 33734656
+    },
+    "books_004201_004400.db": {
+      "sha256": "8dfe42fc171ff629fc45376a7ddd3d999b7baacffabab6171d799ed79b06cb60",
+      "size": 29138944
+    },
+    "books_004401_004600.db": {
+      "sha256": "763de5f22cf89289e0dc89ac40cd063b92f0ac401177c8e68fa2b20644f63ee6",
+      "size": 24961024
+    },
+    "books_004601_004800.db": {
+      "sha256": "d79920b09b6ffc4789324ca5103b6c4f5b031a3c22b3d2cd641eb88050900224",
+      "size": 3026944
+    },
+    "books_004801_005000.db": {
+      "sha256": "efad04c6a3d7cd691a74ba0d17147fc05869ffd9fc5b86ae0a052375048a00d6",
+      "size": 27435008
+    },
+    "books_005001_005200.db": {
+      "sha256": "1b568e5b69b26b7efba3d957a64d83d93bf97a1c182c2d0cc68f43e0ab022e1e",
+      "size": 38998016
+    },
+    "books_005201_005400.db": {
+      "sha256": "38e06f2cb4a6c8f6a1ac61a0db5b75c7c73245dd4553960645fa21c0908a17f5",
+      "size": 36401152
+    },
+    "books_005401_005600.db": {
+      "sha256": "57c67809192143cab536e184a2ac73b43129c89fbbef6f99c2c4bfe0d18bc5ec",
+      "size": 33247232
+    },
+    "books_005601_005800.db": {
+      "sha256": "eb809fe2d909dc66f6f2791949c793c1101dfbda61a228c3ebbd259fe6564c02",
+      "size": 32587776
+    },
+    "books_005801_006000.db": {
+      "sha256": "437ba3a3a4475be911fd96c54de55ca8263da80d246e94780d3044df8a27cadd",
+      "size": 36421632
+    },
+    "books_006001_006200.db": {
+      "sha256": "bb37e166372ada057700da7d7b9a24d44c4318b0a95e323fe4ab1732b0871fe2",
+      "size": 33718272
+    },
+    "books_006201_006400.db": {
+      "sha256": "5a8873fbc515acff96dc0fb450a3db4440882283e39964974c4562573f1969e7",
+      "size": 34775040
+    },
+    "books_006401_006600.db": {
+      "sha256": "2f25f08a6fe55d96edacca31cf2c7747f14ade65378b0a62b68345ed6ccb34fe",
+      "size": 37203968
+    },
+    "books_006601_006800.db": {
+      "sha256": "679caeb1fb0549588587f6c45cd9b9496e97f41c13704d163dc7d2d359a849d0",
+      "size": 18386944
+    },
+    "books_006801_007000.db": {
+      "sha256": "78d81563625f13ef76efcdec55ddcd6c9c5e8ce74068c0f882143870656b28ec",
+      "size": 21352448
+    },
+    "books_007001_007200.db": {
+      "sha256": "aa6c018b1763a7fe78416d3a23eae335405ee9104065b83ca7e907b718b61cd2",
+      "size": 24846336
+    },
+    "books_007201_007400.db": {
+      "sha256": "825fc9353bcbdff6d7e1ffaabd3d6a42cbd55aa29d31d8c76457f4cf4229d7c9",
+      "size": 29396992
+    },
+    "books_007401_007600.db": {
+      "sha256": "50eec58d87af6140a15d5b66c0f258b44f812761c7032ec7ad981c4a3bd87dae",
+      "size": 22929408
+    },
+    "books_007601_007800.db": {
+      "sha256": "a5d0aa52709569369da96772c77dd13b5d59882bc91c400c23245f5d29cd4543",
+      "size": 20574208
+    },
+    "books_007801_008000.db": {
+      "sha256": "2f973e7952e89e500ea952b86332a9fe00d2c254df0333ecced856e7d9c08e28",
+      "size": 15081472
+    },
+    "books_008001_008200.db": {
+      "sha256": "df604847ba8c9396f854436e40bce9465bd0f6b6a47a9a775bc3d2401dd1850f",
+      "size": 23863296
+    },
+    "books_008201_008400.db": {
+      "sha256": "c66aecacfea7d35c562d68ee3da8031cb026999a01bc816f680f64d18bbdbf29",
+      "size": 23949312
+    },
+    "books_008401_008600.db": {
+      "sha256": "dfe1d7bacd446a2b7d2129f7347a30ee97db77d58abc50c71f639a84703d7b2b",
+      "size": 22298624
+    },
+    "books_008601_008800.db": {
+      "sha256": "8dd23e515279ef70e37622418fdd0257e593eed3ea3b7028290faedd3583fa2d",
+      "size": 21553152
+    },
+    "books_008801_009000.db": {
+      "sha256": "07e7a66fffc2bd326f4b62a31e89e23eb3bcd4cdf993eb4c37f303893b3bd52a",
+      "size": 18427904
+    },
+    "books_009001_009200.db": {
+      "sha256": "2fb1725bd0bbcaeda84389a2b03444c61fa127458506a801eb26c2db5122577a",
+      "size": 20140032
+    },
+    "books_009201_009400.db": {
+      "sha256": "f40f21a9a906d87e9cce5f51b665fc30bbd558a88787ba53cfea03bc81eb966a",
+      "size": 24666112
+    },
+    "books_009401_009600.db": {
+      "sha256": "e413c43017504cc79f54ce6af27fa131a8b12a73574acd8854676f48c779361b",
+      "size": 17076224
+    },
+    "books_009601_009800.db": {
+      "sha256": "4586bbd99c4f9dd322a074170cf4d3ed6ff2c55f286a05c23b7d26a5d8d7be8a",
+      "size": 18194432
+    },
+    "books_009801_010000.db": {
+      "sha256": "c47d4c9c311690f53c6fc9541cccc8b3deec885e34079486d473b3d5569c7697",
+      "size": 21180416
+    },
+    "index.json": {
+      "sha256": "5ac9deaaeb5573c60ccc7530af6632a558abd6c453107dace68469a7fc33cde6",
+      "size": 40924
+    }
+  }
+}

@@ -4,6 +4,8 @@
 
 当前抓取脚本已经改为直接请求站点真实接口，并将结果写入 SQLite，支持先抓目录、再抓正文、断点续抓。
 
+现在也支持把主库按 book_id 范围导出成多个 shard SQLite 文件，配合上传脚本做增量上传。
+
 ## 目录结构
 
 - data/books.json 书籍数据
@@ -67,12 +69,25 @@ python main.py crawl-content --start 1 --end 1 --max-pending-per-book 5 --batch-
 
 按每本书限制本次处理的未完成章节数，适合分批跑或小样本验证。
 
+```bash
+python main.py export-shards --start 1 --end 10000 --shard-size 200 --output-dir ../data/shards
+```
+
+把主库按 book_id 范围导出为 shard SQLite 文件。默认每 200 本书一个分片，并在输出目录下生成一个 index.json。
+
+```bash
+python main.py export-shards --start 1 --end 10000 --shard-size 200 --output-dir ../data/shards --only-changed
+```
+
+只重导出发生变化的 shard。依据是输出目录里上一版 `index.json` 记录的 source_fingerprint。
+
 ## 说明
 
 - 默认数据库路径是 data/books.db。
 - crawl-books 会把书籍元信息写入 books 表，把章节目录写入 chapters 表。
 - crawl-content 只会抓还没完成的章节，可以重复执行。
 - 当前 SQLite 使用 WAL，配合 `--sqlite-synchronous FULL` 时更适合怕断电的长任务。
+- export-shards 不会改动主库，而是从主库读取并导出静态 shard 文件，适合上传到数据集仓库。
 - 当前 app.py 仍然读取 data/books.json，还没有切到 SQLite。如果你要，我可以下一步把推荐服务也改成直接读数据库。
 
 ## 上传到 ModelScope
@@ -109,3 +124,53 @@ python upload_modelscope_dataset.py \
 
 - `upload_modelscope_dataset.py` 负责登录 ModelScope 并执行 `upload_folder`
 - `requirements.txt` 包含 Flask 和 ModelScope SDK 的最小依赖
+
+## 增量上传建议流程
+
+对于 `data/books.db` 这种大单文件，不适合直接做真正意义上的增量上传。更合适的做法是：
+
+1. 继续抓取到主库 `data/books.db`
+2. 定期导出 shards 到 `data/shards`
+3. 对 `data/shards` 目录执行增量上传
+
+先导出分片：
+
+```bash
+cd project/起点搜书/data_get
+python main.py export-shards --start 1 --end 10000 --shard-size 200 --output-dir ../data/shards
+```
+
+后续增量更新建议使用：
+
+```bash
+cd project/起点搜书/data_get
+python main.py export-shards --start 1 --end 10000 --shard-size 200 --output-dir ../data/shards --only-changed
+```
+
+先看看这次会上传哪些文件：
+
+```bash
+cd project/起点搜书
+python upload_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data/shards \
+	--incremental \
+	--dry-run
+```
+
+确认后执行真正上传：
+
+```bash
+cd project/起点搜书
+python upload_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data/shards \
+	--incremental \
+	--commit-message "incremental shard upload"
+```
+
+说明：
+
+- 增量模式会在待上传目录旁边生成一个本地 manifest，用于判断哪些文件发生了变化。
+- 当前增量模式只处理新增和更新文件，不自动删除远端已存在但本地已删除的文件。
+- 如果 shard 文件没变，就不会重复上传它。

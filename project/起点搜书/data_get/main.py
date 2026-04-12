@@ -5,11 +5,13 @@ import concurrent.futures
 import json
 import logging
 import os
+from pathlib import Path
 import random
 import sqlite3
 import threading
 import time
 from datetime import datetime
+import hashlib
 from typing import Any, Iterator
 from urllib import error, parse, request
 
@@ -64,6 +66,7 @@ BASE_HEADERS = {
 BASE_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "data"))
 DEFAULT_DB_PATH = os.path.join(DATA_DIR, "books.db")
+DEFAULT_SHARDS_DIR = os.path.join(DATA_DIR, "shards")
 LOG_FILE = os.path.join(BASE_DIR, "data_get.log")
 
 
@@ -934,6 +937,459 @@ def print_stats(conn: sqlite3.Connection, db_path: str) -> None:
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
+def iter_shard_ranges(
+    start: int,
+    end: int,
+    shard_size: int,
+) -> Iterator[tuple[int, int]]:
+    if shard_size <= 0:
+        raise ValueError("shard_size 必须大于 0")
+
+    first_shard_index = (start - 1) // shard_size
+    last_shard_index = (end - 1) // shard_size
+    for shard_index in range(first_shard_index, last_shard_index + 1):
+        shard_start = shard_index * shard_size + 1
+        shard_end = shard_start + shard_size - 1
+        yield max(start, shard_start), min(end, shard_end)
+
+
+def make_shard_file_name(start_book_id: int, end_book_id: int) -> str:
+    return f"books_{start_book_id:06d}_{end_book_id:06d}.db"
+
+
+def load_existing_shard_manifest(
+    output_root: Path,
+) -> dict[str, dict[str, Any]]:
+    manifest_path = output_root / "index.json"
+    if not manifest_path.exists():
+        return {}
+
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+    items = payload.get("shards")
+    if not isinstance(items, list):
+        return {}
+
+    existing: dict[str, dict[str, Any]] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("file_name")
+        if isinstance(name, str) and name:
+            existing[name] = item
+    return existing
+
+
+def load_manifest_range_end(output_root: Path) -> int | None:
+    manifest_path = output_root / "index.json"
+    if not manifest_path.exists():
+        return None
+
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+    shards = payload.get("shards")
+    if not isinstance(shards, list):
+        return None
+
+    max_end: int | None = None
+    for item in shards:
+        if not isinstance(item, dict):
+            continue
+        file_name = item.get("file_name")
+        if not isinstance(file_name, str) or not file_name:
+            continue
+        end_value = item.get("book_id_end")
+        if isinstance(end_value, int) and (output_root / file_name).exists():
+            max_end = end_value if max_end is None else max(max_end, end_value)
+    return max_end
+
+
+def compute_shard_source_fingerprint(
+    source_db_path: str,
+    range_start: int,
+    range_end: int,
+) -> dict[str, Any]:
+    source_db = Path(source_db_path).expanduser().resolve()
+    conn = sqlite3.connect(f"file:{source_db}?mode=ro", uri=True)
+    conn.row_factory = sqlite3.Row
+    try:
+        book_row = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS book_count,
+                COALESCE(SUM(chapter_count), 0) AS chapter_count_in_books,
+                COALESCE(SUM(content_fetched_chapters), 0)
+                    AS fetched_chapters_in_books,
+                COALESCE(MAX(catalog_fetched_at), '') AS max_catalog_fetched_at,
+                COALESCE(MAX(last_update), '') AS max_book_last_update
+            FROM books
+            WHERE book_id BETWEEN ? AND ?
+            """,
+            (range_start, range_end),
+        ).fetchone()
+
+        chapter_row = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS chapter_count,
+                COALESCE(SUM(is_content_fetched), 0) AS fetched_chapter_count,
+                COALESCE(SUM(content_length), 0) AS content_length_sum,
+                COALESCE(MAX(fetched_at), '') AS max_chapter_fetched_at
+            FROM chapters
+            WHERE book_id BETWEEN ? AND ?
+            """,
+            (range_start, range_end),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    fingerprint_source = "|".join(
+        [
+            str(int(book_row["book_count"])),
+            str(int(book_row["chapter_count_in_books"])),
+            str(int(book_row["fetched_chapters_in_books"])),
+            str(book_row["max_catalog_fetched_at"] or ""),
+            str(book_row["max_book_last_update"] or ""),
+            str(int(chapter_row["chapter_count"])),
+            str(int(chapter_row["fetched_chapter_count"])),
+            str(int(chapter_row["content_length_sum"])),
+            str(chapter_row["max_chapter_fetched_at"] or ""),
+        ]
+    )
+
+    return {
+        "source_book_count": int(book_row["book_count"]),
+        "source_book_chapter_count": int(book_row["chapter_count_in_books"]),
+        "source_book_fetched_chapters": int(book_row["fetched_chapters_in_books"]),
+        "source_max_catalog_fetched_at": str(book_row["max_catalog_fetched_at"] or ""),
+        "source_max_book_last_update": str(book_row["max_book_last_update"] or ""),
+        "source_chapter_count": int(chapter_row["chapter_count"]),
+        "source_fetched_chapter_count": int(chapter_row["fetched_chapter_count"]),
+        "source_content_length_sum": int(chapter_row["content_length_sum"]),
+        "source_max_chapter_fetched_at": str(
+            chapter_row["max_chapter_fetched_at"] or ""
+        ),
+        "source_fingerprint": hashlib.sha256(
+            fingerprint_source.encode("utf-8")
+        ).hexdigest(),
+    }
+
+
+def export_shard_range(
+    source_db_path: str,
+    output_dir: str,
+    range_start: int,
+    range_end: int,
+    source_fingerprint: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    source_db = Path(source_db_path).expanduser().resolve()
+    output_root = Path(output_dir).expanduser().resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+
+    shard_name = make_shard_file_name(range_start, range_end)
+    shard_path = output_root / shard_name
+    temp_path = output_root / f".{shard_name}.tmp"
+
+    if temp_path.exists():
+        temp_path.unlink()
+
+    write_conn = sqlite3.connect(temp_path)
+    write_conn.row_factory = sqlite3.Row
+    try:
+        write_conn.execute("PRAGMA journal_mode=DELETE")
+        write_conn.execute("PRAGMA synchronous=FULL")
+        write_conn.execute("PRAGMA foreign_keys=ON")
+        ensure_schema(write_conn)
+
+        write_conn.execute("ATTACH DATABASE ? AS src", (str(source_db),))
+
+        source_range_books_count = write_conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM src.books
+            WHERE book_id BETWEEN ? AND ?
+            """,
+            (range_start, range_end),
+        ).fetchone()[0]
+
+        if source_range_books_count <= 0:
+            write_conn.execute("DETACH DATABASE src")
+            write_conn.close()
+            temp_path.unlink(missing_ok=True)
+            return None
+
+        with write_conn:
+            write_conn.execute(
+                """
+                INSERT INTO books (
+                    book_id,
+                    title,
+                    category,
+                    author,
+                    serial_status,
+                    intro,
+                    last_chapter_id,
+                    last_chapter_title,
+                    last_update,
+                    dir_id,
+                    chapter_count,
+                    homepage_url,
+                    source_book_api,
+                    source_catalog_api,
+                    catalog_fetched_at,
+                    content_fetched_chapters,
+                    content_completed,
+                    last_error
+                )
+                SELECT
+                    book_id,
+                    title,
+                    category,
+                    author,
+                    serial_status,
+                    intro,
+                    last_chapter_id,
+                    last_chapter_title,
+                    last_update,
+                    dir_id,
+                    chapter_count,
+                    homepage_url,
+                    source_book_api,
+                    source_catalog_api,
+                    catalog_fetched_at,
+                    content_fetched_chapters,
+                    content_completed,
+                    last_error
+                FROM src.books
+                WHERE book_id BETWEEN ? AND ?
+                """,
+                (range_start, range_end),
+            )
+            write_conn.execute(
+                """
+                INSERT INTO chapters (
+                    book_id,
+                    chapter_id,
+                    chapter_name,
+                    chapter_url,
+                    source_api_url,
+                    content,
+                    content_length,
+                    is_content_fetched,
+                    fetched_at,
+                    last_error
+                )
+                SELECT
+                    book_id,
+                    chapter_id,
+                    chapter_name,
+                    chapter_url,
+                    source_api_url,
+                    content,
+                    content_length,
+                    is_content_fetched,
+                    fetched_at,
+                    last_error
+                FROM src.chapters
+                WHERE book_id BETWEEN ? AND ?
+                """,
+                (range_start, range_end),
+            )
+
+        book_count = int(write_conn.execute("SELECT COUNT(*) FROM books").fetchone()[0])
+        chapter_count = int(
+            write_conn.execute("SELECT COUNT(*) FROM chapters").fetchone()[0]
+        )
+
+        write_conn.execute("DETACH DATABASE src")
+
+        write_conn.execute("VACUUM")
+        write_conn.close()
+        temp_path.replace(shard_path)
+        summary: dict[str, Any] = {
+            "file_name": shard_name,
+            "path": str(shard_path),
+            "book_id_start": range_start,
+            "book_id_end": range_end,
+            "book_count": book_count,
+            "chapter_count": chapter_count,
+            "size_bytes": shard_path.stat().st_size,
+        }
+        if source_fingerprint:
+            summary.update(source_fingerprint)
+        return summary
+    finally:
+        if write_conn:
+            try:
+                write_conn.close()
+            except sqlite3.Error:
+                pass
+        if temp_path.exists():
+            temp_path.unlink(missing_ok=True)
+
+
+def export_shards(
+    db_path: str,
+    output_dir: str,
+    start: int,
+    end: int,
+    shard_size: int,
+    only_changed: bool,
+    auto_continue: bool,
+) -> None:
+    validate_range(start, end)
+    if shard_size <= 0:
+        raise ValueError("shard-size 必须大于 0")
+
+    output_root = Path(output_dir).expanduser().resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+
+    effective_start = start
+    if auto_continue:
+        last_end = load_manifest_range_end(output_root)
+        if last_end is not None and last_end >= start:
+            effective_start = min(last_end + 1, end + 1)
+            if effective_start <= end:
+                logger.info(
+                    "检测到已导出进度，自动续跑: start=%s -> %s",
+                    start,
+                    effective_start,
+                )
+
+    if effective_start > end:
+        logger.info(
+            "目标区间已全部导出，无需继续: range=%s-%s",
+            start,
+            end,
+        )
+        return
+
+    existing_manifest = load_existing_shard_manifest(output_root)
+
+    shard_ranges = list(iter_shard_ranges(effective_start, end, shard_size))
+    total_ranges = len(shard_ranges)
+    shard_summaries: list[dict[str, Any]] = []
+    for range_index, (range_start, range_end) in enumerate(
+        shard_ranges,
+        start=1,
+    ):
+        shard_name = make_shard_file_name(range_start, range_end)
+        source_fingerprint = compute_shard_source_fingerprint(
+            source_db_path=db_path,
+            range_start=range_start,
+            range_end=range_end,
+        )
+        if source_fingerprint["source_book_count"] <= 0:
+            logger.info(
+                "跳过空分片: book_id=%s-%s",
+                range_start,
+                range_end,
+            )
+            continue
+
+        if only_changed:
+            existing_summary = existing_manifest.get(shard_name)
+            if (
+                existing_summary
+                and existing_summary.get("source_fingerprint")
+                == source_fingerprint["source_fingerprint"]
+                and (output_root / shard_name).exists()
+            ):
+                logger.info(
+                    "分片未变化，跳过重导出: %s",
+                    shard_name,
+                )
+                merged_summary = dict(existing_summary)
+                merged_summary.update(source_fingerprint)
+                merged_summary["file_name"] = shard_name
+                merged_summary["path"] = str(output_root / shard_name)
+                shard_summaries.append(merged_summary)
+                logger.info(
+                    "分片进度: %s/%s shard=%s",
+                    range_index,
+                    total_ranges,
+                    shard_name,
+                )
+                continue
+
+        logger.info(
+            "导出分片: %s/%s book_id=%s-%s",
+            range_index,
+            total_ranges,
+            range_start,
+            range_end,
+        )
+        summary = export_shard_range(
+            source_db_path=db_path,
+            output_dir=str(output_root),
+            range_start=range_start,
+            range_end=range_end,
+            source_fingerprint=source_fingerprint,
+        )
+        if summary is None:
+            logger.info(
+                "跳过空分片: book_id=%s-%s",
+                range_start,
+                range_end,
+            )
+            continue
+        shard_summaries.append(summary)
+        logger.info(
+            "分片完成: %s/%s shard=%s size_bytes=%s",
+            range_index,
+            total_ranges,
+            shard_name,
+            summary.get("size_bytes", 0),
+        )
+
+    manifest = {
+        "generated_at": now_iso(),
+        "source_db_path": str(Path(db_path).expanduser().resolve()),
+        "output_dir": str(output_root),
+        "shard_size": shard_size,
+        "range_start": effective_start,
+        "range_end": end,
+        "shard_count": len(shard_summaries),
+        "total_books": sum(item["book_count"] for item in shard_summaries),
+        "total_chapters": sum(item["chapter_count"] for item in shard_summaries),
+        "shards": shard_summaries,
+    }
+    manifest_path = output_root / "index.json"
+    existing_text = ""
+    existing_manifest_payload: dict[str, Any] | None = None
+    if manifest_path.exists():
+        try:
+            existing_text = manifest_path.read_text(encoding="utf-8")
+            loaded = json.loads(existing_text)
+            if isinstance(loaded, dict):
+                existing_manifest_payload = loaded
+        except (OSError, json.JSONDecodeError):
+            existing_manifest_payload = None
+
+    if existing_manifest_payload is not None:
+        current_without_generated_at = dict(manifest)
+        current_without_generated_at.pop("generated_at", None)
+        existing_without_generated_at = dict(existing_manifest_payload)
+        existing_without_generated_at.pop("generated_at", None)
+
+        if current_without_generated_at == existing_without_generated_at:
+            previous_generated_at = existing_manifest_payload.get("generated_at")
+            if isinstance(previous_generated_at, str) and previous_generated_at:
+                manifest["generated_at"] = previous_generated_at
+
+    manifest_json = json.dumps(manifest, ensure_ascii=False, indent=2)
+    if manifest_json != existing_text:
+        manifest_path.write_text(manifest_json, encoding="utf-8")
+
+    print(manifest_json)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="起点搜书数据抓取：先抓目录入库，再抓章节正文入库。"
@@ -1038,11 +1494,53 @@ def build_parser() -> argparse.ArgumentParser:
     stats_parser = subparsers.add_parser("stats", help="查看数据库抓取进度")
     stats_parser.add_argument("--db-path", default=DEFAULT_DB_PATH)
 
+    export_shards_parser = subparsers.add_parser(
+        "export-shards",
+        help="按 book_id 范围导出可增量上传的 SQLite 分片",
+    )
+    export_shards_parser.add_argument("--db-path", default=DEFAULT_DB_PATH)
+    export_shards_parser.add_argument("--start", type=int, default=1)
+    export_shards_parser.add_argument("--end", type=int, default=10000)
+    export_shards_parser.add_argument(
+        "--shard-size",
+        type=int,
+        default=200,
+        help="每个 shard 覆盖多少本书，默认 200",
+    )
+    export_shards_parser.add_argument(
+        "--output-dir",
+        default=DEFAULT_SHARDS_DIR,
+        help="分片输出目录，默认 data/shards",
+    )
+    export_shards_parser.add_argument(
+        "--only-changed",
+        action="store_true",
+        help="只重导出发生变化的 shard（基于上次 index.json 指纹）",
+    )
+    export_shards_parser.add_argument(
+        "--auto-continue",
+        action="store_true",
+        help="基于输出目录 index.json 自动从下一个未导出分片继续",
+    )
+
     return parser
 
 
 def run_command(args: argparse.Namespace) -> None:
     command = args.command
+
+    if command == "export-shards":
+        export_shards(
+            db_path=args.db_path,
+            output_dir=args.output_dir,
+            start=args.start,
+            end=args.end,
+            shard_size=args.shard_size,
+            only_changed=args.only_changed,
+            auto_continue=args.auto_continue,
+        )
+        return
+
     db_path = getattr(args, "db_path", DEFAULT_DB_PATH)
     synchronous_mode = getattr(args, "sqlite_synchronous", "FULL")
     conn = open_database(db_path, synchronous_mode=synchronous_mode)

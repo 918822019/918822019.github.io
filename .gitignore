@@ -19,10 +19,10 @@ project/起点搜书/.env.*
 # Crawler runtime logs
 project/起点搜书/data_get/data_get.log
 
-# SQLite runtime artifacts (large/volatile)
-project/起点搜书/data/books.db
-project/起点搜书/data/books.db-shm
-project/起点搜书/data/books.db-wal
+# SQLite / shard artifacts (large/volatile)
+project/起点搜书/data/**/*.db
+project/起点搜书/data/**/*.db-*
+project/起点搜书/data/**/*.tmp-journal
 
 # Optional crawler debug dumps
 project/起点搜书/data_get/page_*.html
