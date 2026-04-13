@@ -24,7 +24,7 @@
 - --repo-id        ModelScope 仓库 ID，必填
 - --output-dir     下载到的本地目录，默认 data/modelscope_download
 - --allow-pattern  允许下载的文件模式，可多次传入
-- --ignore-pattern 忽略下载的文件模式，可多次传入
+- --ignore-pattern 忽略下载的文件模式，可多次传入 
 - --token          访问令牌，默认自动读取环境变量
 - --revision       下载分支/版本，默认 master
 - --clean-output   下载前清空 output-dir

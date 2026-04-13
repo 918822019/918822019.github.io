@@ -10,6 +10,9 @@
 
 - data/books.json 书籍数据
 - data/books.db SQLite 抓取数据库
+- db_viewer.py 数据库可视化管理界面 (见文件注释)
+- script/start_viewer.sh 可视化界面启动脚本 (见文件注释)
+- tests/test_db.py 数据库连接测试脚本 (见文件注释)
 - query_processor.py 查询预处理
 - rag_retriever.py 数据召回
 - app.py 推荐API服务
@@ -89,6 +92,37 @@ python main.py export-shards --start 1 --end 10000 --shard-size 200 --output-dir
 - 当前 SQLite 使用 WAL，配合 `--sqlite-synchronous FULL` 时更适合怕断电的长任务。
 - export-shards 不会改动主库，而是从主库读取并导出静态 shard 文件，适合上传到数据集仓库。
 - 当前 app.py 仍然读取 data/books.json，还没有切到 SQLite。如果你要，我可以下一步把推荐服务也改成直接读数据库。
+
+## 数据库可视化界面
+
+提供了 Web 界面来查看和管理数据库中的书籍和章节数据。
+
+### 快速开始
+
+```bash
+# 1. 测试数据库连接
+cd tests
+python3 test_db.py
+
+# 2. 启动可视化界面
+cd ..
+./script/start_viewer.sh
+# 或
+python3 db_viewer.py
+
+# 3. 访问界面
+# 打开浏览器: http://localhost:5000
+```
+
+### 功能特性
+
+- 📊 数据统计面板：展示书籍总数、章节数、完成进度等
+- 🔍 智能搜索：支持按书名、作者、简介搜索
+- 🏷️ 分类筛选：按书籍分类和完成状态过滤
+- 📈 进度可视化：直观显示每本书的章节抓取进度
+- 🕐 最近更新：展示最近更新的书籍列表
+
+详细用法请查看 `db_viewer.py`、`script/start_viewer.sh` 和 `tests/test_db.py` 的文件注释。
 
 ## 上传到 ModelScope
 

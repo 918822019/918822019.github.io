@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>起点搜书 - 数据库管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            color: #667eea;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .stat-card .label {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .content-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-bar input,
+        .search-bar select {
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            flex: 1;
+            min-width: 200px;
+            transition: border-color 0.3s;
+        }
+
+        .search-bar input:focus,
+        .search-bar select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #667eea;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .recent-books {
+            list-style: none;
+        }
+
+        .recent-books li {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.3s;
+        }
+
+        .recent-books li:hover {
+            background: #f8f9fa;
+        }
+
+        .recent-books .book-title {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .recent-books .book-meta {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 起点搜书数据库管理</h1>
+            <p>可视化查看和管理书籍数据</p>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>总书籍数</h3>
+                <div class="value">{{ stats.total_books }}</div>
+                <div class="label">本</div>
+            </div>
+            <div class="stat-card">
+                <h3>目录就绪</h3>
+                <div class="value">{{ stats.catalog_ready }}</div>
+                <div class="label">本</div>
+            </div>
+            <div class="stat-card">
+                <h3>内容完成</h3>
+                <div class="value">{{ stats.content_completed }}</div>
+                <div class="label">本</div>
+            </div>
+            <div class="stat-card">
+                <h3>总章节数</h3>
+                <div class="value">{{ stats.total_chapters }}</div>
+                <div class="label">章</div>
+            </div>
+            <div class="stat-card">
+                <h3>已抓取章节</h3>
+                <div class="value">{{ stats.fetched_chapters }}</div>
+                <div class="label">章</div>
+            </div>
+            <div class="stat-card">
+                <h3>待抓取章节</h3>
+                <div class="value">{{ stats.pending_chapters }}</div>
+                <div class="label">章</div>
+            </div>
+        </div>
+
+        <!-- 最近更新的书籍 -->
+        <div class="content-section">
+            <h2 class="section-title">🕐 最近更新的书籍</h2>
+            {% if stats.recent_books %}
+            <ul class="recent-books">
+                {% for book in stats.recent_books %}
+                <li>
+                    <div class="book-title">{{ book.title }}</div>
+                    <div class="book-meta">
+                        作者: {{ book.author }} | 
+                        分类: {{ book.category }} | 
+                        章节: {{ book.chapter_count }} | 
+                        更新: {{ book.last_update }}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: #999; text-align: center;">暂无数据</p>
+            {% endif %}
+        </div>
+
+        <!-- 书籍列表 -->
+        <div class="content-section">
+            <h2 class="section-title">📖 书籍列表</h2>
+            
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="搜索书名、作者或简介...">
+                <select id="categoryFilter">
+                    <option value="">所有分类</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="">所有状态</option>
+                    <option value="completed">已完成</option>
+                    <option value="incomplete">未完成</option>
+                </select>
+                <button class="btn" onclick="loadBooks()">搜索</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>书名</th>
+                        <th>作者</th>
+                        <th>分类</th>
+                        <th>状态</th>
+                        <th>章节进度</th>
+                        <th>更新时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="booksTableBody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #999;">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <button onclick="changePage(-1)" id="prevBtn">上一页</button>
+                <span id="pageInfo">第 1 页</span>
+                <button onclick="changePage(1)" id="nextBtn">下一页</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const perPage = 20;
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+            loadBooks();
+        });
+
+        // 加载分类列表
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('categoryFilter');
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('加载分类失败:', error);
+            }
+        }
+
+        // 加载书籍列表
+        async function loadBooks(page = 1) {
+            currentPage = page;
+            const search = document.getElementById('searchInput').value;
+            const category = document.getElementById('categoryFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            try {
+                const params = new URLSearchParams({
+                    page: page,
+                    per_page: perPage,
+                    search: search,
+                    category: category,
+                    status: status
+                });
+
+                const response = await fetch(`/api/books?${params}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderBooks(data.data);
+                    updatePagination(data.pagination);
+                }
+            } catch (error) {
+                console.error('加载书籍失败:', error);
+                document.getElementById('booksTableBody').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center; color: red;">加载失败</td></tr>';
+            }
+        }
+
+        // 渲染书籍表格
+        function renderBooks(books) {
+            const tbody = document.getElementById('booksTableBody');
+            
+            if (books.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">没有找到书籍</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = books.map(book => {
+                const progress = book.chapter_count > 0 
+                    ? Math.round((book.content_fetched_chapters / book.chapter_count) * 100)
+                    : 0;
+                
+                const statusBadge = book.content_completed 
+                    ? '<span class="badge badge-success">已完成</span>'
+                    : '<span class="badge badge-warning">进行中</span>';
+
+                return `
+                    <tr>
+                        <td>${book.book_id}</td>
+                        <td><strong>${book.title}</strong></td>
+                        <td>${book.author || '-'}</td>
+                        <td>${book.category || '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            ${book.content_fetched_chapters}/${book.chapter_count}
+                            <div class="progress-bar" style="margin-top: 5px;">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </td>
+                        <td>${book.last_update || '-'}</td>
+                        <td>
+                            <a href="${book.homepage_url}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 0.9em;">
+                                查看详情
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 更新分页信息
+        function updatePagination(pagination) {
+            document.getElementById('pageInfo').textContent = 
+                `第 ${pagination.page} / ${pagination.pages} 页 (共 ${pagination.total} 条)`;
+            
+            document.getElementById('prevBtn').disabled = pagination.page <= 1;
+            document.getElementById('nextBtn').disabled = pagination.page >= pagination.pages;
+        }
+
+        // 切换页码
+        function changePage(delta) {
+            loadBooks(currentPage + delta);
+        }
+
+        // 回车键搜索
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadBooks(1);
+            }
+        });
+    </script>
+</body>
+</html>
