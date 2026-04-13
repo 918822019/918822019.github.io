@@ -221,6 +221,30 @@ python download_modelscope_dataset.py \
   例如 `data/.shards.modelscope-upload-manifest.json`。
 - `--include-hidden` 用于确保上述隐藏状态文件也被上传。
 
+可直接复制的“注释版”恢复与续跑命令：
+
+```bash
+# 1) 拉取完整数据到 data 目录（保持与旧服务器相同相对路径）
+cd project/起点搜书
+python download_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--repo-type dataset \
+	--revision master \
+	--output-dir data
+
+# 2) 一键检查断点状态文件是否齐全
+test -f data/books.db && echo "OK data/books.db" || echo "MISS data/books.db"
+test -f data/shards/index.json && echo "OK data/shards/index.json" || echo "MISS data/shards/index.json"
+test -f data/.shards.modelscope-upload-manifest.json && echo "OK data/.shards.modelscope-upload-manifest.json" || echo "MISS data/.shards.modelscope-upload-manifest.json"
+
+# 3) 查看当前进度（确认能继续）
+cd data_get
+python main.py stats
+
+# 4) 继续抓正文（断点重跑）
+python main.py crawl-content --start 1 --end 10000 --concurrency 8 --batch-size 40
+```
+
 ## 从 ModelScope 下载数据
 
 如果你需要在新机器或中断后继续爬取，可以先把 ModelScope 上的数据下载到本地：

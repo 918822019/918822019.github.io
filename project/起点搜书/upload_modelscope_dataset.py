@@ -17,6 +17,29 @@
 #     --incremental \
 #     --commit-message "shard update"
 #
+#   # 跨服务器断点续跑：全量上传 data（包含隐藏状态文件）
+#   python upload_modelscope_dataset.py \
+#     --repo-id wzywuan/Novel-Collection \
+#     --folder-path data \
+#     --include-hidden \
+#     --commit-message "full data upload for resume"
+#
+#   # 第三方服务器恢复：下载后先检查关键断点文件
+#   # test -f data/books.db \
+#   #   && echo "OK data/books.db" || echo "MISS data/books.db"
+#   # test -f data/shards/index.json \
+#   #   && echo "OK data/shards/index.json" \
+#   #   || echo "MISS data/shards/index.json"
+#   # test -f data/.shards.modelscope-upload-manifest.json \
+#   #   && echo "OK data/.shards.modelscope-upload-manifest.json" \
+#   #   || echo "MISS data/.shards.modelscope-upload-manifest.json"
+#
+#   # 第三方服务器续跑正文
+#   # cd data_get
+#   # python main.py stats
+#   # python main.py crawl-content --start 1 --end 10000 \
+#   #   --concurrency 8 --batch-size 40
+#
 # 依赖：pip install -r requirements.txt
 #
 # - 支持断点续传，自动生成本地 manifest 追踪已上传内容
