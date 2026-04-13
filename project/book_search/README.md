@@ -24,6 +24,34 @@
 2. 运行 app.py 启动服务
 3. 前端通过 API 获取推荐结果
 
+## LLM 批量打标签
+
+可以使用 `src/process/llm_tagging.py` 对每一本小说调用 LLM 自动生成标签。
+
+先配置环境变量（OpenAI 兼容接口）：
+
+```bash
+export LLM_API_KEY="你的密钥"
+export LLM_BASE_URL="https://api.openai.com/v1"
+export LLM_MODEL_NAME="gpt-4o-mini"
+```
+
+执行打标签：
+
+```bash
+cd project/book_search
+python -m src.process.llm_tagging \
+	--input data/books.json \
+	--output data/books_tagged.json
+```
+
+常用参数：
+
+- `--overwrite` 覆盖已有标签
+- `--limit 100` 只处理前 100 本，便于小样本验证
+- `--sleep 0.2` 每本间隔 0.2 秒，降低触发限流概率
+- `--model qwen-plus` 临时覆盖模型名
+
 ## 抓取命令
 
 在 project/起点搜书/data_get 目录执行：

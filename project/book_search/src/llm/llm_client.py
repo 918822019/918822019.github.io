@@ -3,7 +3,9 @@ LLM 客户端模块
 负责大语言模型的调用和管理
 """
 
-from typing import Optional, Dict, Any
+import json
+from typing import Optional
+from urllib import error, request
 
 from .env import config
 
@@ -11,10 +13,15 @@ from .env import config
 class LLMClient:
     """LLM 客户端类，统一管理大语言模型调用"""
 
-    def __init__(self, model_name: Optional[str] = None, api_key: Optional[str] = None, base_url: Optional[str] = None):
+    def __init__(
+        self,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+    ):
         """
         初始化 LLM 客户端
-        
+
         Args:
             model_name: 模型名称（默认从配置读取）
             api_key: API 密钥（默认从配置读取）
@@ -27,49 +34,91 @@ class LLMClient:
         self._initialize_client()
 
     def _initialize_client(self):
-        """初始化具体的 LLM 客户端"""
-        # TODO: 根据配置初始化不同的 LLM 客户端
-        # 例如：OpenAI, Qwen, ChatGLM 等
-        pass
+        """初始化具体的 LLM 客户端（预留）"""
+        self.client = {
+            "base_url": self.base_url.rstrip("/"),
+            "model": self.model_name,
+        }
 
-    def generate(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> str:
+    def _post_chat_completion(self, messages: list, **kwargs) -> str:
+        if not self.api_key:
+            raise ValueError("LLM_API_KEY 未设置，无法调用模型。")
+
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": kwargs.pop("temperature", 0.2),
+        }
+        payload.update(kwargs)
+
+        body = json.dumps(payload).encode("utf-8")
+        api_url = f"{self.base_url.rstrip('/')}/chat/completions"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        req = request.Request(api_url, data=body, headers=headers, method="POST")
+        timeout = kwargs.get("timeout", config.REQUEST_TIMEOUT)
+        try:
+            with request.urlopen(req, timeout=timeout) as resp:
+                resp_data = resp.read().decode("utf-8")
+        except error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="ignore")
+            raise RuntimeError(
+                f"LLM 调用失败: HTTP {exc.code}, detail={detail}"
+            ) from exc
+        except error.URLError as exc:
+            raise RuntimeError(f"LLM 调用失败: {exc.reason}") from exc
+
+        try:
+            data = json.loads(resp_data)
+            return data["choices"][0]["message"]["content"].strip()
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(f"LLM 返回解析失败: {resp_data}") from exc
+
+    def generate(
+        self, prompt: str, system_prompt: Optional[str] = None, **kwargs
+    ) -> str:
         """
         生成文本响应
-        
+
         Args:
             prompt: 用户提示词
             system_prompt: 系统提示词
             **kwargs: 其他参数
-            
+
         Returns:
             生成的文本
         """
-        # TODO: 实现实际的 LLM 调用逻辑
-        return f"LLM 响应（待实现）- 模型: {self.model_name}"
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        return self._post_chat_completion(messages=messages, **kwargs)
 
     def chat(self, messages: list, **kwargs) -> str:
         """
         对话式调用
-        
+
         Args:
             messages: 消息列表，格式为 [{"role": "user/assistant/system", "content": "..."}]
             **kwargs: 其他参数
-            
+
         Returns:
             助手的回复
         """
-        # TODO: 实现实际的聊天调用逻辑
-        return f"Chat 响应（待实现）- 模型: {self.model_name}"
+        return self._post_chat_completion(messages=messages, **kwargs)
 
     def generate_with_context(self, query: str, context: str, **kwargs) -> str:
         """
         基于上下文生成回答（适用于 RAG 场景）
-        
+
         Args:
             query: 用户查询
             context: 相关上下文信息
             **kwargs: 其他参数
-            
+
         Returns:
             基于上下文的回答
         """
