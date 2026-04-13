@@ -3,7 +3,7 @@
 #
 # 用法示例：
 #   # 先 dry-run 看会上传哪些文件
-#   cd project/起点搜书
+#   cd project/book_search
 #   python tools/upload_modelscope_dataset.py \
 #     --repo-id wzywuan/Novel-Collection \
 #     --folder-path data/shards \

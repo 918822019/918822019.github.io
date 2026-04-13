@@ -171,21 +171,21 @@ python tools/upload_modelscope_dataset.py \
 先导出分片：
 
 ```bash
-cd project/起点搜书/data_get
+cd project/book_search/data_get
 python main.py export-shards --start 1 --end 10000 --shard-size 200 --output-dir ../data/shards
 ```
 
 后续增量更新建议使用：
 
 ```bash
-cd project/起点搜书/data_get
+cd project/book_search/data_get
 python main.py export-shards --start 1 --end 10000 --shard-size 200 --output-dir ../data/shards --only-changed
 ```
 
 先看看这次会上传哪些文件：
 
 ```bash
-cd project/起点搜书
+cd project/book_search
 python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data/shards \
@@ -196,7 +196,7 @@ python tools/upload_modelscope_dataset.py \
 确认后执行真正上传：
 
 ```bash
-cd project/起点搜书
+cd project/book_search
 python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data/shards \
@@ -218,7 +218,7 @@ python tools/upload_modelscope_dataset.py \
 先在旧服务器执行 dry-run，确认上传列表里包含隐藏状态文件：
 
 ```bash
-cd project/起点搜书
+cd project/book_search
 python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data \
@@ -229,7 +229,7 @@ python tools/upload_modelscope_dataset.py \
 确认后执行全量上传：
 
 ```bash
-cd project/起点搜书
+cd project/book_search
 python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data \
@@ -240,7 +240,7 @@ python tools/upload_modelscope_dataset.py \
 然后在新服务器下载到同样路径：
 
 ```bash
-cd project/起点搜书
+cd project/book_search
 python tools/download_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--repo-type dataset \
@@ -261,7 +261,7 @@ python tools/download_modelscope_dataset.py \
 
 ```bash
 # 1) 拉取完整数据到 data 目录（保持与旧服务器相同相对路径）
-cd project/起点搜书
+cd project/book_search
 python tools/download_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--repo-type dataset \
@@ -286,7 +286,7 @@ python main.py crawl-content --start 1 --end 10000 --concurrency 8 --batch-size 
 如果你需要在新机器或中断后继续爬取，可以先把 ModelScope 上的数据下载到本地：
 
 ```bash
-cd project/起点搜书
+cd project/book_search
 python tools/download_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--repo-type dataset \

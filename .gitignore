@@ -13,11 +13,11 @@ __pycache__/
 venv/
 
 # Project secrets
-project/起点搜书/.env
-project/起点搜书/.env.*
+project/book_search/.env
+project/book_search/.env.*
 
 # Crawler runtime logs
-project/起点搜书/data_get/data_get.log
+project/book_search/data_get/data_get.log
 
 # SQLite / shard artifacts (large/volatile)
 project/起点搜书/data/**/*.db
@@ -25,10 +25,10 @@ project/起点搜书/data/**/*.db-*
 project/起点搜书/data/**/*.tmp-journal
 
 # Optional crawler debug dumps
-project/起点搜书/data_get/page_*.html
-project/起点搜书/data_get/page_*.png
-project/起点搜书/data_get/page_*_raw_response.html
-project/起点搜书/data_get/page_*_network_debug.json
-project/起点搜书/data_get/page_*_dom_before_click.html
-project/起点搜书/data_get/page_*_dom_after_click.html
-project/起点搜书/data_get/xpath_result*.json
+project/book_search/data_get/page_*.html
+project/book_search/data_get/page_*.png
+project/book_search/data_get/page_*_raw_response.html
+project/book_search/data_get/page_*_network_debug.json
+project/book_search/data_get/page_*_dom_before_click.html
+project/book_search/data_get/page_*_dom_after_click.html
+project/book_search/data_get/xpath_result*.json
