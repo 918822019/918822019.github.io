@@ -1,44 +1,21 @@
 # =========================================
-# ModelScope 数据集分片增量上传脚本
+# ModelScope 数据集分片增量上传脚本 (已移动到 tools/)
 #
 # 用法示例：
 #   # 先 dry-run 看会上传哪些文件
 #   cd project/起点搜书
-#   python upload_modelscope_dataset.py \
+#   python tools/upload_modelscope_dataset.py \
 #     --repo-id wzywuan/Novel-Collection \
 #     --folder-path data/shards \
 #     --incremental \
 #     --dry-run
 #
 #   # 真正上传（只会上传有变化的分片）
-#   python upload_modelscope_dataset.py \
+#   python tools/upload_modelscope_dataset.py \
 #     --repo-id wzywuan/Novel-Collection \
 #     --folder-path data/shards \
 #     --incremental \
 #     --commit-message "shard update"
-#
-#   # 跨服务器断点续跑：全量上传 data（包含隐藏状态文件）
-#   python upload_modelscope_dataset.py \
-#     --repo-id wzywuan/Novel-Collection \
-#     --folder-path data \
-#     --include-hidden \
-#     --commit-message "full data upload for resume"
-#
-#   # 第三方服务器恢复：下载后先检查关键断点文件
-#   # test -f data/books.db \
-#   #   && echo "OK data/books.db" || echo "MISS data/books.db"
-#   # test -f data/shards/index.json \
-#   #   && echo "OK data/shards/index.json" \
-#   #   || echo "MISS data/shards/index.json"
-#   # test -f data/.shards.modelscope-upload-manifest.json \
-#   #   && echo "OK data/.shards.modelscope-upload-manifest.json" \
-#   #   || echo "MISS data/.shards.modelscope-upload-manifest.json"
-#
-#   # 第三方服务器续跑正文
-#   # cd data_get
-#   # python main.py stats
-#   # python main.py crawl-content --start 1 --end 10000 \
-#   #   --concurrency 8 --batch-size 40
 #
 # 依赖：pip install -r requirements.txt
 #
@@ -74,8 +51,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--folder-path",
-        default=str(Path(__file__).resolve().parent / "data"),
-        help="要上传的本地目录，默认是当前项目下的 data 目录",
+        default=str(Path(__file__).resolve().parent.parent / "data"),
+        help="要上传的本地目录，默认是项目根下的 data 目录",
     )
     parser.add_argument(
         "--commit-message",

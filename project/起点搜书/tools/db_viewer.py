@@ -5,7 +5,7 @@
 使用方法:
     1. 确保数据库文件存在: data/books.db
     2. 安装依赖: pip install flask
-    3. 启动服务: python3 db_viewer.py
+    3. 启动服务: python3 tools/db_viewer.py
     4. 访问界面: http://localhost:5000
 
 功能:
@@ -29,11 +29,14 @@ import os
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 
-app = Flask(__name__)
-
-# 数据库路径配置
+# 项目根目录（tools/ 的上一级）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'data', 'books.db')
+PROJECT_ROOT = os.path.normpath(os.path.join(BASE_DIR, ".."))
+TEMPLATES_DIR = os.path.join(PROJECT_ROOT, "templates")
+STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
+DB_PATH = os.path.abspath(os.path.join(PROJECT_ROOT, "data", "books.db"))
+
+app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 
 
 def get_db_connection():
@@ -43,87 +46,98 @@ def get_db_connection():
     return conn
 
 
-@app.route('/')
+def now_iso() -> str:
+    return datetime.now().isoformat(timespec="seconds")
+
+
+@app.route("/")
 def index():
     """主页 - 显示数据统计概览"""
     conn = get_db_connection()
     try:
         # 获取书籍统计
-        book_stats = conn.execute("""
+        book_stats = conn.execute(
+            """
             SELECT 
                 COUNT(*) as total_books,
                 COALESCE(SUM(CASE WHEN chapter_count > 0 THEN 1 ELSE 0 END), 0) as catalog_ready_books,
                 COALESCE(SUM(content_completed), 0) as content_completed_books
             FROM books
-        """).fetchone()
-        
+        """
+        ).fetchone()
+
         # 获取章节统计
-        chapter_stats = conn.execute("""
+        chapter_stats = conn.execute(
+            """
             SELECT 
                 COUNT(*) as total_chapters,
                 COALESCE(SUM(is_content_fetched), 0) as fetched_chapters
             FROM chapters
-        """).fetchone()
-        
+        """
+        ).fetchone()
+
         # 获取最近更新的书籍
-        recent_books = conn.execute("""
+        recent_books = conn.execute(
+            """
             SELECT book_id, title, author, category, last_update, chapter_count
             FROM books
             WHERE last_update IS NOT NULL AND last_update != ''
             ORDER BY last_update DESC
             LIMIT 10
-        """).fetchall()
-        
+        """
+        ).fetchall()
+
         stats = {
-            'total_books': book_stats['total_books'],
-            'catalog_ready': book_stats['catalog_ready_books'],
-            'content_completed': book_stats['content_completed_books'],
-            'total_chapters': chapter_stats['total_chapters'],
-            'fetched_chapters': chapter_stats['fetched_chapters'],
-            'pending_chapters': chapter_stats['total_chapters'] - chapter_stats['fetched_chapters'],
-            'recent_books': [dict(row) for row in recent_books]
+            "total_books": book_stats["total_books"],
+            "catalog_ready": book_stats["catalog_ready_books"],
+            "content_completed": book_stats["content_completed_books"],
+            "total_chapters": chapter_stats["total_chapters"],
+            "fetched_chapters": chapter_stats["fetched_chapters"],
+            "pending_chapters": chapter_stats["total_chapters"]
+            - chapter_stats["fetched_chapters"],
+            "recent_books": [dict(row) for row in recent_books],
         }
-        
-        return render_template('dashboard.html', stats=stats)
+
+        return render_template("dashboard.html", stats=stats)
     finally:
         conn.close()
 
 
-@app.route('/api/books')
+@app.route("/api/books")
 def api_books():
     """API: 获取书籍列表(支持分页和搜索)"""
     conn = get_db_connection()
     try:
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 20, type=int)
-        search = request.args.get('search', '', type=str)
-        category = request.args.get('category', '', type=str)
-        status = request.args.get('status', '', type=str)
-        
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 20, type=int)
+        search = request.args.get("search", "", type=str)
+        category = request.args.get("category", "", type=str)
+        status = request.args.get("status", "", type=str)
+
         # 构建查询条件
         conditions = []
         params = []
-        
+
         if search:
             conditions.append("(title LIKE ? OR author LIKE ? OR intro LIKE ?)")
             search_term = f"%{search}%"
             params.extend([search_term, search_term, search_term])
-        
+
         if category:
             conditions.append("category = ?")
             params.append(category)
-        
-        if status == 'completed':
+
+        if status == "completed":
             conditions.append("content_completed = 1")
-        elif status == 'incomplete':
+        elif status == "incomplete":
             conditions.append("content_completed = 0")
-        
+
         where_clause = " AND ".join(conditions) if conditions else "1=1"
-        
+
         # 获取总数
         count_query = f"SELECT COUNT(*) as total FROM books WHERE {where_clause}"
-        total = conn.execute(count_query, params).fetchone()['total']
-        
+        total = conn.execute(count_query, params).fetchone()["total"]
+
         # 获取分页数据
         offset = (page - 1) * per_page
         query = f"""
@@ -136,100 +150,112 @@ def api_books():
             LIMIT ? OFFSET ?
         """
         params.extend([per_page, offset])
-        
+
         books = conn.execute(query, params).fetchall()
-        
-        return jsonify({
-            'success': True,
-            'data': [dict(row) for row in books],
-            'pagination': {
-                'page': page,
-                'per_page': per_page,
-                'total': total,
-                'pages': (total + per_page - 1) // per_page
+
+        return jsonify(
+            {
+                "success": True,
+                "data": [dict(row) for row in books],
+                "pagination": {
+                    "page": page,
+                    "per_page": per_page,
+                    "total": total,
+                    "pages": (total + per_page - 1) // per_page,
+                },
             }
-        })
+        )
     finally:
         conn.close()
 
 
-@app.route('/api/books/<int:book_id>')
+@app.route("/api/books/<int:book_id>")
 def api_book_detail(book_id):
     """API: 获取单本书的详细信息"""
     conn = get_db_connection()
     try:
-        book = conn.execute("""
+        book = conn.execute(
+            """
             SELECT * FROM books WHERE book_id = ?
-        """, (book_id,)).fetchone()
-        
+        """,
+            (book_id,),
+        ).fetchone()
+
         if not book:
-            return jsonify({'success': False, 'error': '书籍不存在'}), 404
-        
+            return jsonify({"success": False, "error": "书籍不存在"}), 404
+
         # 获取章节列表
-        chapters = conn.execute("""
+        chapters = conn.execute(
+            """
             SELECT chapter_id, chapter_name, is_content_fetched, content_length
             FROM chapters
             WHERE book_id = ?
             ORDER BY chapter_id
-        """, (book_id,)).fetchall()
-        
-        return jsonify({
-            'success': True,
-            'book': dict(book),
-            'chapters': [dict(row) for row in chapters]
-        })
+        """,
+            (book_id,),
+        ).fetchall()
+
+        return jsonify(
+            {
+                "success": True,
+                "book": dict(book),
+                "chapters": [dict(row) for row in chapters],
+            }
+        )
     finally:
         conn.close()
 
 
-@app.route('/api/chapters/<int:book_id>/<int:chapter_id>')
+@app.route("/api/chapters/<int:book_id>/<int:chapter_id>")
 def api_chapter_content(book_id, chapter_id):
     """API: 获取章节内容"""
     conn = get_db_connection()
     try:
-        chapter = conn.execute("""
+        chapter = conn.execute(
+            """
             SELECT * FROM chapters 
             WHERE book_id = ? AND chapter_id = ?
-        """, (book_id, chapter_id)).fetchone()
-        
+        """,
+            (book_id, chapter_id),
+        ).fetchone()
+
         if not chapter:
-            return jsonify({'success': False, 'error': '章节不存在'}), 404
-        
-        return jsonify({
-            'success': True,
-            'chapter': dict(chapter)
-        })
+            return jsonify({"success": False, "error": "章节不存在"}), 404
+
+        return jsonify({"success": True, "chapter": dict(chapter)})
     finally:
         conn.close()
 
 
-@app.route('/api/categories')
+@app.route("/api/categories")
 def api_categories():
     """API: 获取所有分类"""
     conn = get_db_connection()
     try:
-        categories = conn.execute("""
+        categories = conn.execute(
+            """
             SELECT DISTINCT category
             FROM books
             WHERE category IS NOT NULL AND category != ''
             ORDER BY category
-        """).fetchall()
-        
-        return jsonify({
-            'success': True,
-            'categories': [row['category'] for row in categories]
-        })
+        """
+        ).fetchall()
+
+        return jsonify(
+            {"success": True, "categories": [row["category"] for row in categories]}
+        )
     finally:
         conn.close()
 
 
-@app.route('/api/statistics')
+@app.route("/api/statistics")
 def api_statistics():
     """API: 获取详细统计数据"""
     conn = get_db_connection()
     try:
         # 按分类统计
-        category_stats = conn.execute("""
+        category_stats = conn.execute(
+            """
             SELECT category, 
                    COUNT(*) as book_count,
                    SUM(chapter_count) as total_chapters,
@@ -238,20 +264,24 @@ def api_statistics():
             WHERE category IS NOT NULL AND category != ''
             GROUP BY category
             ORDER BY book_count DESC
-        """).fetchall()
-        
+        """
+        ).fetchall()
+
         # 按状态统计
-        status_stats = conn.execute("""
+        status_stats = conn.execute(
+            """
             SELECT serial_status,
                    COUNT(*) as book_count
             FROM books
             WHERE serial_status IS NOT NULL AND serial_status != ''
             GROUP BY serial_status
             ORDER BY book_count DESC
-        """).fetchall()
-        
+        """
+        ).fetchall()
+
         # 章节完成度分布
-        completion_stats = conn.execute("""
+        completion_stats = conn.execute(
+            """
             SELECT 
                 CASE 
                     WHEN chapter_count = 0 THEN '0%'
@@ -266,17 +296,20 @@ def api_statistics():
             WHERE chapter_count > 0
             GROUP BY completion_range
             ORDER BY completion_range
-        """).fetchall()
-        
-        return jsonify({
-            'success': True,
-            'category_stats': [dict(row) for row in category_stats],
-            'status_stats': [dict(row) for row in status_stats],
-            'completion_stats': [dict(row) for row in completion_stats]
-        })
+        """
+        ).fetchall()
+
+        return jsonify(
+            {
+                "success": True,
+                "category_stats": [dict(row) for row in category_stats],
+                "status_stats": [dict(row) for row in status_stats],
+                "completion_stats": [dict(row) for row in completion_stats],
+            }
+        )
     finally:
         conn.close()
 
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)

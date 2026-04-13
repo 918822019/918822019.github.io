@@ -10,7 +10,7 @@
 
 - data/books.json 书籍数据
 - data/books.db SQLite 抓取数据库
-- db_viewer.py 数据库可视化管理界面 (见文件注释)
+- tools/db_viewer.py 数据库可视化管理界面 (见文件注释)
 - script/start_viewer.sh 可视化界面启动脚本 (见文件注释)
 - tests/test_db.py 数据库连接测试脚本 (见文件注释)
 - query_processor.py 查询预处理
@@ -108,7 +108,7 @@ python3 test_db.py
 cd ..
 ./script/start_viewer.sh
 # 或
-python3 db_viewer.py
+python3 tools/db_viewer.py
 
 # 3. 访问界面
 # 打开浏览器: http://localhost:5000
@@ -122,7 +122,7 @@ python3 db_viewer.py
 - 📈 进度可视化：直观显示每本书的章节抓取进度
 - 🕐 最近更新：展示最近更新的书籍列表
 
-详细用法请查看 `db_viewer.py`、`script/start_viewer.sh` 和 `tests/test_db.py` 的文件注释。
+详细用法请查看 `tools/db_viewer.py`、`script/start_viewer.sh` 和 `tests/test_db.py` 的文件注释。
 
 ## 上传到 ModelScope
 
@@ -136,7 +136,7 @@ pip install -r requirements.txt
 
 ```bash
 export MODELSCOPE_API_TOKEN="你的 token"
-python upload_modelscope_dataset.py \
+python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data \
 	--commit-message "upload dataset folder to repo"
@@ -149,14 +149,15 @@ python upload_modelscope_dataset.py \
 如果你想保留这份临时快照，方便重复上传或人工检查，可以加上：
 
 ```bash
-python upload_modelscope_dataset.py \
+python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--keep-snapshot
 ```
 
 脚本位置：
 
-- `upload_modelscope_dataset.py` 负责登录 ModelScope 并执行 `upload_folder`
+- `tools/upload_modelscope_dataset.py` 负责登录 ModelScope 并执行 `upload_folder`
+- `tools/download_modelscope_dataset.py` 负责从 ModelScope 下载并同步到本地目录
 - `requirements.txt` 包含 Flask 和 ModelScope SDK 的最小依赖
 
 ## 增量上传建议流程
@@ -185,7 +186,7 @@ python main.py export-shards --start 1 --end 10000 --shard-size 200 --output-dir
 
 ```bash
 cd project/起点搜书
-python upload_modelscope_dataset.py \
+python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data/shards \
 	--incremental \
@@ -196,7 +197,7 @@ python upload_modelscope_dataset.py \
 
 ```bash
 cd project/起点搜书
-python upload_modelscope_dataset.py \
+python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data/shards \
 	--incremental \
@@ -212,13 +213,13 @@ python upload_modelscope_dataset.py \
 ## 跨服务器断点续跑（建议流程）
 
 如果你希望在新服务器上继续 `crawl-content`、`export-shards --auto-continue`、
-以及 `upload_modelscope_dataset.py --incremental` 的断点状态，建议把 `data` 目录全量上传。
+以及 `tools/upload_modelscope_dataset.py --incremental` 的断点状态，建议把 `data` 目录全量上传。
 
 先在旧服务器执行 dry-run，确认上传列表里包含隐藏状态文件：
 
 ```bash
 cd project/起点搜书
-python upload_modelscope_dataset.py \
+python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data \
 	--include-hidden \
@@ -229,7 +230,7 @@ python upload_modelscope_dataset.py \
 
 ```bash
 cd project/起点搜书
-python upload_modelscope_dataset.py \
+python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data \
 	--include-hidden \
@@ -240,7 +241,7 @@ python upload_modelscope_dataset.py \
 
 ```bash
 cd project/起点搜书
-python download_modelscope_dataset.py \
+python tools/download_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--repo-type dataset \
 	--revision master \
@@ -249,10 +250,11 @@ python download_modelscope_dataset.py \
 
 说明：
 
-- `crawl-content` 的断点在 `data/books.db` 里的 `is_content_fetched` 状态。
-- `export-shards --auto-continue` 依赖 `data/shards/index.json`。
-- `upload_modelscope_dataset.py --incremental` 依赖本地 manifest，
-  例如 `data/.shards.modelscope-upload-manifest.json`。
+-- `crawl-content` 的断点在 `data/books.db` 里的 `is_content_fetched` 状态。
+-- `export-shards --auto-continue` 依赖 `data/shards/index.json`。
+-- `tools/upload_modelscope_dataset.py --incremental` 依赖本地 manifest，
+例如 `data/.shards.modelscope-upload-manifest.json`。
+
 - `--include-hidden` 用于确保上述隐藏状态文件也被上传。
 
 可直接复制的“注释版”恢复与续跑命令：
@@ -260,7 +262,7 @@ python download_modelscope_dataset.py \
 ```bash
 # 1) 拉取完整数据到 data 目录（保持与旧服务器相同相对路径）
 cd project/起点搜书
-python download_modelscope_dataset.py \
+python tools/download_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--repo-type dataset \
 	--revision master \
@@ -285,7 +287,7 @@ python main.py crawl-content --start 1 --end 10000 --concurrency 8 --batch-size 
 
 ```bash
 cd project/起点搜书
-python download_modelscope_dataset.py \
+python tools/download_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--repo-type dataset \
 	--revision master \
@@ -296,14 +298,14 @@ python download_modelscope_dataset.py \
 
 ```bash
 # 只下载分片和索引
-python download_modelscope_dataset.py \
+python tools/download_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--allow-pattern '*.db' \
 	--allow-pattern 'index.json' \
 	--output-dir data/shards
 
 # 下载前先清空目标目录（谨慎）
-python download_modelscope_dataset.py \
+python tools/download_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--output-dir data/shards \
 	--clean-output

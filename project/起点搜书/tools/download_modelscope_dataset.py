@@ -5,17 +5,17 @@
 
 【常用命令】
 1. 下载全部内容到默认目录：
-    python download_modelscope_dataset.py --repo-id wzywuan/Novel-Collection
+    python tools/download_modelscope_dataset.py --repo-id wzywuan/Novel-Collection
 
 2. 只下载分片和索引到 data/shards：
-    python download_modelscope_dataset.py \
+    python tools/download_modelscope_dataset.py \
       --repo-id wzywuan/Novel-Collection \
       --allow-pattern '*.db' \
       --allow-pattern 'index.json' \
       --output-dir data/shards
 
 3. 下载前清空目标目录（谨慎）：
-    python download_modelscope_dataset.py \
+    python tools/download_modelscope_dataset.py \
       --repo-id wzywuan/Novel-Collection \
       --output-dir data/shards \
       --clean-output
@@ -24,10 +24,10 @@
 - --repo-id        ModelScope 仓库 ID，必填
 - --output-dir     下载到的本地目录，默认 data/modelscope_download
 - --allow-pattern  允许下载的文件模式，可多次传入
-- --ignore-pattern 忽略下载的文件模式，可多次传入 
+- --ignore-pattern 忽略下载的文件模式，可多次传入
 - --token          访问令牌，默认自动读取环境变量
 - --revision       下载分支/版本，默认 master
-- --clean-output   下载前清空 output-dir
+- --clean-output   下载前清空 output-dir（谨慎使用）
 
 【依赖环境】
 - pip install -r requirements.txt
@@ -58,7 +58,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--output-dir",
-        default=str(Path(__file__).resolve().parent / "data" / "modelscope_download"),
+        default=str(
+            Path(__file__).resolve().parent.parent / "data" / "modelscope_download"
+        ),
         help="下载后同步到的本地目录",
     )
     parser.add_argument(
@@ -82,7 +84,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--cache-dir",
-        default=str(Path(__file__).resolve().parent / ".modelscope-cache"),
+        default=str(Path(__file__).resolve().parent.parent / ".modelscope-cache"),
         help="ModelScope 缓存目录",
     )
     parser.add_argument(
@@ -132,12 +134,12 @@ def login_if_needed(token: str) -> None:
 
 
 def snapshot_download_with_fallback(
-        repo_id: str,
-        repo_type: str,
-        revision: str,
-        cache_dir: str,
-        allow_patterns: list[str],
-        ignore_patterns: list[str],
+    repo_id: str,
+    repo_type: str,
+    revision: str,
+    cache_dir: str,
+    allow_patterns: list[str],
+    ignore_patterns: list[str],
 ) -> str:
     snapshot_download = importlib.import_module(
         "modelscope.hub.snapshot_download"
