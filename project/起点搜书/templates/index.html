@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>起点搜书</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link href="/static/style.css" rel="stylesheet">
 </head>
 <body>
-    <h1>起点搜书</h1>
-    <input type="text" id="query" placeholder="输入关键词">
-    <button onclick="search()">搜索</button>
-    <div id="results"></div>
-    <script>
-        async function search() {
-            const query = document.getElementById('query').value;
-            const res = await fetch('/recommend', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({query})
-            });
-            const data = await res.json();
-            document.getElementById('results').innerHTML = data.map(book => `
+<h1>起点搜书</h1>
+<input id="query" placeholder="输入关键词" type="text">
+<button onclick="search()">搜索</button>
+<div id="results"></div>
+<script>
+    async function search() {
+        const query = document.getElementById('query').value;
+        const res = await fetch('/recommend', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({query})
+        });
+        const data = await res.json();
+        document.getElementById('results').innerHTML = data.map(book => `
                 <div>
                     <h3>${book.name}</h3>
                     <p>作者：${book.author}</p>
@@ -28,7 +28,7 @@
                     <a href="${book.link}">查看详情</a>
                 </div>
             `).join('');
-        }
-    </script>
+    }
+</script>
 </body>
 </html>

@@ -132,12 +132,12 @@ def login_if_needed(token: str) -> None:
 
 
 def snapshot_download_with_fallback(
-    repo_id: str,
-    repo_type: str,
-    revision: str,
-    cache_dir: str,
-    allow_patterns: list[str],
-    ignore_patterns: list[str],
+        repo_id: str,
+        repo_type: str,
+        revision: str,
+        cache_dir: str,
+        allow_patterns: list[str],
+        ignore_patterns: list[str],
 ) -> str:
     snapshot_download = importlib.import_module(
         "modelscope.hub.snapshot_download"

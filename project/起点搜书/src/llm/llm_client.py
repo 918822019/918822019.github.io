@@ -1,76 +1,85 @@
-"""简易的 OpenAI 聊天客户端（项目内使用）。
-
-用法：
-    - 在环境变量中设置 OPENAI_API_KEY
-    - 调用 `chat(messages)` 或直接以脚本运行进行快速测试
-
-本模块使用与 OpenAI Chat Completions 兼容的请求格式。
+"""
+LLM 客户端模块
+负责大语言模型的调用和管理
 """
 
-import os
-from typing import List, Dict
+from typing import Optional, Dict, Any
 
-try:
-    import openai
-except Exception:
-    openai = None
+from .env import config
 
 
-def chat(messages: List[Dict[str, str]], model: str = "gpt-4o-mini", **kwargs) -> str:
-    """发送聊天消息并返回助手的文本回复。
+class LLMClient:
+    """LLM 客户端类，统一管理大语言模型调用"""
 
-    参数：
-      - messages: 聊天消息列表，每项为 {"role": "system|user|assistant", "content": str}
-      - model: 要使用的模型名称，默认为 "gpt-4o-mini"
-      - kwargs: 额外传给 `openai.ChatCompletion.create` 的参数（如 `max_tokens`、`temperature` 等）
+    def __init__(self, model_name: Optional[str] = None, api_key: Optional[str] = None, base_url: Optional[str] = None):
+        """
+        初始化 LLM 客户端
+        
+        Args:
+            model_name: 模型名称（默认从配置读取）
+            api_key: API 密钥（默认从配置读取）
+            base_url: API 基础 URL（默认从配置读取）
+        """
+        self.model_name = model_name or config.LLM_MODEL_NAME
+        self.api_key = api_key or config.LLM_API_KEY
+        self.base_url = base_url or config.LLM_BASE_URL
+        self.client = None
+        self._initialize_client()
 
-    返回：助手生成的文本内容（字符串）。
-    """
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        # 若未设置密钥，提示用户设置环境变量
-        raise RuntimeError("请设置环境变量 OPENAI_API_KEY")
+    def _initialize_client(self):
+        """初始化具体的 LLM 客户端"""
+        # TODO: 根据配置初始化不同的 LLM 客户端
+        # 例如：OpenAI, Qwen, ChatGLM 等
+        pass
 
-    if openai is None:
-        # 如果未安装 openai 包，提示安装
-        raise RuntimeError("未安装 openai 包；请运行: pip install openai")
+    def generate(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> str:
+        """
+        生成文本响应
+        
+        Args:
+            prompt: 用户提示词
+            system_prompt: 系统提示词
+            **kwargs: 其他参数
+            
+        Returns:
+            生成的文本
+        """
+        # TODO: 实现实际的 LLM 调用逻辑
+        return f"LLM 响应（待实现）- 模型: {self.model_name}"
 
-    # 配置 API Key
-    openai.api_key = api_key
+    def chat(self, messages: list, **kwargs) -> str:
+        """
+        对话式调用
+        
+        Args:
+            messages: 消息列表，格式为 [{"role": "user/assistant/system", "content": "..."}]
+            **kwargs: 其他参数
+            
+        Returns:
+            助手的回复
+        """
+        # TODO: 实现实际的聊天调用逻辑
+        return f"Chat 响应（待实现）- 模型: {self.model_name}"
 
-    # 调用 ChatCompletion 接口
-    resp = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        **kwargs,
-    )
+    def generate_with_context(self, query: str, context: str, **kwargs) -> str:
+        """
+        基于上下文生成回答（适用于 RAG 场景）
+        
+        Args:
+            query: 用户查询
+            context: 相关上下文信息
+            **kwargs: 其他参数
+            
+        Returns:
+            基于上下文的回答
+        """
+        prompt = f"""基于以下信息回答问题：
 
-    # 解析响应，兼容常见的 choices 结构
-    choices = resp.get("choices") or []
-    if not choices:
-        raise RuntimeError(f"响应中未找到 choices: {resp}")
+相关信息：
+{context}
 
-    # 返回第一个候选的 message.content
-    return choices[0]["message"]["content"]
+问题：{query}
 
+请根据上述信息给出回答："""
 
-def main():
-    example = [
-        {"role": "system", "content": "你是一个有用的助手"},
-        {"role": "user", "content": "你好，请介绍一下你自己"},
-    ]
-    try:
-        text = chat(
-            example,
-            model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-            max_tokens=512,
-            temperature=0.7,
-        )
-        print(text)
-    except Exception as e:
-        # 调用失败时打印错误信息，便于本地调试
-        print("调用 OpenAI 出错:", e)
-
-
-if __name__ == "__main__":
-    main()
+        return self.generate(prompt, **kwargs)

@@ -3,7 +3,7 @@ name: Auto Build Docs Index
 on:
   push:
     branches: [ main, doc ]
-  workflow_dispatch: {}
+  workflow_dispatch: { }
 
 permissions:
   contents: write
