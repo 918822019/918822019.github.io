@@ -4,7 +4,54 @@
 """
 
 import os
+from pathlib import Path
 from typing import Optional
+
+
+def _parse_dotenv_line(line: str) -> tuple[str, str] | None:
+    """解析单行 .env 内容，返回 (key, value)。"""
+    raw = line.strip()
+    if not raw or raw.startswith("#") or "=" not in raw:
+        return None
+
+    key, value = raw.split("=", 1)
+    key = key.strip()
+    value = value.strip()
+    if not key:
+        return None
+
+    if (value.startswith('"') and value.endswith('"')) or (
+        value.startswith("'") and value.endswith("'")
+    ):
+        value = value[1:-1]
+    return key, value
+
+
+def _load_dotenv_files() -> None:
+    """加载常见 .env 文件到进程环境（不覆盖已存在变量）。"""
+    current = Path(__file__).resolve()
+    llm_dir = current.parent
+    project_root = current.parents[2]
+
+    dotenv_candidates = [
+        project_root / ".env",
+        project_root / ".env.local",
+        llm_dir / ".env",
+        llm_dir / ".env.local",
+    ]
+
+    for dotenv_file in dotenv_candidates:
+        if not dotenv_file.exists():
+            continue
+        for line in dotenv_file.read_text(encoding="utf-8").splitlines():
+            parsed = _parse_dotenv_line(line)
+            if not parsed:
+                continue
+            key, value = parsed
+            os.environ.setdefault(key, value)
+
+
+_load_dotenv_files()
 
 
 class EnvConfig:

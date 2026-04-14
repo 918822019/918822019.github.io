@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>起点搜书 - 数据库管理</title>
     <style>
+        :root {
+            --bg-1: #f6f8fb;
+            --bg-2: #e9eef6;
+            --panel: #ffffff;
+            --ink: #1f2937;
+            --ink-soft: #64748b;
+            --brand: #0f766e;
+            --brand-2: #0b5f58;
+            --accent: #d97706;
+            --line: #dbe3ee;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,10 +24,11 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: radial-gradient(circle at 10% 10%, var(--bg-2) 0, var(--bg-1) 48%, #f4f7fb 100%);
             min-height: 100vh;
             padding: 20px;
+            color: var(--ink);
         }
 
         .container {
@@ -24,22 +37,23 @@
         }
 
         .header {
-            background: white;
+            background: var(--panel);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
             margin-bottom: 30px;
             text-align: center;
+            border: 1px solid var(--line);
         }
 
         .header h1 {
-            color: #667eea;
+            color: var(--brand);
             font-size: 2.5em;
             margin-bottom: 10px;
         }
 
         .header p {
-            color: #666;
+            color: var(--ink-soft);
             font-size: 1.1em;
         }
 
@@ -51,11 +65,12 @@
         }
 
         .stat-card {
-            background: white;
+            background: var(--panel);
             padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
             transition: transform 0.3s ease;
+            border: 1px solid var(--line);
         }
 
         .stat-card:hover {
@@ -63,38 +78,39 @@
         }
 
         .stat-card h3 {
-            color: #666;
+            color: var(--ink-soft);
             font-size: 0.9em;
             text-transform: uppercase;
             margin-bottom: 10px;
         }
 
         .stat-card .value {
-            color: #667eea;
+            color: var(--brand);
             font-size: 2.5em;
             font-weight: bold;
         }
 
         .stat-card .label {
-            color: #999;
+            color: var(--ink-soft);
             font-size: 0.9em;
             margin-top: 5px;
         }
 
         .content-section {
-            background: white;
+            background: var(--panel);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
             margin-bottom: 30px;
+            border: 1px solid var(--line);
         }
 
         .section-title {
-            color: #667eea;
+            color: var(--brand);
             font-size: 1.8em;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid var(--brand);
         }
 
         .search-bar {
@@ -107,23 +123,25 @@
         .search-bar input,
         .search-bar select {
             padding: 12px 20px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--line);
             border-radius: 8px;
             font-size: 1em;
             flex: 1;
             min-width: 200px;
             transition: border-color 0.3s;
+            color: var(--ink);
+            background: #fbfdff;
         }
 
         .search-bar input:focus,
         .search-bar select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--brand);
         }
 
         .btn {
             padding: 12px 30px;
-            background: #667eea;
+            background: var(--brand);
             color: white;
             border: none;
             border-radius: 8px;
@@ -133,7 +151,7 @@
         }
 
         .btn:hover {
-            background: #5568d3;
+            background: var(--brand-2);
         }
 
         table {
@@ -150,7 +168,7 @@
 
         th {
             background: #f8f9fa;
-            color: #667eea;
+            color: var(--brand);
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.85em;
@@ -170,7 +188,7 @@
 
         .pagination button {
             padding: 8px 16px;
-            background: #667eea;
+            background: var(--brand);
             color: white;
             border: none;
             border-radius: 5px;
@@ -196,7 +214,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, var(--brand), var(--accent));
             transition: width 0.3s;
         }
 
@@ -233,7 +251,7 @@
         }
 
         .recent-books .book-title {
-            color: #667eea;
+            color: var(--brand);
             font-weight: 600;
             font-size: 1.1em;
         }
@@ -242,6 +260,160 @@
             color: #999;
             font-size: 0.9em;
             margin-top: 5px;
+        }
+
+        .search-result-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .search-result-card {
+            border: 1px solid #e8ecf5;
+            border-radius: 12px;
+            padding: 16px;
+            background: #fbfcff;
+        }
+
+        .search-result-card h3 {
+            color: #334155;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        .search-score {
+            color: var(--brand);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .search-intro {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .muted {
+            color: #94a3b8;
+            font-size: 0.95em;
+        }
+
+        .mono {
+            font-family: "JetBrains Mono", "Menlo", "Consolas", monospace;
+            font-size: 0.85em;
+        }
+
+        .tag {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 0.82em;
+            border: 1px solid var(--line);
+            background: #f8fafc;
+            color: var(--ink-soft);
+        }
+
+        .tag-ok {
+            border-color: #bae6fd;
+            background: #ecfeff;
+            color: #0e7490;
+        }
+
+        .processed-intro {
+            max-width: 520px;
+            color: #475569;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 2000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            width: min(980px, 100%);
+            max-height: 90vh;
+            overflow: auto;
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.24);
+            padding: 22px;
+        }
+
+        .modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            color: var(--brand);
+            font-size: 1.25em;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            border: 1px solid var(--line);
+            background: #f8fafc;
+            color: #334155;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .compare-box {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px;
+            background: #fcfdff;
+        }
+
+        .compare-box h4 {
+            color: #0f766e;
+            margin-bottom: 8px;
+            font-size: 0.98em;
+        }
+
+        .compare-text {
+            color: #475569;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .chapter-list {
+            margin-top: 8px;
+            border-top: 1px dashed var(--line);
+            padding-top: 10px;
         }
 
         @media (max-width: 768px) {
@@ -301,6 +473,16 @@
                 <h3>待抓取章节</h3>
                 <div class="value">{{ stats.pending_chapters }}</div>
                 <div class="label">章</div>
+            </div>
+            <div class="stat-card">
+                <h3>润色覆盖</h3>
+                <div class="value">{{ stats.polished_books }}</div>
+                <div class="label">本</div>
+            </div>
+            <div class="stat-card">
+                <h3>向量覆盖</h3>
+                <div class="value">{{ stats.embedded_books }}</div>
+                <div class="label">本</div>
             </div>
         </div>
 
@@ -369,16 +551,100 @@
                 <button onclick="changePage(1)" id="nextBtn">下一页</button>
             </div>
         </div>
+
+        <!-- 润色语义检索 -->
+        <div class="content-section">
+            <h2 class="section-title">🔎 润色语义检索</h2>
+            <div class="search-bar">
+                <input type="text" id="polishQuery" placeholder="例如：轻松搞笑修仙文" />
+                <input type="number" id="polishTopK" min="1" max="50" value="10" style="max-width: 140px;" />
+                <button class="btn" onclick="runPolishSearch()">检索</button>
+            </div>
+            <p class="muted">结果来自 book_polish_embedding 表，按余弦相似度降序返回。</p>
+            <div id="polishSearchResult" class="search-result-list"></div>
+        </div>
+
+        <!-- 处理后数据 -->
+        <div class="content-section">
+            <h2 class="section-title">🧪 处理后数据</h2>
+            <div class="search-bar">
+                <input type="text" id="processedSearch" placeholder="搜索原始书名 / 润色书名 / 润色简介" />
+                <select id="processedFilter">
+                    <option value="all">全部</option>
+                    <option value="polished">仅已润色</option>
+                    <option value="embedded">仅已向量化</option>
+                </select>
+                <button class="btn" onclick="loadProcessedBooks(1)">查询</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>原始书名</th>
+                        <th>润色书名</th>
+                        <th>润色简介</th>
+                        <th>向量状态</th>
+                        <th>更新时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="processedTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #94a3b8;">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <button onclick="changeProcessedPage(-1)" id="processedPrevBtn">上一页</button>
+                <span id="processedPageInfo">第 1 页</span>
+                <button onclick="changeProcessedPage(1)" id="processedNextBtn">下一页</button>
+            </div>
+        </div>
+
+        <div id="compareModal" class="modal-overlay" onclick="closeCompareModal(event)">
+            <div class="modal-card" onclick="event.stopPropagation()">
+                <div class="modal-head">
+                    <div class="modal-title">原文与润色对比</div>
+                    <button class="modal-close" onclick="closeCompareModal()">关闭</button>
+                </div>
+                <div class="detail-meta" id="compareMeta"></div>
+                <div class="compare-grid">
+                    <div class="compare-box">
+                        <h4>原始简介</h4>
+                        <div class="compare-text" id="sourceIntro"></div>
+                    </div>
+                    <div class="compare-box">
+                        <h4>润色简介</h4>
+                        <div class="compare-text" id="polishedIntro"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="detailModal" class="modal-overlay" onclick="closeDetailModal(event)">
+            <div class="modal-card" onclick="event.stopPropagation()">
+                <div class="modal-head">
+                    <div class="modal-title">书籍详情</div>
+                    <button class="modal-close" onclick="closeDetailModal()">关闭</button>
+                </div>
+                <div id="detailBody"></div>
+            </div>
+        </div>
     </div>
 
     <script>
         let currentPage = 1;
         const perPage = 20;
+        let currentProcessedPage = 1;
+        const processedPerPage = 12;
 
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadCategories();
             loadBooks();
+            loadProcessedBooks();
         });
 
         // 加载分类列表
@@ -493,6 +759,225 @@
                 loadBooks(1);
             }
         });
+
+        // 回车触发润色语义检索
+        document.getElementById('polishQuery').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                runPolishSearch();
+            }
+        });
+
+        // 调用后端语义检索 API
+        async function runPolishSearch() {
+            const query = document.getElementById('polishQuery').value.trim();
+            const topK = parseInt(document.getElementById('polishTopK').value || '10', 10);
+            const resultBox = document.getElementById('polishSearchResult');
+
+            if (!query) {
+                resultBox.innerHTML = '<div class="muted">请输入查询词后再检索。</div>';
+                return;
+            }
+
+            resultBox.innerHTML = '<div class="muted">检索中，请稍候...</div>';
+
+            try {
+                const response = await fetch('/api/polish-search', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ query, top_k: Math.max(topK, 1) })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    resultBox.innerHTML = `<div style="color: #dc2626;">检索失败：${data.error || '未知错误'}</div>`;
+                    return;
+                }
+
+                renderPolishSearchResults(data.results || []);
+            } catch (error) {
+                console.error('语义检索失败:', error);
+                resultBox.innerHTML = '<div style="color: #dc2626;">检索请求失败，请检查服务日志。</div>';
+            }
+        }
+
+        // 渲染语义检索结果卡片
+        function renderPolishSearchResults(results) {
+            const resultBox = document.getElementById('polishSearchResult');
+            if (!results.length) {
+                resultBox.innerHTML = '<div class="muted">没有检索到结果，请先执行润色与 embedding 步骤。</div>';
+                return;
+            }
+
+            resultBox.innerHTML = results.map(item => `
+                <div class="search-result-card">
+                    <h3>${item.polished_title || item.source_title || '未知书名'}</h3>
+                    <div class="search-score">相似度：${Number(item.score).toFixed(4)}</div>
+                    <div class="muted">book_id: ${item.book_id} | 向量维度: ${item.embedding_dim}</div>
+                    <p class="search-intro">${item.polished_intro || '暂无润色简介'}</p>
+                    <div style="margin-top:10px;">
+                        <button class="btn" style="padding:6px 12px;font-size:0.85em;" onclick="openBookDetail(${item.book_id})">查看详情</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 加载处理后数据列表
+        async function loadProcessedBooks(page = 1) {
+            currentProcessedPage = page;
+            const search = document.getElementById('processedSearch').value.trim();
+            const processed = document.getElementById('processedFilter').value;
+            const tbody = document.getElementById('processedTableBody');
+
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">加载中...</td></tr>';
+
+            try {
+                const params = new URLSearchParams({
+                    page: String(page),
+                    per_page: String(processedPerPage),
+                    search,
+                    processed,
+                });
+                const response = await fetch(`/api/processed-books?${params.toString()}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc2626;">加载失败</td></tr>';
+                    return;
+                }
+
+                renderProcessedBooks(data.data || []);
+                updateProcessedPagination(data.pagination || { page: 1, pages: 1, total: 0 });
+            } catch (error) {
+                console.error('加载处理后数据失败:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc2626;">请求失败</td></tr>';
+            }
+        }
+
+        // 渲染处理后数据表格
+        function renderProcessedBooks(rows) {
+            const tbody = document.getElementById('processedTableBody');
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无处理后数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = rows.map(item => {
+                const embedTag = item.has_embedding
+                    ? `<span class="tag tag-ok">已向量化 · ${item.embedding_dim || 0} 维</span>`
+                    : '<span class="tag">未向量化</span>';
+                const updatedAt = item.embedding_updated_at || item.polish_updated_at || '-';
+
+                return `
+                    <tr>
+                        <td class="mono">${item.book_id}</td>
+                        <td>${item.source_title || '-'}</td>
+                        <td>${item.polished_title || '-'}</td>
+                        <td><div class="processed-intro">${item.polished_intro || '-'}</div></td>
+                        <td>${embedTag}</td>
+                        <td>${updatedAt}</td>
+                        <td>
+                            <button class="btn" style="padding:6px 12px;font-size:0.85em;" onclick="openCompareModal('${encodeURIComponent(JSON.stringify(item))}')">对比</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 更新处理后数据分页
+        function updateProcessedPagination(pagination) {
+            const page = pagination.page || 1;
+            const pages = pagination.pages || 1;
+            const total = pagination.total || 0;
+
+            document.getElementById('processedPageInfo').textContent = `第 ${page} / ${pages} 页 (共 ${total} 条)`;
+            document.getElementById('processedPrevBtn').disabled = page <= 1;
+            document.getElementById('processedNextBtn').disabled = page >= pages;
+        }
+
+        // 处理后数据翻页
+        function changeProcessedPage(delta) {
+            loadProcessedBooks(currentProcessedPage + delta);
+        }
+
+        // 处理后数据回车触发查询
+        document.getElementById('processedSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadProcessedBooks(1);
+            }
+        });
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function openCompareModal(encodedPayload) {
+            const item = JSON.parse(decodeURIComponent(encodedPayload));
+            document.getElementById('compareMeta').innerHTML = `
+                <span class="tag">book_id: ${item.book_id}</span>
+                <span class="tag">原始书名: ${escapeHtml(item.source_title || '-')}</span>
+                <span class="tag">润色书名: ${escapeHtml(item.polished_title || '-')}</span>
+                <span class="tag">润色模型: ${escapeHtml(item.polish_model || '-')}</span>
+                <span class="tag">向量模型: ${escapeHtml(item.embedding_model || '-')}</span>
+            `;
+            document.getElementById('sourceIntro').textContent = item.source_intro || '暂无原始简介';
+            document.getElementById('polishedIntro').textContent = item.polished_intro || '暂无润色简介';
+            document.getElementById('compareModal').classList.add('active');
+        }
+
+        function closeCompareModal(event) {
+            if (!event || event.target.id === 'compareModal') {
+                document.getElementById('compareModal').classList.remove('active');
+            }
+        }
+
+        async function openBookDetail(bookId) {
+            const modal = document.getElementById('detailModal');
+            const body = document.getElementById('detailBody');
+            body.innerHTML = '<div class="muted">加载书籍详情中...</div>';
+            modal.classList.add('active');
+
+            try {
+                const response = await fetch(`/api/books/${bookId}`);
+                const data = await response.json();
+                if (!data.success) {
+                    body.innerHTML = `<div style="color:#dc2626;">加载失败：${escapeHtml(data.error || '未知错误')}</div>`;
+                    return;
+                }
+
+                const book = data.book || {};
+                const chapters = data.chapters || [];
+                const preview = chapters.slice(0, 8).map(ch => `<li>${escapeHtml(ch.chapter_name || '')}</li>`).join('');
+
+                body.innerHTML = `
+                    <div class="detail-meta">
+                        <span class="tag">book_id: ${book.book_id || '-'}</span>
+                        <span class="tag">作者: ${escapeHtml(book.author || '-')}</span>
+                        <span class="tag">分类: ${escapeHtml(book.category || '-')}</span>
+                        <span class="tag">章节: ${book.chapter_count || 0}</span>
+                    </div>
+                    <h3 style="color:#0f766e;margin-bottom:8px;">${escapeHtml(book.title || '未知书名')}</h3>
+                    <p class="compare-text">${escapeHtml(book.intro || '暂无简介')}</p>
+                    <div class="chapter-list">
+                        <div class="muted" style="margin-bottom:6px;">章节预览（前8章）</div>
+                        <ol style="padding-left:18px;">${preview || '<li class="muted">暂无章节</li>'}</ol>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('加载书籍详情失败:', error);
+                body.innerHTML = '<div style="color:#dc2626;">请求失败，请稍后重试。</div>';
+            }
+        }
+
+        function closeDetailModal(event) {
+            if (!event || event.target.id === 'detailModal') {
+                document.getElementById('detailModal').classList.remove('active');
+            }
+        }
     </script>
 </body>
 </html>

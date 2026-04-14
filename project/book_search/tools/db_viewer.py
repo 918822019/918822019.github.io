@@ -28,6 +28,9 @@ import sqlite3
 import os
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
+from pathlib import Path
+
+from src.process.polish_embedding_search import search_books_by_polish_embedding
 
 # 项目根目录（tools/ 的上一级）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +51,15 @@ def get_db_connection():
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+def table_exists(conn, table_name: str) -> bool:
+    """检查指定数据表是否存在。"""
+    row = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ? LIMIT 1",
+        (table_name,),
+    ).fetchone()
+    return row is not None
 
 
 @app.route("/")
@@ -76,6 +88,19 @@ def index():
         """
         ).fetchone()
 
+        polish_count = 0
+        embed_count = 0
+        if table_exists(conn, "book_polish"):
+            polish_count = int(
+                conn.execute("SELECT COUNT(*) AS c FROM book_polish").fetchone()["c"]
+            )
+        if table_exists(conn, "book_polish_embedding"):
+            embed_count = int(
+                conn.execute(
+                    "SELECT COUNT(*) AS c FROM book_polish_embedding"
+                ).fetchone()["c"]
+            )
+
         # 获取最近更新的书籍
         recent_books = conn.execute(
             """
@@ -95,6 +120,8 @@ def index():
             "fetched_chapters": chapter_stats["fetched_chapters"],
             "pending_chapters": chapter_stats["total_chapters"]
             - chapter_stats["fetched_chapters"],
+            "polished_books": polish_count,
+            "embedded_books": embed_count,
             "recent_books": [dict(row) for row in recent_books],
         }
 
@@ -305,6 +332,143 @@ def api_statistics():
                 "category_stats": [dict(row) for row in category_stats],
                 "status_stats": [dict(row) for row in status_stats],
                 "completion_stats": [dict(row) for row in completion_stats],
+            }
+        )
+    finally:
+        conn.close()
+
+
+@app.route("/api/polish-search", methods=["POST"])
+def api_polish_search():
+    """API: 基于润色 embedding 的相似书检索。"""
+    payload = request.get_json(silent=True) or {}
+    query = str(payload.get("query", "")).strip()
+    model_name = payload.get("model")
+    top_k = int(payload.get("top_k", 10) or 10)
+
+    if not query:
+        return jsonify({"success": False, "error": "query 不能为空"}), 400
+
+    try:
+        results = search_books_by_polish_embedding(
+            db_path=Path(DB_PATH),
+            query=query,
+            model_name=model_name,
+            top_k=max(top_k, 1),
+        )
+        return jsonify({"success": True, "query": query, "results": results})
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/processed-books")
+def api_processed_books():
+    """API: 获取处理后数据（润色 + embedding）列表。"""
+    conn = get_db_connection()
+    try:
+        if not table_exists(conn, "book_polish"):
+            return jsonify(
+                {
+                    "success": True,
+                    "data": [],
+                    "pagination": {
+                        "page": 1,
+                        "per_page": 20,
+                        "total": 0,
+                        "pages": 0,
+                    },
+                    "meta": {
+                        "has_polish_table": False,
+                        "has_embedding_table": table_exists(
+                            conn, "book_polish_embedding"
+                        ),
+                    },
+                }
+            )
+
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 20, type=int)
+        search = request.args.get("search", "", type=str).strip()
+        processed_filter = request.args.get("processed", "all", type=str)
+
+        has_embedding_table = table_exists(conn, "book_polish_embedding")
+
+        conditions = ["1=1"]
+        params = []
+
+        if search:
+            conditions.append(
+                "(b.title LIKE ? OR p.polished_title LIKE ? OR p.polished_intro LIKE ?)"
+            )
+            kw = f"%{search}%"
+            params.extend([kw, kw, kw])
+
+        if processed_filter == "embedded":
+            if has_embedding_table:
+                conditions.append("e.book_id IS NOT NULL")
+            else:
+                conditions.append("1=0")
+        elif processed_filter == "polished":
+            conditions.append("p.book_id IS NOT NULL")
+
+        where_clause = " AND ".join(conditions)
+
+        join_embedding = (
+            "LEFT JOIN book_polish_embedding e ON e.book_id = b.book_id"
+            if has_embedding_table
+            else "LEFT JOIN (SELECT NULL AS book_id, NULL AS embedding_dim, NULL AS updated_at, NULL AS model_name) e ON 1=0"
+        )
+
+        count_sql = f"""
+            SELECT COUNT(*) AS total
+            FROM books b
+            LEFT JOIN book_polish p ON p.book_id = b.book_id
+            {join_embedding}
+            WHERE {where_clause}
+        """
+        total = int(conn.execute(count_sql, params).fetchone()["total"])
+
+        offset = (max(page, 1) - 1) * max(per_page, 1)
+        data_sql = f"""
+            SELECT
+                b.book_id,
+                b.title AS source_title,
+                b.intro AS source_intro,
+                b.author,
+                b.category,
+                b.homepage_url,
+                p.polished_title,
+                p.polished_intro,
+                p.updated_at AS polish_updated_at,
+                p.model_name AS polish_model,
+                e.embedding_dim,
+                e.updated_at AS embedding_updated_at,
+                e.model_name AS embedding_model,
+                CASE WHEN e.book_id IS NULL THEN 0 ELSE 1 END AS has_embedding
+            FROM books b
+            LEFT JOIN book_polish p ON p.book_id = b.book_id
+            {join_embedding}
+            WHERE {where_clause}
+            ORDER BY b.book_id
+            LIMIT ? OFFSET ?
+        """
+        query_params = params + [max(per_page, 1), offset]
+        rows = conn.execute(data_sql, query_params).fetchall()
+
+        return jsonify(
+            {
+                "success": True,
+                "data": [dict(r) for r in rows],
+                "pagination": {
+                    "page": max(page, 1),
+                    "per_page": max(per_page, 1),
+                    "total": total,
+                    "pages": (total + max(per_page, 1) - 1) // max(per_page, 1),
+                },
+                "meta": {
+                    "has_polish_table": True,
+                    "has_embedding_table": has_embedding_table,
+                },
             }
         )
     finally:
