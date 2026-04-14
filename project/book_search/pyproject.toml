@@ -10,3 +10,9 @@ dependencies = [
     "modelscope>=1.17.0",
     "numpy>=1.25",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "live: tests that call a real LLM endpoint with full key/base_url",
+]
+

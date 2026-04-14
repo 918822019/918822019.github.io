@@ -34,9 +34,9 @@ from src.process.polish_embedding_search import search_books_by_polish_embedding
 
 # 项目根目录（tools/ 的上一级）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.normpath(os.path.join(BASE_DIR, ".."))
-TEMPLATES_DIR = os.path.join(PROJECT_ROOT, "templates")
-STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
+PROJECT_ROOT = os.path.normpath(os.path.join(BASE_DIR, "..", ".."))
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
 DB_PATH = os.path.abspath(os.path.join(PROJECT_ROOT, "data", "books.db"))
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
