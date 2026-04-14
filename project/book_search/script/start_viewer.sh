@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# 数据库可视化界面启动脚本
+# 统一前端服务启动脚本（适配 src/viewer 集成结构）
 # ============================================================================
 #
 # 使用方法:
@@ -16,15 +16,12 @@
 # 访问地址:
 #     http://localhost:5000
 #
-# 注意事项:
-#     - 确保数据库文件 data/books.db 已存在
-#     - 如果数据库不存在，先运行数据抓取脚本
-#     - 按 Ctrl+C 停止服务器
-#
 # ============================================================================
+source .venv/bin/activate
+cd "$(dirname "$0")/.."
 
 echo "======================================"
-echo "  起点搜书 - 数据库可视化管理界面"
+echo "  起点搜书 - 前端服务启动"
 echo "======================================"
 echo ""
 
@@ -43,13 +40,13 @@ if [ $? -ne 0 ]; then
 fi
 
 # 检查数据库文件
-DB_PATH="data/books.db"
+DB_PATH="../data/books.db"
 if [ ! -f "$DB_PATH" ]; then
     echo "警告: 数据库文件 $DB_PATH 不存在"
     echo "请先运行数据抓取脚本生成数据库"
     echo ""
     echo "示例命令:"
-    echo "  cd data_get"
+    echo "  cd ../data_get"
     echo "  python main.py crawl-books --start 1 --end 100"
     echo ""
     read -p "是否继续? (y/n) " -n 1 -r
@@ -60,10 +57,12 @@ if [ ! -f "$DB_PATH" ]; then
 fi
 
 # 启动服务
+cd ../src/viewer
+
 echo ""
 echo "启动服务器..."
 echo "访问地址: http://localhost:5000"
 echo "按 Ctrl+C 停止服务器"
 echo ""
 
-python3 tools/db_viewer.py
+python3 db_viewer.py
