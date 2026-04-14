@@ -27,19 +27,19 @@ TaggingMode = Literal["flat", "cascading"]
 class PreprocessPipelineConfig:
     """预处理 pipeline 配置。"""
 
-    input_path: Union[str, Path]
-    output_path: Union[str, Path]
-    enable_text_polish: bool = True
-    enable_polish_embedding: bool = True
-    enable_llm_tagging: bool = True
-    polish_model_name: Optional[str] = None
-    embedding_model_name: Optional[str] = None
-    tagging_mode: TaggingMode = "flat"
-    model_name: Optional[str] = None
-    max_tags: int = 8
-    sleep_seconds: float = 0.0
-    overwrite: bool = False
-    limit: int = 0
+    input_path: Union[str, Path]  # 输入数据库文件路径
+    output_path: Union[str, Path]  # 输出数据库文件路径
+    enable_text_polish: bool = True  # 是否启用文本润色（书名+简介）
+    enable_polish_embedding: bool = True  # 是否启用润色文本的 embedding 生成
+    enable_llm_tagging: bool = True  # 是否启用 LLM 标签生成
+    polish_model_name: Optional[str] = None  # 文本润色使用的模型名称，None 则使用默认模型
+    embedding_model_name: Optional[str] = None  # embedding 生成使用的模型名称，None 则使用默认模型
+    tagging_mode: TaggingMode = "flat"  # 标签生成模式："flat"（扁平标签）或 "cascading"（级联标签）
+    model_name: Optional[str] = None  # LLM 标签生成使用的模型名称，None 则使用默认模型
+    max_tags: int = 8  # 每本书最多生成的标签数量（仅 flat 模式有效）
+    sleep_seconds: float = 0.0  # 每次 API 调用后的休眠时间（秒），用于控制请求频率
+    overwrite: bool = False  # 是否覆盖已存在的数据
+    limit: int = 0  # 处理的最大书籍数量，0 表示处理全部书籍
 
 
 def run_preprocess_pipeline(config: PreprocessPipelineConfig) -> dict[str, object]:
@@ -51,6 +51,8 @@ def run_preprocess_pipeline(config: PreprocessPipelineConfig) -> dict[str, objec
     Returns:
             流程统计信息
     """
+
+    # 输入数据
     input_path = Path(config.input_path)
     output_path = Path(config.output_path)
 
@@ -61,6 +63,7 @@ def run_preprocess_pipeline(config: PreprocessPipelineConfig) -> dict[str, objec
     }
 
     if config.enable_text_polish:
+        # 开始进行润色
         polish_stats = run_polish(
             db_path=input_path,
             model_name=config.polish_model_name,
@@ -85,6 +88,7 @@ def run_preprocess_pipeline(config: PreprocessPipelineConfig) -> dict[str, objec
         )
 
     if config.enable_polish_embedding:
+        # 开始润色的embedding生成入库
         embed_stats = run_polish_embedding(
             db_path=input_path,
             model_name=config.embedding_model_name,
@@ -107,7 +111,7 @@ def run_preprocess_pipeline(config: PreprocessPipelineConfig) -> dict[str, objec
                 "stats": None,
             }
         )
-
+    # 进入llm标签打标逻辑
     if not config.enable_llm_tagging:
         result["steps"].append(
             {

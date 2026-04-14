@@ -11,9 +11,13 @@ from src.process.polish_embedding import EMBED_TABLE, run_polish_embedding
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="为 book_polish 生成 embedding 并写入 SQLite"
+        description="为 book_polish 生成 embedding 并写入 Faiss（元数据写入 SQLite）"
     )
-    parser.add_argument("--db-path", default="data/books.db", help="SQLite 数据库路径")
+    parser.add_argument(
+        "--db-path",
+        default="data/books.db",
+        help="SQLite 元数据库路径（建议位于 data 根目录）",
+    )
     parser.add_argument("--model", default=None, help="可选，覆盖默认 embedding 模型名")
     parser.add_argument(
         "--limit", type=int, default=0, help="最多处理多少本，0 表示不限制"
