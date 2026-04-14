@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>918822019 | 个人技术博客</title>
+    <link href="assets/styles.css?v=20260410-3" rel="stylesheet"/>
+</head>
+<body>
+<div class="bg-orb orb-a"></div>
+<div class="bg-orb orb-b"></div>
+<div class="grain"></div>
+
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" href="/">918822019</a>
+        <div class="top-actions">
+            <button id="theme-toggle" aria-label="切换主题" class="menu-btn">夜间</button>
+            <button id="sidebar-toggle" aria-label="打开目录" class="menu-btn">目录</button>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <section class="hero reveal">
+        <p class="eyebrow">PERSONAL BLOG</p>
+        <h1>记录 AI、数学与工程实践</h1>
+        <p class="hero-desc">
+            这里是我的技术笔记花园，持续沉淀模型、RAG、搜索与系统化学习过程。
+        </p>
+        <div class="hero-actions">
+            <button id="random-post" class="hero-btn">随机看一篇</button>
+            <a class="hero-link" href="https://github.com/918822019/918822019.github.io" rel="noopener noreferrer"
+               target="_blank">查看仓库</a>
+        </div>
+        <div id="stats" class="stats">
+            <div class="stat-card">
+                <span id="stat-files" class="stat-value">-</span>
+                <span class="stat-label">文档数</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-folders" class="stat-value">-</span>
+                <span class="stat-label">分类数</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-updated" class="stat-value">刚刚</span>
+                <span class="stat-label">最后更新</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-grid">
+        <aside id="sidebar" aria-label="目录侧边栏" class="sidebar">
+            <div class="panel reveal">
+                <h2>文档目录</h2>
+                <div class="search-row">
+                    <input id="doc-search" aria-label="搜索文档" placeholder="搜索标题或路径"/>
+                </div>
+                <nav id="doc-tree" aria-label="文档树" class="doc-tree">
+                    <p class="loading">正在加载目录...</p>
+                </nav>
+            </div>
+        </aside>
+
+        <section class="main-feed">
+            <article id="reader-panel" class="panel reader-panel" hidden>
+                <div class="reader-toolbar">
+                    <button id="reader-back" class="menu-btn">返回首页</button>
+                    <span id="reader-path" class="muted"></span>
+                </div>
+                <div class="reader-header">
+                    <p class="eyebrow">ARTICLE</p>
+                    <h2 id="reader-title">加载中...</h2>
+                </div>
+                <div id="reader-content" class="markdown-body"></div>
+            </article>
+
+            <div class="panel reveal command-panel">
+                <div class="panel-head">
+                    <h2>一键更新命令</h2>
+                </div>
+                <p class="muted">在仓库根目录执行以下命令，可自动更新目录并推送到 <code>doc</code>：</p>
+                <pre id="publish-cmd"
+                     class="cmd-block"><code>bash scripts/publish-doc.sh "docs: update notes"</code></pre>
+                <div class="cmd-actions">
+                    <button id="copy-cmd" class="menu-btn">复制命令</button>
+                    <span id="copy-tip" class="muted">可直接粘贴到终端执行</span>
+                </div>
+            </div>
+
+            <div class="panel reveal">
+                <div class="panel-head">
+                    <h2>精选文章</h2>
+                    <span id="feed-count" class="muted">0 篇</span>
+                </div>
+                <div id="featured-posts" class="featured-posts"></div>
+            </div>
+
+            <div class="panel reveal">
+                <div class="panel-head">
+                    <h2>全部文章</h2>
+                    <div id="tag-filter" class="tags"></div>
+                </div>
+                <div id="all-posts" class="post-list"></div>
+            </div>
+        </section>
+    </section>
+</main>
+
+<div id="sidebar-overlay" aria-hidden="true" class="sidebar-overlay"></div>
+<button id="to-top" aria-label="回到顶部" class="to-top">↑</button>
+
+<footer class="site-footer">
+    <div class="footer-inner">© 2026 918822019 · Built with GitHub Pages</div>
+    </div>
+</footer>
+
+<script src="assets/app.js?v=20260410-3"></script>
+</body>
+</html>

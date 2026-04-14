@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>数据中台观察台 · 918822019</title>
+  <link href="assets/styles.css?v=20260413-1" rel="stylesheet" />
+</head>
+<body class="inspector-body">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="grain"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./index.html">918822019</a>
+      <div class="top-actions">
+        <a class="menu-btn inspector-link-btn" href="./index.html">返回文档首页</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page inspector-page">
+    <section class="hero reveal inspector-hero">
+      <p class="eyebrow">DATA CONSOLE</p>
+      <h1>爬取数据观察台</h1>
+      <p class="hero-desc">
+        把样本浏览、分片巡检、字段画像和数据质量信号放到一个页面里，快速判断抓取覆盖率、缺失区间和异常分片。
+      </p>
+      <div class="hero-actions">
+        <button id="load-btn" class="hero-btn">重新加载</button>
+        <button id="export-csv" class="hero-link inspector-action" type="button">导出当前视图 CSV</button>
+        <button id="download-json" class="hero-link inspector-action" type="button">下载当前 JSON</button>
+      </div>
+    </section>
+
+    <section class="inspector-shell">
+      <aside class="panel inspector-controls reveal">
+        <div class="panel-head">
+          <h2>控制台</h2>
+          <span id="load-status" class="muted">等待加载</span>
+        </div>
+
+        <div class="inspector-form-grid">
+          <label class="inspector-label">
+            数据文件
+            <select id="file-select" class="inspector-input">
+              <option value="frontend/data/manifest.json">frontend/data/manifest.json · SQLite 导出样本</option>
+              <option value="frontend/data/books_sample.json">frontend/data/books_sample.json · 书籍 example</option>
+              <option value="frontend/data/chapters_sample.json">frontend/data/chapters_sample.json · 正文 example</option>
+              <option value="project/book_search/data/shards/index.json">project/book_search/data/shards/index.json · 分片巡检</option>
+              <option value="project/book_search/data/books.json">project/book_search/data/books.json · 原始书单</option>
+              <option value="__custom__">自定义路径</option>
+            </select>
+          </label>
+
+          <label id="custom-path-wrap" class="inspector-label" hidden>
+            自定义路径
+            <input id="custom-path" class="inspector-input" placeholder="输入相对路径或 URL" />
+          </label>
+
+          <label class="inspector-label">
+            视图
+            <select id="view-select" class="inspector-input" disabled>
+              <option>等待数据</option>
+            </select>
+          </label>
+
+          <label class="inspector-label">
+            采样 / 展示行数
+            <input id="sample-size" class="inspector-input" type="number" min="5" value="20" />
+          </label>
+
+          <label class="inspector-label">
+            关键词过滤
+            <input id="keyword-filter" class="inspector-input" placeholder="书名、作者、字段值、分片范围" />
+          </label>
+
+          <label class="inspector-label">
+            排序字段
+            <select id="sort-field" class="inspector-input" disabled>
+              <option value="">默认顺序</option>
+            </select>
+          </label>
+
+          <label class="inspector-label">
+            聚焦字段
+            <select id="column-focus" class="inspector-input" disabled>
+              <option value="__all__">全部字段</option>
+            </select>
+          </label>
+
+          <label class="inspector-label inspector-checkbox">
+            <input id="sort-desc" type="checkbox" />
+            <span>倒序</span>
+          </label>
+        </div>
+
+        <div class="inspector-hints">
+          <p class="muted">推荐优先观察 shards/index.json，它能直接暴露抓取覆盖率与空内容分片。</p>
+          <p id="source-summary" class="muted">尚未选择数据源。</p>
+        </div>
+      </aside>
+
+      <section class="inspector-main">
+        <section class="panel reveal">
+          <div class="panel-head">
+            <h2>核心指标</h2>
+            <span id="dataset-badge" class="inspector-chip">未加载</span>
+          </div>
+          <div id="metric-grid" class="inspector-metrics"></div>
+        </section>
+
+        <section class="panel reveal inspector-grid-two">
+          <div>
+            <div class="panel-head">
+              <h2>质量信号</h2>
+              <span id="alert-count" class="muted">0 条</span>
+            </div>
+            <div id="alert-list" class="inspector-alert-list"></div>
+          </div>
+          <div>
+            <div class="panel-head">
+              <h2>字段画像</h2>
+              <span id="schema-summary" class="muted">-</span>
+            </div>
+            <div id="schema-content" class="inspector-table-wrap"></div>
+          </div>
+        </section>
+
+        <section class="panel reveal">
+          <div class="panel-head">
+            <h2>明细表</h2>
+            <span id="preview-summary" class="muted">0 行</span>
+          </div>
+          <div id="preview-table" class="inspector-table-wrap"></div>
+        </section>
+
+        <section class="panel reveal inspector-grid-two inspector-bottom-grid">
+          <div>
+            <div class="panel-head">
+              <h2>选中记录</h2>
+              <span id="detail-title" class="muted">点击表格行查看</span>
+            </div>
+            <pre id="record-detail" class="json-raw">-</pre>
+          </div>
+          <div>
+            <div class="panel-head">
+              <h2>原始数据</h2>
+              <span class="muted">当前数据源快照</span>
+            </div>
+            <pre id="json-raw" class="json-raw">-</pre>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script src="assets/data-inspector.js?v=20260413-1"></script>
+</body>
+</html>

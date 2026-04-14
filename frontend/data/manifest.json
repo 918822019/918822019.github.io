@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-04-13T16:06:33",
+  "source_db": "/Users/wangzeyu.67/Downloads/918822019.github.io/project/book_search/data/books.db",
+  "output_dir": "/Users/wangzeyu.67/Downloads/918822019.github.io/frontend/data",
+  "books_count": 10000,
+  "chapters_count": 9635988,
+  "sample_size": 60,
+  "files": {
+    "books_sample": "books_sample.json",
+    "chapters_sample": "chapters_sample.json"
+  }
+}

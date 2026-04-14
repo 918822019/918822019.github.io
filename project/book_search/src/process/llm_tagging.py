@@ -9,7 +9,7 @@
    - 第四级：风格与情感标签（轻松/压抑、甜/虐等）
 
 主要功能：
-- 从 JSON 文件加载小说数据
+- 从 JSON / NDJSON / SQLite 文件加载小说数据
 - 调用 LLM 为每本小说生成标签（支持级联和扁平两种方式）
 - 规范化标签格式（去重、过滤占位符）
 - 支持增量更新（跳过已有有效标签的书籍）
@@ -34,11 +34,12 @@
     print(stats)
     ```
 """
+
 from __future__ import annotations
 
-import argparse
 import json
 import re
+import sqlite3
 import time
 from pathlib import Path
 from typing import Any, Optional, Union
@@ -49,6 +50,80 @@ from src.llm.llm_client import LLMClient
 PLACEHOLDER_TAGS = {"分类", "状态"}
 # 需要过滤的占位符字段值（书名和作者的默认占位符）
 PLACEHOLDER_FIELDS = {"书名", "作者"}
+
+
+def _pick_first_non_empty(book: dict[str, Any], keys: tuple[str, ...]) -> str:
+    """从多个候选字段中取第一个非空字符串值。"""
+    for key in keys:
+        value = str(book.get(key, "")).strip()
+        if value:
+            return value
+    return ""
+
+
+def _extract_book_fields(book: dict[str, Any]) -> dict[str, str]:
+    """提取并兼容不同数据结构下的关键字段。"""
+    name = _pick_first_non_empty(book, ("name", "title"))
+    author = _pick_first_non_empty(book, ("author",))
+    description = _pick_first_non_empty(book, ("description", "intro"))
+    first_500_chars = _pick_first_non_empty(
+        book,
+        ("first_500_chars", "excerpt", "content_preview"),
+    )
+    if not first_500_chars:
+        first_500_chars = description[:500]
+
+    category = _pick_first_non_empty(book, ("category",))
+    serial_status = _pick_first_non_empty(book, ("serial_status", "status"))
+
+    if name in PLACEHOLDER_FIELDS:
+        name = "未知书名"
+    if author in PLACEHOLDER_FIELDS:
+        author = "未知作者"
+
+    return {
+        "name": name,
+        "author": author,
+        "description": description,
+        "first_500_chars": first_500_chars,
+        "category": category,
+        "serial_status": serial_status,
+    }
+
+
+def _load_books_from_path(input_path: Union[str, Path]) -> list[dict[str, Any]]:
+    """从 JSON / NDJSON / SQLite 读取书籍数据。"""
+    p = Path(input_path)
+    if not p.exists():
+        raise FileNotFoundError(f"输入文件不存在: {p}")
+
+    suffix = p.suffix.lower()
+
+    if suffix == ".db":
+        conn = sqlite3.connect(str(p))
+        conn.row_factory = sqlite3.Row
+        try:
+            rows = conn.execute("SELECT * FROM books ORDER BY book_id").fetchall()
+            return [dict(row) for row in rows]
+        finally:
+            conn.close()
+
+    if suffix in {".ndjson", ".jsonl"}:
+        books: list[dict[str, Any]] = []
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            if isinstance(record, dict):
+                books.append(record)
+        return books
+
+    books = json.loads(p.read_text(encoding="utf-8"))
+    if not isinstance(books, list):
+        raise ValueError("输入 JSON 必须是数组，每个元素是一条小说记录")
+    return books
+
 
 # 第一级：题材分类选项
 GENRE_CATEGORIES = ["都市", "玄幻", "科幻", "古代", "悬疑", "其他"]
@@ -120,21 +195,19 @@ class CascadingTagger:
         self.llm = llm if llm is not None else LLMClient(model_name=model_name)
 
     def load_books(self, input_path: Union[str, Path]) -> None:
-        """从 JSON 文件加载小说数据。"""
-        p = Path(input_path)
-        if not p.exists():
-            raise FileNotFoundError(f"输入文件不存在: {p}")
-        books = json.loads(p.read_text(encoding="utf-8"))
-        if not isinstance(books, list):
-            raise ValueError("输入 JSON 必须是数组，每个元素是一条小说记录")
-        self.books = books
+        """从 JSON / NDJSON / SQLite 文件加载小说数据。"""
+        self.books = _load_books_from_path(input_path)
 
     def save_books(self, output_path: Union[str, Path]) -> None:
         """将小说数据保存到 JSON 文件。"""
         p = Path(output_path)
-        p.write_text(json.dumps(self.books, ensure_ascii=False, indent=2), encoding="utf-8")
+        p.write_text(
+            json.dumps(self.books, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
-    def _call_llm_with_retry(self, prompt: str, system_prompt: str, max_retries: int = 2) -> dict[str, Any]:
+    def _call_llm_with_retry(
+        self, prompt: str, system_prompt: str, max_retries: int = 2
+    ) -> dict[str, Any]:
         """调用 LLM 并解析 JSON，支持重试。
 
         Args:
@@ -173,10 +246,13 @@ class CascadingTagger:
         Returns:
             题材分类结果（都市/玄幻/科幻/古代/悬疑/其他）
         """
-        name = str(book.get("name", "")).strip()
-        author = str(book.get("author", "")).strip()
-        description = str(book.get("description", "")).strip()
-        first_500_chars = str(book.get("first_500_chars", description[:500])).strip()
+        fields = _extract_book_fields(book)
+        name = fields["name"]
+        author = fields["author"]
+        description = fields["description"]
+        first_500_chars = fields["first_500_chars"]
+        category = fields["category"]
+        serial_status = fields["serial_status"]
 
         prompt = f"""
 请判断这本小说的题材分类。
@@ -191,6 +267,8 @@ class CascadingTagger:
 小说信息：
 - 书名：{name}
 - 作者：{author}
+- 原始分类：{category or '（未知）'}
+- 连载状态：{serial_status or '（未知）'}
 - 简介：{description or '（无简介）'}
 - 前500字：{first_500_chars[:500]}
 """.strip()
@@ -215,9 +293,10 @@ class CascadingTagger:
         Returns:
             情节类型（根据题材不同而不同）
         """
-        name = str(book.get("name", "")).strip()
-        description = str(book.get("description", "")).strip()
-        first_500_chars = str(book.get("first_500_chars", description[:500])).strip()
+        fields = _extract_book_fields(book)
+        name = fields["name"]
+        description = fields["description"]
+        first_500_chars = fields["first_500_chars"]
 
         # 获取该题材对应的情节类型选项
         plot_options = PLOT_TYPES_BY_GENRE.get(genre, ["综合"])
@@ -257,9 +336,10 @@ class CascadingTagger:
         Returns:
             角色特征字典，包含：has_system, has_rebirth, protagonist_gender, initial_power
         """
-        name = str(book.get("name", "")).strip()
-        description = str(book.get("description", "")).strip()
-        first_500_chars = str(book.get("first_500_chars", description[:500])).strip()
+        fields = _extract_book_fields(book)
+        name = fields["name"]
+        description = fields["description"]
+        first_500_chars = fields["first_500_chars"]
 
         prompt = f"""
 请分析这本小说的角色特征。
@@ -297,9 +377,10 @@ class CascadingTagger:
         Returns:
             风格与情感字典，包含：style, emotion
         """
-        name = str(book.get("name", "")).strip()
-        description = str(book.get("description", "")).strip()
-        first_500_chars = str(book.get("first_500_chars", description[:500])).strip()
+        fields = _extract_book_fields(book)
+        name = fields["name"]
+        description = fields["description"]
+        first_500_chars = fields["first_500_chars"]
 
         prompt = f"""
 请分析这本小说的整体风格和情感基调。
@@ -376,7 +457,11 @@ class CascadingTagger:
             "flat_tags": flat_tags,
         }
 
-    def run(self, input_path: Optional[Union[str, Path]] = None, output_path: Optional[Union[str, Path]] = None) -> dict[str, int]:
+    def run(
+        self,
+        input_path: Optional[Union[str, Path]] = None,
+        output_path: Optional[Union[str, Path]] = None,
+    ) -> dict[str, int]:
         """执行批量级联标签流程。
 
         Args:
@@ -405,7 +490,7 @@ class CascadingTagger:
                 continue
 
             try:
-                name = book.get("name", "未知书名")
+                name = _extract_book_fields(book)["name"] or "未知书名"
                 print(f"\n[{idx}/{total}] 开始处理: {name}")
 
                 result = self.tag_single_book_cascading(book)
@@ -419,7 +504,7 @@ class CascadingTagger:
                 print(f"[{idx}/{total}] 完成: {name}")
             except Exception as exc:  # noqa: BLE001
                 failed += 1
-                name = book.get("name", "未知书名")
+                name = _extract_book_fields(book)["name"] or "未知书名"
                 print(f"[{idx}/{total}] 处理失败: {name} | error={exc}")
 
             if self.sleep_seconds > 0:
@@ -601,15 +686,12 @@ class LLMTagger:
         Returns:
             格式化后的提示词字符串
         """
-        name = str(book.get("name", "")).strip()
-        author = str(book.get("author", "")).strip()
-        description = str(book.get("description", "")).strip()
-
-        # 如果字段值是占位符，替换为默认值
-        if name in PLACEHOLDER_FIELDS:
-            name = "未知书名"
-        if author in PLACEHOLDER_FIELDS:
-            author = "未知作者"
+        fields = _extract_book_fields(book)
+        name = fields["name"]
+        author = fields["author"]
+        description = fields["description"]
+        category = fields["category"]
+        serial_status = fields["serial_status"]
 
         return f"""
 请根据下列小说信息打标签。
@@ -624,6 +706,8 @@ class LLMTagger:
 小说信息：
 - 书名：{name}
 - 作者：{author}
+- 原始分类：{category or '（未知）'}
+- 连载状态：{serial_status or '（未知）'}
 - 简介：{description or '（无简介）'}
 """.strip()
 
@@ -655,22 +739,16 @@ class LLMTagger:
         return self._normalize_tags(parsed.get("tags", []), max_tags=self.max_tags)
 
     def load_books(self, input_path: Union[str, Path]) -> None:
-        """从 JSON 文件加载小说数据。
+        """从 JSON / NDJSON / SQLite 文件加载小说数据。
 
         Args:
-            input_path: 输入 JSON 文件路径
+            input_path: 输入文件路径（支持 .json / .ndjson / .jsonl / .db）
 
         Raises:
             FileNotFoundError: 当文件不存在时
             ValueError: 当 JSON 不是数组格式时
         """
-        p = Path(input_path)
-        if not p.exists():
-            raise FileNotFoundError(f"输入文件不存在: {p}")
-        books = json.loads(p.read_text(encoding="utf-8"))
-        if not isinstance(books, list):
-            raise ValueError("输入 JSON 必须是数组，每个元素是一条小说记录")
-        self.books = books
+        self.books = _load_books_from_path(input_path)
 
     def save_books(self, output_path: Union[str, Path]) -> None:
         """将小说数据保存到 JSON 文件。
@@ -679,9 +757,15 @@ class LLMTagger:
             output_path: 输出 JSON 文件路径
         """
         p = Path(output_path)
-        p.write_text(json.dumps(self.books, ensure_ascii=False, indent=2), encoding="utf-8")
+        p.write_text(
+            json.dumps(self.books, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
-    def run(self, input_path: Optional[Union[str, Path]] = None, output_path: Optional[Union[str, Path]] = None) -> dict[str, int]:
+    def run(
+        self,
+        input_path: Optional[Union[str, Path]] = None,
+        output_path: Optional[Union[str, Path]] = None,
+    ) -> dict[str, int]:
         """执行批量打标签流程。
 
         这是主要的入口方法，遍历所有书籍并为需要打标签的书籍调用 LLM。
@@ -733,13 +817,13 @@ class LLMTagger:
                 else:
                     failed += 1
                 processed += 1
-                name = book.get("name", "未知书名")
+                name = _extract_book_fields(book)["name"] or "未知书名"
                 print(f"[{idx}/{total}] 已处理: {name} -> {book.get('tags', [])}")
             except Exception as exc:  # noqa: BLE001
                 # 捕获所有异常，记录失败但不中断流程
                 failed += 1
                 processed += 1
-                name = book.get("name", "未知书名")
+                name = _extract_book_fields(book)["name"] or "未知书名"
                 print(f"[{idx}/{total}] 处理失败: {name} | error={exc}")
 
             # 限流：如果设置了等待时间，则在每次调用后暂停
@@ -768,70 +852,3 @@ class LLMTagger:
         print(f"失败数: {failed}")
 
         return stats
-    print(f"输入记录数: {total}")
-    print(f"本次处理数: {processed}")
-    print(f"更新标签数: {changed}")
-    print(f"跳过数: {skipped}")
-    print(f"失败数: {failed}")
-    print(f"输出文件: {output_path}")
-
-
-def parse_args() -> argparse.Namespace:
-    """解析命令行参数并返回命名空间对象。
-
-    Returns:
-        包含所有命令行参数的命名空间对象
-    """
-    parser = argparse.ArgumentParser(description="使用 LLM 对小说数据批量打标签")
-    parser.add_argument("--input", default="data/books.json", help="输入 JSON 文件路径")
-    parser.add_argument(
-        "--output",
-        default="data/books_tagged.json",
-        help="输出 JSON 文件路径",
-    )
-    parser.add_argument("--overwrite", action="store_true", help="覆盖已有 tags")
-    parser.add_argument(
-        "--limit",
-        type=int,
-        default=0,
-        help="最多处理多少本，0 表示不限制",
-    )
-    parser.add_argument(
-        "--sleep",
-        type=float,
-        default=0.0,
-        help="每本之间的等待秒数",
-    )
-    parser.add_argument(
-        "--max-tags",
-        type=int,
-        default=8,
-        help="每本最多保留多少标签",
-    )
-    parser.add_argument("--model", default=None, help="覆盖默认模型名")
-    return parser.parse_args()
-
-
-def main() -> None:
-    """主函数：解析命令行参数并执行标签任务。
-
-    这是命令行入口点，将命令行参数转换为 LLMTagger 的配置并执行。
-    """
-    args = parse_args()
-    # 创建标签器实例
-    tagger = LLMTagger(
-        model_name=args.model,
-        max_tags=max(args.max_tags, 1),
-        sleep_seconds=max(args.sleep, 0.0),
-        overwrite=args.overwrite,
-        limit=max(args.limit, 0),
-    )
-    # 执行标签任务
-    tagger.run(
-        input_path=Path(args.input),
-        output_path=Path(args.output),
-    )
-
-
-if __name__ == "__main__":
-    main()
