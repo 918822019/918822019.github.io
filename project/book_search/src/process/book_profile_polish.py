@@ -14,6 +14,8 @@ from src.llm.llm_client import LLMClient
 
 
 POLISH_TABLE = "book_polish"
+CHAPTER_PREVIEW_COUNT = 5
+CHAPTER_PREVIEW_MAX_CHARS = 1200
 
 
 def now_iso() -> str:
@@ -56,35 +58,119 @@ def ensure_polish_table(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def build_prompt(title: str, intro: str) -> str:
+def normalize_text(text: str, max_chars: int | None = None) -> str:
+    """规范化文本，避免提示词中出现过长或过碎的内容。"""
+    normalized = re.sub(r"\s+", " ", text or "").strip()
+    if max_chars is not None and max_chars > 0 and len(normalized) > max_chars:
+        return f"{normalized[:max_chars].rstrip()}..."
+    return normalized
+
+
+def fetch_chapter_previews(
+    conn: sqlite3.Connection,
+    book_id: int,
+    limit: int = CHAPTER_PREVIEW_COUNT,
+) -> list[dict[str, str]]:
+    """读取前若干章正文预览，用于辅助简介润色。"""
+    rows = conn.execute(
+        """
+        SELECT chapter_id, chapter_name, content
+        FROM chapters
+        WHERE book_id = ?
+          AND is_content_fetched = 1
+          AND COALESCE(TRIM(content), '') <> ''
+        ORDER BY chapter_id
+        LIMIT ?
+        """,
+        (book_id, limit),
+    ).fetchall()
+
+    previews: list[dict[str, str]] = []
+    for row in rows:
+        chapter_name = normalize_text(str(row["chapter_name"] or "")) or "未命名章节"
+        content = normalize_text(
+            str(row["content"] or ""),
+            max_chars=CHAPTER_PREVIEW_MAX_CHARS,
+        )
+        if not content:
+            continue
+        previews.append(
+            {
+                "chapter_name": chapter_name,
+                "content": content,
+            }
+        )
+    return previews
+
+
+def format_chapter_previews(chapter_previews: list[dict[str, str]]) -> str:
+    """将章节预览拼接成提示词文本。"""
+    if not chapter_previews:
+        return "（未提供章节正文，仅可参考原简介与书名）"
+
+    lines: list[str] = []
+    for idx, chapter in enumerate(chapter_previews, start=1):
+        lines.append(f"第{idx}章：{chapter['chapter_name']}")
+        lines.append(chapter["content"])
+    return "\n".join(lines)
+
+
+def build_prompt(
+    title: str,
+    intro: str,
+    chapter_previews: list[dict[str, str]],
+) -> str:
     """构建润色提示词。"""
+    chapter_context = format_chapter_previews(chapter_previews)
     return f"""
-请润色下面小说的书名和简介，让表达更自然、更有吸引力。
+【角色设定】
+你是一位资深的出版编辑，擅长在不改变作者原意的前提下，提炼小说的核心钩子。你需要基于已有的正文内容反向优化简介，确保简介与正文前五章的基调、人设、冲突完全一致。
 
-要求：
-1. 只返回 JSON，不要输出额外文字。
-2. JSON 格式必须为：{{"polished_title": "...", "polished_intro": "..."}}。
-3. 不要改变核心设定、人物关系、时代背景和关键事实。
-4. 书名长度建议 2-16 字；简介长度建议 40-180 字。
-5. 避免夸张营销词、避免低俗词、避免加入不存在的信息。
+【核心任务】
+根据提供的信息，润色小说的简介（polished_intro），并清理书名的空白（polished_title）。
 
-原始信息：
+【正文依据（必读）】
+{chapter_context}
+
+【待处理信息】
 - 书名：{title or '未知书名'}
-- 简介：{intro or '（无简介）'}
+- 原简介：{intro or '（无简介）'}
+
+【执行约束】
+1. **输出格式**：仅输出标准 JSON，严禁包含任何解释性前缀、后缀或 Markdown 代码块标记。
+2. **JSON 结构**：{{"polished_title": "...", "polished_intro": "..."}}
+3. **事实锁定**：严禁修改世界观、角色姓名、身份关系及已发生的关键剧情事实。
+4. **书名处理**：仅做全角/半角空格清理，严禁修改书名文字本身。
+5. **简介字数**：严格控制在 60-180 字之间。
+6. **内容边界**：
+   - 必须基于前五章已出现的冲突或线索（避免写飞）。
+   - 严禁出现营销体（如“爆款”、“震撼来袭”）、严禁低俗擦边、严禁剧透五章后的结局。
+7. **文风一致性**：保持与正文前五章相同的叙事人称（如第三人称/第一人称）和文字气质。
+
+【请直接返回 JSON】:
 """.strip()
 
 
-def polish_one_book(llm: LLMClient, title: str, intro: str) -> tuple[str, str]:
+def polish_one_book(
+    llm: LLMClient,
+    title: str,
+    intro: str,
+    chapter_previews: list[dict[str, str]],
+) -> tuple[str, str]:
     """调用 LLM 润色单本书。"""
     system_prompt = "你是中文小说文案编辑，擅长在不改动事实的前提下优化标题和简介。"
     response = llm.generate(
-        prompt=build_prompt(title=title, intro=intro),
+        prompt=build_prompt(
+            title=title,
+            intro=intro,
+            chapter_previews=chapter_previews,
+        ),
         system_prompt=system_prompt,
         temperature=0.3,
     )
     payload = extract_json_block(response)
 
-    polished_title = str(payload.get("polished_title", "")).strip()
+    polished_title = normalize_text(str(payload.get("polished_title", "")))
     polished_intro = str(payload.get("polished_intro", "")).strip()
 
     if not polished_title:
@@ -134,6 +220,10 @@ def run_polish(
             book_id = int(row["book_id"])
             title = str(row["title"] or "").strip()
             intro = str(row["intro"] or "").strip()
+            chapter_previews = fetch_chapter_previews(
+                conn=conn,
+                book_id=book_id,
+            )
 
             exists = conn.execute(
                 f"SELECT 1 FROM {POLISH_TABLE} WHERE book_id = ?",
@@ -148,6 +238,7 @@ def run_polish(
                     llm=llm,
                     title=title,
                     intro=intro,
+                    chapter_previews=chapter_previews,
                 )
                 conn.execute(
                     f"""

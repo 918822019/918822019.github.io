@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""批量润色小说书名和简介，并写入 SQLite 的 book_polish 表。"""
+"""基于书名、简介和前五章正文润色小说简介，并写入 SQLite 的 book_polish 表。"""
 
 from __future__ import annotations
 
@@ -10,8 +10,14 @@ from src.process.book_profile_polish import POLISH_TABLE, run_polish
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="批量润色小说书名+简介并写入 SQLite")
-    parser.add_argument("--db-path", default="data/books.db", help="SQLite 数据库路径")
+    parser = argparse.ArgumentParser(
+        description="基于前五章正文批量润色小说简介并写入 SQLite"
+    )
+    parser.add_argument(
+        "--db-path",
+        default="data/books.db",
+        help="SQLite 数据库路径",
+    )
     parser.add_argument("--model", default=None, help="可选，覆盖默认模型名")
     parser.add_argument(
         "--limit", type=int, default=0, help="最多处理多少本，0 表示不限制"

@@ -52,6 +52,82 @@ python -m src.process.llm_tagging \
 - `--sleep 0.2` 每本间隔 0.2 秒，降低触发限流概率
 - `--model qwen-plus` 临时覆盖模型名
 
+## 数据预处理 Pipeline 运行方式
+
+`src/process/preprocess.py` 提供了统一编排入口，会按顺序执行：
+
+1. 文本润色（基于书名 + 原简介 + 前五章正文润色简介，结果写入 `book_polish`）
+2. 生成 embedding（基于 `book_polish` 写入 `book_polish_embedding`）
+3. LLM 打标签（输出到 JSON）
+
+### 1) 准备环境变量
+
+至少需要以下配置（可写在 `project/book_search/.env`）：
+
+```bash
+export LLM_API_KEY="你的密钥"
+export LLM_BASE_URL="https://api.openai.com/v1"
+export LLM_MODEL_NAME="gpt-4o-mini"
+
+export EMBEDDING_API_KEY="你的密钥"
+export EMBEDDING_BASE_URL="https://api.openai.com/v1"
+export EMBEDDING_MODEL_NAME="text-embedding-3-small"
+```
+
+### 2) 一次性运行完整 Pipeline
+
+在 `project/book_search` 目录执行：
+
+```bash
+python -c "from src.process.preprocess import PreprocessPipelineConfig, run_preprocess_pipeline; cfg=PreprocessPipelineConfig(input_path='data/books.db', output_path='data/books_tagged.json', enable_text_polish=True, enable_polish_embedding=True, enable_llm_tagging=True, tagging_mode='flat', overwrite=False, limit=0, sleep_seconds=0.0); print(run_preprocess_pipeline(cfg))"
+```
+
+### 3) 只跑某些步骤（常见场景）
+
+只做“简介润色 + embedding”，暂不打标签：
+
+```bash
+python -c "from src.process.preprocess import PreprocessPipelineConfig, run_preprocess_pipeline; cfg=PreprocessPipelineConfig(input_path='data/books.db', output_path='data/books_tagged.json', enable_text_polish=True, enable_polish_embedding=True, enable_llm_tagging=False, overwrite=False, limit=200, sleep_seconds=0.1); print(run_preprocess_pipeline(cfg))"
+```
+
+只做 LLM 打标签（复用已有润色和 embedding 结果）：
+
+```bash
+python -c "from src.process.preprocess import PreprocessPipelineConfig, run_preprocess_pipeline; cfg=PreprocessPipelineConfig(input_path='data/books.db', output_path='data/books_tagged.json', enable_text_polish=False, enable_polish_embedding=False, enable_llm_tagging=True, tagging_mode='cascading', overwrite=False, limit=0); print(run_preprocess_pipeline(cfg))"
+```
+
+### 常用参数说明
+
+- `input_path`：SQLite 数据库路径（通常为 `data/books.db`）
+- `output_path`：标签结果输出 JSON 路径
+- `tagging_mode`：`flat`（扁平标签）或 `cascading`（级联标签）
+- `limit`：本次最多处理书籍数，`0` 表示全部
+- `overwrite`：是否覆盖已有结果
+- `sleep_seconds`：每次模型调用后的等待秒数，用于降低限流风险
+- `incremental_tagging`：是否启用标签增量模式（默认 `True`）
+
+### 增量预处理（新数据续跑）
+
+当 `books.db` 里新增了一批书时，直接复用同一个 `output_path` 再跑一次 pipeline 即可。
+
+机制说明：
+
+- 文本润色和 embedding 本身就是增量写入（默认 `overwrite=False` 时会跳过已处理 book_id）
+- LLM 打标会自动读取已有 `output_path`，按 `book_id` 回填历史 `tags/cascaded_tags` 后再执行
+- 因此第二次运行会优先处理新进来的书，避免对旧书重复调用模型
+
+示例（推荐保留同一个输出文件）：
+
+```bash
+python -c "from src.process.preprocess import PreprocessPipelineConfig, run_preprocess_pipeline; cfg=PreprocessPipelineConfig(input_path='data/books.db', output_path='data/books_tagged.json', incremental_tagging=True, overwrite=False); print(run_preprocess_pipeline(cfg))"
+```
+
+提示：如果你偏好脚本方式，也可以继续使用单步骤脚本：
+
+- `python tools/polish_book_profile.py`
+- `python tools/embed_book_polish.py`
+- `python -m src.process.llm_tagging --input data/books.json --output data/books_tagged.json`
+
 ## 抓取命令
 
 在 project/起点搜书/data_get 目录执行：
