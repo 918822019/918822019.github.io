@@ -32,3 +32,6 @@ project/book_search/data_get/page_*_network_debug.json
 project/book_search/data_get/page_*_dom_before_click.html
 project/book_search/data_get/page_*_dom_after_click.html
 project/book_search/data_get/xpath_result*.json
+
+# Frontend exported full datasets (very large)
+frontend/data/*_full.ndjson
