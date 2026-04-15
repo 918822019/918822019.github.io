@@ -974,130 +974,109 @@ def crawl_content_stage(
         logger.info("正文阶段无可处理书籍，请先执行 crawl-books。")
         return
 
+    # 一次性收集所有待抓章节，而不是逐书处理
+    all_pending_chapters = []
     pending_chapter_total = count_pending_chapters_in_range(conn, start, end)
-    if max_pending_per_book > 0:
-        pending_chapter_total = 0
-        for book_row in books:
-            pending_chapter_total += len(
-                get_pending_chapters(
-                    conn,
-                    int(book_row["book_id"]),
-                    max_pending_per_book,
-                )
-            )
 
-    if pending_chapter_total == 0:
+    for book_row in books:
+        book_id = int(book_row["book_id"])
+        pending_rows = get_pending_chapters(
+            conn,
+            book_id,
+            max_pending_per_book if max_pending_per_book > 0 else 0,
+        )
+        for row in pending_rows:
+            all_pending_chapters.append((book_id, int(row["chapter_id"])))
+
+    if not all_pending_chapters:
         logger.info("正文阶段无需执行，目标区间章节内容已全部完成。")
         return
 
     stage_start = time.time()
-    completed_books = 0
     chapter_success_count = 0
     chapter_failure_count = 0
     chapter_processed_count = 0
+
+    # 按 book_id 分组以便统计完成情况
+    books_with_chapters = {}
+    for book_id, chapter_id in all_pending_chapters:
+        if book_id not in books_with_chapters:
+            books_with_chapters[book_id] = []
+        books_with_chapters[book_id].append(chapter_id)
+
     logger.info(
         (
-            "正文阶段启动: range=%s-%s books=%s pending_chapters=%s "
-            "concurrency=%s batch_size=%s interval=%.3fs jitter=%.3fs"
+            "正文阶段启动(全集并发): range=%s-%s books=%s pending_chapters=%s "
+            "concurrency=%s interval=%.3fs jitter=%.3fs"
         ),
         start,
         end,
-        len(books),
-        pending_chapter_total,
+        len(books_with_chapters),
+        len(all_pending_chapters),
         concurrency,
-        batch_size,
         client.min_request_interval,
         client.request_jitter,
     )
 
+    # 一次性提交所有任务到线程池
     with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
-        for book_index, book_row in enumerate(books, start=1):
-            book_id = int(book_row["book_id"])
-            pending_rows = get_pending_chapters(
-                conn,
+        future_to_chapter_info = {
+            executor.submit(
+                client.fetch_chapter_content,
                 book_id,
-                max_pending_per_book,
-            )
-            if not pending_rows:
-                refresh_book_content_progress(conn, book_id)
-                completed_books += 1
-                if book_index % progress_every == 0 or book_index == len(books):
-                    logger.info(
-                        "正文书籍进度: %s/%s elapsed=%.2fs",
-                        completed_books,
-                        len(books),
-                        time.time() - stage_start,
-                    )
-                continue
+                chapter_id,
+            ): (book_id, chapter_id)
+            for book_id, chapter_id in all_pending_chapters
+        }
 
-            logger.info(
-                "开始抓正文: book_id=%s title=%s pending=%s",
-                book_id,
-                book_row["title"],
-                len(pending_rows),
-            )
+        # 按完成顺序处理结果
+        for future in concurrent.futures.as_completed(future_to_chapter_info):
+            book_id, chapter_id = future_to_chapter_info[future]
+            try:
+                chapter_record = future.result()
+                upsert_chapter_content(conn, chapter_record)
+                chapter_success_count += 1
+            except Exception as exc:
+                record_chapter_error(
+                    conn,
+                    book_id,
+                    chapter_id,
+                    str(exc),
+                )
+                chapter_failure_count += 1
+                logger.warning(
+                    "正文抓取失败: book_id=%s chapter_id=%s error=%s",
+                    book_id,
+                    chapter_id,
+                    exc,
+                )
+            finally:
+                chapter_processed_count += 1
 
-            for batch in chunked(list(pending_rows), batch_size):
-                future_to_chapter = {
-                    executor.submit(
-                        client.fetch_chapter_content,
-                        book_id,
-                        int(row["chapter_id"]),
-                    ): int(row["chapter_id"])
-                    for row in batch
-                }
-                for future in concurrent.futures.as_completed(future_to_chapter):
-                    chapter_id = future_to_chapter[future]
-                    try:
-                        chapter_record = future.result()
-                        upsert_chapter_content(conn, chapter_record)
-                        chapter_success_count += 1
-                    except Exception as exc:
-                        record_chapter_error(
-                            conn,
-                            book_id,
-                            chapter_id,
-                            str(exc),
-                        )
-                        chapter_failure_count += 1
-                        logger.warning(
-                            "正文抓取失败: book_id=%s chapter_id=%s error=%s",
-                            book_id,
-                            chapter_id,
-                            exc,
-                        )
-                    finally:
-                        chapter_processed_count += 1
-
-                    if (
-                        chapter_processed_count % chapter_progress_every == 0
-                        or chapter_processed_count == pending_chapter_total
-                    ):
-                        logger.info(
-                            (
-                                "正文章节进度: %s/%s success=%s failure=%s "
-                                "current_book=%s elapsed=%.2fs"
-                            ),
-                            chapter_processed_count,
-                            pending_chapter_total,
-                            chapter_success_count,
-                            chapter_failure_count,
-                            book_id,
-                            time.time() - stage_start,
-                        )
-
-                refresh_book_content_progress(conn, book_id)
-
-            completed_books += 1
-            if book_index % progress_every == 0 or book_index == len(books):
+            if (
+                chapter_processed_count % chapter_progress_every == 0
+                or chapter_processed_count == len(all_pending_chapters)
+            ):
                 logger.info(
-                    "正文书籍进度: %s/%s chapters=%s/%s elapsed=%.2fs",
-                    completed_books,
-                    len(books),
+                    ("正文章节进度: %s/%s success=%s failure=%s " "elapsed=%.2fs"),
                     chapter_processed_count,
-                    pending_chapter_total,
+                    len(all_pending_chapters),
+                    chapter_success_count,
+                    chapter_failure_count,
                     time.time() - stage_start,
                 )
+
+        # 最后刷新所有书的进度
+        for book_id in books_with_chapters:
+            refresh_book_content_progress(conn, book_id)
+
+    logger.info(
+        ("正文阶段完成: total_chapters=%s success=%s failure=%s " "elapsed=%.2fs"),
+        len(all_pending_chapters),
+        chapter_success_count,
+        chapter_failure_count,
+        time.time() - stage_start,
+    )
 
 
 def print_stats(conn: sqlite3.Connection, db_path: str) -> None:
