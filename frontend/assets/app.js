@@ -363,7 +363,7 @@
                 continue;
             }
 
-            const heading = line.match(/^(#{1,4})\s+(.*)$/);
+            const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
             if (heading) {
                 closeBlocks();
                 const level = heading[1].length;
@@ -378,7 +378,7 @@
                 continue;
             }
 
-            const ordered = line.match(/^\d+\.\s+(.*)$/);
+            const ordered = line.match(/^\s*\d+[\.)]\s+(.*)$/);
             if (ordered) {
                 closeTable();
                 if (listType !== 'ol') {
@@ -390,7 +390,7 @@
                 continue;
             }
 
-            const unordered = line.match(/^[-*+]\s+(.*)$/);
+            const unordered = line.match(/^\s*[-*+]\s+(.*)$/);
             if (unordered) {
                 closeTable();
                 if (listType !== 'ul') {
@@ -402,9 +402,10 @@
                 continue;
             }
 
-            if (line.startsWith('> ')) {
+            const quote = line.match(/^\s{0,3}>\s?(.*)$/);
+            if (quote) {
                 closeBlocks();
-                html.push('<blockquote><p>' + renderInline(line.slice(2), docPath) + '</p></blockquote>');
+                html.push('<blockquote><p>' + renderInline(quote[1], docPath) + '</p></blockquote>');
                 continue;
             }
 
@@ -448,7 +449,7 @@
                 throw new Error('无法加载文档');
             }
             const markdown = await response.text();
-            const title = markdown.match(/^#\s+(.+)$/m);
+            const title = markdown.match(/^\s{0,3}#\s+(.+?)\s*#*\s*$/m);
             readerTitle.textContent = title ? title[1] : docPath.split('/').pop();
             readerContent.innerHTML = renderMarkdown(markdown, docFetchPath);
             if (typeof window.renderMathInElement === 'function') {
