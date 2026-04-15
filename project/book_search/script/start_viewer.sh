@@ -17,8 +17,11 @@
 #     http://localhost:5000
 #
 # ============================================================================
-source .venv/bin/activate
 cd "$(dirname "$0")/.."
+
+if [ -f ".venv/bin/activate" ]; then
+    source .venv/bin/activate
+fi
 
 echo "======================================"
 echo "  起点搜书 - 前端服务启动"
@@ -40,13 +43,13 @@ if [ $? -ne 0 ]; then
 fi
 
 # 检查数据库文件
-DB_PATH="../data/books.db"
+DB_PATH="data/books.db"
 if [ ! -f "$DB_PATH" ]; then
     echo "警告: 数据库文件 $DB_PATH 不存在"
     echo "请先运行数据抓取脚本生成数据库"
     echo ""
     echo "示例命令:"
-    echo "  cd ../data_get"
+    echo "  cd data_get"
     echo "  python main.py crawl-books --start 1 --end 100"
     echo ""
     read -p "是否继续? (y/n) " -n 1 -r
@@ -56,13 +59,14 @@ if [ ! -f "$DB_PATH" ]; then
     fi
 fi
 
-# 启动服务
-cd ../src/viewer
-
 echo ""
 echo "启动服务器..."
-echo "访问地址: http://localhost:5000"
+echo "访问地址:"
+echo "  统一中台:   http://localhost:5000/"
+echo "  管理台:     http://localhost:5000/admin"
+echo "  文档前端:   http://localhost:5000/frontend/"
+echo "  数据观察台: http://localhost:5000/frontend/data-inspector.html"
 echo "按 Ctrl+C 停止服务器"
 echo ""
 
-python3 db_viewer.py
+python3 -m src.viewer.db_viewer

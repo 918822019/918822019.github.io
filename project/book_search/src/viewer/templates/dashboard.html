@@ -4,442 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>起点搜书 - 数据库管理</title>
-    <style>
-        :root {
-            --bg-1: #f6f8fb;
-            --bg-2: #e9eef6;
-            --panel: #ffffff;
-            --ink: #1f2937;
-            --ink-soft: #64748b;
-            --brand: #0f766e;
-            --brand-2: #0b5f58;
-            --accent: #d97706;
-            --line: #dbe3ee;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            background: radial-gradient(circle at 10% 10%, var(--bg-2) 0, var(--bg-1) 48%, #f4f7fb 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: var(--ink);
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: var(--panel);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
-            margin-bottom: 30px;
-            text-align: center;
-            border: 1px solid var(--line);
-        }
-
-        .header h1 {
-            color: var(--brand);
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: var(--ink-soft);
-            font-size: 1.1em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--panel);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-            transition: transform 0.3s ease;
-            border: 1px solid var(--line);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-card h3 {
-            color: var(--ink-soft);
-            font-size: 0.9em;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-
-        .stat-card .value {
-            color: var(--brand);
-            font-size: 2.5em;
-            font-weight: bold;
-        }
-
-        .stat-card .label {
-            color: var(--ink-soft);
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-
-        .content-section {
-            background: var(--panel);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-            margin-bottom: 30px;
-            border: 1px solid var(--line);
-        }
-
-        .section-title {
-            color: var(--brand);
-            font-size: 1.8em;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid var(--brand);
-        }
-
-        .search-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .search-bar input,
-        .search-bar select {
-            padding: 12px 20px;
-            border: 2px solid var(--line);
-            border-radius: 8px;
-            font-size: 1em;
-            flex: 1;
-            min-width: 200px;
-            transition: border-color 0.3s;
-            color: var(--ink);
-            background: #fbfdff;
-        }
-
-        .search-bar input:focus,
-        .search-bar select:focus {
-            outline: none;
-            border-color: var(--brand);
-        }
-
-        .btn {
-            padding: 12px 30px;
-            background: var(--brand);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background: var(--brand-2);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        th {
-            background: #f8f9fa;
-            color: var(--brand);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85em;
-        }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .pagination button {
-            padding: 8px 16px;
-            background: var(--brand);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .pagination button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .pagination span {
-            color: #666;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--brand), var(--accent));
-            transition: width 0.3s;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-
-        .badge-success {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .badge-warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .recent-books {
-            list-style: none;
-        }
-
-        .recent-books li {
-            padding: 15px;
-            border-bottom: 1px solid #e0e0e0;
-            transition: background 0.3s;
-        }
-
-        .recent-books li:hover {
-            background: #f8f9fa;
-        }
-
-        .recent-books .book-title {
-            color: var(--brand);
-            font-weight: 600;
-            font-size: 1.1em;
-        }
-
-        .recent-books .book-meta {
-            color: #999;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-
-        .search-result-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-
-        .search-result-card {
-            border: 1px solid #e8ecf5;
-            border-radius: 12px;
-            padding: 16px;
-            background: #fbfcff;
-        }
-
-        .search-result-card h3 {
-            color: #334155;
-            margin-bottom: 8px;
-            font-size: 1.05em;
-        }
-
-        .search-score {
-            color: var(--brand);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .search-intro {
-            color: #475569;
-            line-height: 1.6;
-            font-size: 0.95em;
-        }
-
-        .muted {
-            color: #94a3b8;
-            font-size: 0.95em;
-        }
-
-        .mono {
-            font-family: "JetBrains Mono", "Menlo", "Consolas", monospace;
-            font-size: 0.85em;
-        }
-
-        .tag {
-            display: inline-block;
-            border-radius: 999px;
-            padding: 3px 10px;
-            font-size: 0.82em;
-            border: 1px solid var(--line);
-            background: #f8fafc;
-            color: var(--ink-soft);
-        }
-
-        .tag-ok {
-            border-color: #bae6fd;
-            background: #ecfeff;
-            color: #0e7490;
-        }
-
-        .processed-intro {
-            max-width: 520px;
-            color: #475569;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            z-index: 2000;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-card {
-            width: min(980px, 100%);
-            max-height: 90vh;
-            overflow: auto;
-            background: #fff;
-            border-radius: 14px;
-            border: 1px solid var(--line);
-            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.24);
-            padding: 22px;
-        }
-
-        .modal-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .modal-title {
-            color: var(--brand);
-            font-size: 1.25em;
-            font-weight: 700;
-        }
-
-        .modal-close {
-            border: 1px solid var(--line);
-            background: #f8fafc;
-            color: #334155;
-            border-radius: 8px;
-            padding: 6px 10px;
-            cursor: pointer;
-        }
-
-        .compare-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .compare-box {
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 12px;
-            background: #fcfdff;
-        }
-
-        .compare-box h4 {
-            color: #0f766e;
-            margin-bottom: 8px;
-            font-size: 0.98em;
-        }
-
-        .compare-text {
-            color: #475569;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-
-        .detail-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .chapter-list {
-            margin-top: 8px;
-            border-top: 1px dashed var(--line);
-            padding-top: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            table {
-                font-size: 0.9em;
-            }
-            
-            th, td {
-                padding: 10px;
-            }
-        }
-    </style>
+    <link href="/frontend/assets/styles.css?v=20260415-3" rel="stylesheet"/>
+    <link href="/static/dashboard.css?v=20260415-1" rel="stylesheet"/>
 </head>
-<body>
+<body class="dashboard-body">
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="grain"></div>
+
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" href="/">BOOK SEARCH CONSOLE</a>
+            <div class="top-actions">
+                <nav class="console-nav" aria-label="统一导航">
+                    <a class="console-link" href="/">统一中台</a>
+                    <a class="console-link is-active" href="/admin">数据库管理台</a>
+                    <a class="console-link" href="/frontend/">文档前端</a>
+                    <a class="console-link" href="/frontend/data-inspector.html">数据观察台</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="page dashboard-page">
     <div class="container">
         <div class="header">
             <h1>📚 起点搜书数据库管理</h1>
             <p>可视化查看和管理书籍数据</p>
+            <div class="quick-nav">
+                <a class="quick-link" href="/">统一中台</a>
+                <a class="quick-link" href="/admin">数据库管理台</a>
+                <a class="quick-link" href="/frontend/" target="_blank" rel="noopener">文档前端首页</a>
+                <a class="quick-link" href="/frontend/data-inspector.html" target="_blank" rel="noopener">数据观察台</a>
+            </div>
         </div>
 
         <!-- 统计卡片 -->
@@ -504,7 +101,7 @@
                 {% endfor %}
             </ul>
             {% else %}
-            <p style="color: #999; text-align: center;">暂无数据</p>
+            <p class="empty-message">暂无数据</p>
             {% endif %}
         </div>
 
@@ -514,10 +111,10 @@
             
             <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="搜索书名、作者或简介...">
-                <select id="categoryFilter">
+                <select id="categoryFilter" aria-label="分类筛选">
                     <option value="">所有分类</option>
                 </select>
-                <select id="statusFilter">
+                <select id="statusFilter" aria-label="完成状态筛选">
                     <option value="">所有状态</option>
                     <option value="completed">已完成</option>
                     <option value="incomplete">未完成</option>
@@ -540,7 +137,7 @@
                 </thead>
                 <tbody id="booksTableBody">
                     <tr>
-                        <td colspan="8" style="text-align: center; color: #999;">加载中...</td>
+                        <td colspan="8" class="table-message">加载中...</td>
                     </tr>
                 </tbody>
             </table>
@@ -557,7 +154,7 @@
             <h2 class="section-title">🔎 润色语义检索</h2>
             <div class="search-bar">
                 <input type="text" id="polishQuery" placeholder="例如：轻松搞笑修仙文" />
-                <input type="number" id="polishTopK" min="1" max="50" value="10" style="max-width: 140px;" />
+                <input type="number" id="polishTopK" min="1" max="50" value="10" class="input-topk" aria-label="返回结果数量 top-k" placeholder="TopK" />
                 <button class="btn" onclick="runPolishSearch()">检索</button>
             </div>
             <p class="muted">结果来自 Faiss 向量索引（元数据来自 book_polish_embedding 表），按余弦相似度降序返回。</p>
@@ -565,11 +162,11 @@
         </div>
 
         <!-- 处理后数据 -->
-        <div class="content-section">
+        <div class="content-section" id="processedSection">
             <h2 class="section-title">🧪 处理后数据</h2>
             <div class="search-bar">
                 <input type="text" id="processedSearch" placeholder="搜索原始书名 / 润色书名 / 润色简介" />
-                <select id="processedFilter">
+                <select id="processedFilter" aria-label="处理结果筛选">
                     <option value="all">全部</option>
                     <option value="polished">仅已润色</option>
                     <option value="embedded">仅已向量化</option>
@@ -591,7 +188,7 @@
                 </thead>
                 <tbody id="processedTableBody">
                     <tr>
-                        <td colspan="7" style="text-align: center; color: #94a3b8;">加载中...</td>
+                        <td colspan="7" class="table-message-soft">滚动到本区后自动加载，或手动点击查询</td>
                     </tr>
                 </tbody>
             </table>
@@ -633,19 +230,39 @@
             </div>
         </div>
     </div>
+    </main>
 
     <script>
         let currentPage = 1;
         const perPage = 20;
         let currentProcessedPage = 1;
         const processedPerPage = 12;
+        let processedInitialized = false;
 
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
-            loadCategories();
-            loadBooks();
-            loadProcessedBooks();
+            Promise.all([loadCategories(), loadBooks()]);
+
+            // 处理后数据体量较大，首屏不请求，进入视口后再加载。
+            const processedSection = document.getElementById('processedSection');
+            if ('IntersectionObserver' in window && processedSection) {
+                const observer = new IntersectionObserver(entries => {
+                    if (entries.some(entry => entry.isIntersecting)) {
+                        ensureProcessedBooksLoaded();
+                        observer.disconnect();
+                    }
+                }, { rootMargin: '200px 0px' });
+                observer.observe(processedSection);
+            }
         });
+
+        function ensureProcessedBooksLoaded() {
+            if (processedInitialized) {
+                return;
+            }
+            processedInitialized = true;
+            loadProcessedBooks(1);
+        }
 
         // 加载分类列表
         async function loadCategories() {
@@ -693,7 +310,7 @@
             } catch (error) {
                 console.error('加载书籍失败:', error);
                 document.getElementById('booksTableBody').innerHTML = 
-                    '<tr><td colspan="8" style="text-align: center; color: red;">加载失败</td></tr>';
+                    '<tr><td colspan="8" class="table-message-error">加载失败</td></tr>';
             }
         }
 
@@ -702,7 +319,7 @@
             const tbody = document.getElementById('booksTableBody');
             
             if (books.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">没有找到书籍</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="table-message">没有找到书籍</td></tr>';
                 return;
             }
 
@@ -724,13 +341,13 @@
                         <td>${statusBadge}</td>
                         <td>
                             ${book.content_fetched_chapters}/${book.chapter_count}
-                            <div class="progress-bar" style="margin-top: 5px;">
+                            <div class="progress-bar progress-with-gap">
                                 <div class="progress-fill" style="width: ${progress}%"></div>
                             </div>
                         </td>
                         <td>${book.last_update || '-'}</td>
                         <td>
-                            <a href="${book.homepage_url}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 0.9em;">
+                            <a href="${book.homepage_url}" target="_blank" class="btn btn-sm">
                                 查看详情
                             </a>
                         </td>
@@ -789,14 +406,14 @@
                 const data = await response.json();
 
                 if (!data.success) {
-                    resultBox.innerHTML = `<div style="color: #dc2626;">检索失败：${data.error || '未知错误'}</div>`;
+                    resultBox.innerHTML = `<div class="error-text">检索失败：${data.error || '未知错误'}</div>`;
                     return;
                 }
 
                 renderPolishSearchResults(data.results || []);
             } catch (error) {
                 console.error('语义检索失败:', error);
-                resultBox.innerHTML = '<div style="color: #dc2626;">检索请求失败，请检查服务日志。</div>';
+                resultBox.innerHTML = '<div class="error-text">检索请求失败，请检查服务日志。</div>';
             }
         }
 
@@ -814,8 +431,8 @@
                     <div class="search-score">相似度：${Number(item.score).toFixed(4)}</div>
                     <div class="muted">book_id: ${item.book_id} | 向量维度: ${item.embedding_dim}</div>
                     <p class="search-intro">${item.polished_intro || '暂无润色简介'}</p>
-                    <div style="margin-top:10px;">
-                        <button class="btn" style="padding:6px 12px;font-size:0.85em;" onclick="openBookDetail(${item.book_id})">查看详情</button>
+                    <div class="result-action-wrap">
+                        <button class="btn btn-sm" onclick="openBookDetail(${item.book_id})">查看详情</button>
                     </div>
                 </div>
             `).join('');
@@ -823,12 +440,13 @@
 
         // 加载处理后数据列表
         async function loadProcessedBooks(page = 1) {
+            processedInitialized = true;
             currentProcessedPage = page;
             const search = document.getElementById('processedSearch').value.trim();
             const processed = document.getElementById('processedFilter').value;
             const tbody = document.getElementById('processedTableBody');
 
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">加载中...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="table-message-soft">加载中...</td></tr>';
 
             try {
                 const params = new URLSearchParams({
@@ -841,7 +459,7 @@
                 const data = await response.json();
 
                 if (!data.success) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc2626;">加载失败</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="table-message-error">加载失败</td></tr>';
                     return;
                 }
 
@@ -849,7 +467,7 @@
                 updateProcessedPagination(data.pagination || { page: 1, pages: 1, total: 0 });
             } catch (error) {
                 console.error('加载处理后数据失败:', error);
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc2626;">请求失败</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="table-message-error">请求失败</td></tr>';
             }
         }
 
@@ -857,7 +475,7 @@
         function renderProcessedBooks(rows) {
             const tbody = document.getElementById('processedTableBody');
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无处理后数据</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="table-message-soft">暂无处理后数据</td></tr>';
                 return;
             }
 
@@ -876,7 +494,7 @@
                         <td>${embedTag}</td>
                         <td>${updatedAt}</td>
                         <td>
-                            <button class="btn" style="padding:6px 12px;font-size:0.85em;" onclick="openCompareModal('${encodeURIComponent(JSON.stringify(item))}')">对比</button>
+                            <button class="btn btn-sm" onclick="openCompareModal('${encodeURIComponent(JSON.stringify(item))}')">对比</button>
                         </td>
                     </tr>
                 `;
@@ -945,7 +563,7 @@
                 const response = await fetch(`/api/books/${bookId}`);
                 const data = await response.json();
                 if (!data.success) {
-                    body.innerHTML = `<div style="color:#dc2626;">加载失败：${escapeHtml(data.error || '未知错误')}</div>`;
+                    body.innerHTML = `<div class="error-text">加载失败：${escapeHtml(data.error || '未知错误')}</div>`;
                     return;
                 }
 
@@ -960,16 +578,16 @@
                         <span class="tag">分类: ${escapeHtml(book.category || '-')}</span>
                         <span class="tag">章节: ${book.chapter_count || 0}</span>
                     </div>
-                    <h3 style="color:#0f766e;margin-bottom:8px;">${escapeHtml(book.title || '未知书名')}</h3>
+                    <h3 class="book-detail-title">${escapeHtml(book.title || '未知书名')}</h3>
                     <p class="compare-text">${escapeHtml(book.intro || '暂无简介')}</p>
                     <div class="chapter-list">
-                        <div class="muted" style="margin-bottom:6px;">章节预览（前8章）</div>
-                        <ol style="padding-left:18px;">${preview || '<li class="muted">暂无章节</li>'}</ol>
+                        <div class="muted chapter-preview-label">章节预览（前8章）</div>
+                        <ol class="chapter-preview-list">${preview || '<li class="muted">暂无章节</li>'}</ol>
                     </div>
                 `;
             } catch (error) {
                 console.error('加载书籍详情失败:', error);
-                body.innerHTML = '<div style="color:#dc2626;">请求失败，请稍后重试。</div>';
+                body.innerHTML = '<div class="error-text">请求失败，请稍后重试。</div>';
             }
         }
 

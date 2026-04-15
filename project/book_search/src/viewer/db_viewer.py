@@ -26,7 +26,7 @@ API接口:
 
 import sqlite3
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from datetime import datetime
 from pathlib import Path
 
@@ -35,9 +35,13 @@ from src.process.polish_embedding_search import search_books_by_polish_embedding
 # 项目根目录（tools/ 的上一级）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.normpath(os.path.join(BASE_DIR, "..", ".."))
+REPO_ROOT = os.path.normpath(os.path.join(PROJECT_ROOT, "..", ".."))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 DB_PATH = os.path.abspath(os.path.join(PROJECT_ROOT, "data", "books.db"))
+FRONTEND_ROOT = os.path.join(REPO_ROOT, "frontend")
+DOCS_ROOT = os.path.join(REPO_ROOT, "docs")
+BOOK_SEARCH_DATA_ROOT = os.path.join(PROJECT_ROOT, "data")
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 
@@ -62,9 +66,39 @@ def table_exists(conn, table_name: str) -> bool:
     return row is not None
 
 
+@app.route("/frontend/")
+def frontend_index():
+    """统一入口: 前端首页。"""
+    return send_from_directory(FRONTEND_ROOT, "index.html")
+
+
+@app.route("/frontend/<path:filename>")
+def frontend_files(filename):
+    """统一入口: 前端静态资源与子页面。"""
+    return send_from_directory(FRONTEND_ROOT, filename)
+
+
+@app.route("/docs/<path:filename>")
+def docs_files(filename):
+    """供 frontend/index.html 读取 docs 索引与文档文件。"""
+    return send_from_directory(DOCS_ROOT, filename)
+
+
+@app.route("/project/book_search/data/<path:filename>")
+def book_search_data_files(filename):
+    """供数据观察台读取 books/shards 等数据文件。"""
+    return send_from_directory(BOOK_SEARCH_DATA_ROOT, filename)
+
+
 @app.route("/")
+def hub():
+    """统一中台入口页。"""
+    return render_template("hub.html")
+
+
+@app.route("/admin")
 def index():
-    """主页 - 显示数据统计概览"""
+    """数据库管理台 - 显示数据统计概览"""
     conn = get_db_connection()
     try:
         # 获取书籍统计

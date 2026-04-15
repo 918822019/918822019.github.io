@@ -12,6 +12,13 @@ fi
 echo "[1/5] 拉取远程 ${branch} ..."
 git pull --rebase origin "$branch"
 
+echo "[1.5/5] 转换 Jupyter 笔记本 ..."
+if command -v python3 >/dev/null 2>&1; then
+  python3 scripts/convert-notebooks.py || echo "警告：部分笔记本转换失败，继续推送已有内容。"
+else
+  echo "警告：未找到 python3，跳过笔记本转换。"
+fi
+
 echo "[2/5] 生成 docs/index.json ..."
 if command -v node >/dev/null 2>&1; then
   node build-docs-index.js

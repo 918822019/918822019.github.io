@@ -97,7 +97,45 @@ body {
 
 .top-actions {
     display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.console-nav {
+    display: inline-flex;
     gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.console-link {
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 13px;
+    transition: transform 160ms ease, background 160ms ease;
+}
+
+.console-link:hover {
+    transform: translateY(-1px);
+}
+
+.console-link.is-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.console-tools {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
 }
 
 .brand {
@@ -125,7 +163,8 @@ body {
 .menu-btn:focus-visible,
 .hero-btn:focus-visible,
 .tag-btn:focus-visible,
-.hero-link:focus-visible {
+.hero-link:focus-visible,
+.console-link:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
 }
@@ -344,6 +383,68 @@ body {
     border-radius: 10px;
     margin: 1.2em 0;
     display: block;
+}
+
+.panel h2 {
+
+/* ---- Markdown tables ---- */
+.table-wrap {
+    overflow-x: auto;
+    margin: 0 0 1.2em;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.93em;
+}
+
+.markdown-body th,
+.markdown-body td {
+    padding: 8px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+}
+
+.markdown-body th {
+    background: rgba(15, 106, 115, 0.07);
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.markdown-body tr:last-child td {
+    border-bottom: none;
+}
+
+.markdown-body tbody tr:hover {
+    background: rgba(15, 106, 115, 0.04);
+}
+
+/* ---- KaTeX display math ---- */
+.math-display {
+    overflow-x: auto;
+    margin: 1em 0;
+    text-align: center;
+}
+
+.math-display .katex-display,
+.katex-display {
+    margin: 0.5em 0;
+}
+
+body[data-theme='dark'] .markdown-body th {
+    background: rgba(15, 106, 115, 0.18);
+}
+
+body[data-theme='dark'] .table-wrap {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+body[data-theme='dark'] .markdown-body th,
+body[data-theme='dark'] .markdown-body td {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 .panel h2 {
@@ -926,6 +1027,11 @@ body[data-theme='dark'] .json-raw {
 
     .top-actions {
         gap: 6px;
+    }
+
+    .console-link {
+        padding: 7px 11px;
+        font-size: 12px;
     }
 
     .menu-btn {

@@ -278,6 +278,9 @@
         let inCode = false;
         let codeBuffer = [];
         let listType = null;
+        let tableRows = [];
+        let inMath = false;
+        let mathBuffer = [];
 
         function closeList() {
             if (listType) {
@@ -286,11 +289,60 @@
             }
         }
 
+        function closeTable() {
+            if (!tableRows.length) { return; }
+            var rows = tableRows;
+            tableRows = [];
+            if (rows.length < 2 || !/^[\s|:\-]+$/.test(rows[1])) {
+                rows.forEach(function (r) { html.push('<p>' + renderInline(r, docPath) + '</p>'); });
+                return;
+            }
+            function parseCells(row) {
+                var parts = row.split('|');
+                if (parts[0].trim() === '') { parts = parts.slice(1); }
+                if (parts.length && parts[parts.length - 1].trim() === '') { parts = parts.slice(0, -1); }
+                return parts.map(function (c) { return c.trim(); });
+            }
+            var headers = parseCells(rows[0]);
+            var thead = '<thead><tr>' + headers.map(function (h) {
+                return '<th>' + renderInline(h, docPath) + '</th>';
+            }).join('') + '</tr></thead>';
+            var tbody = rows.length > 2 ? '<tbody>' + rows.slice(2).map(function (row) {
+                return '<tr>' + parseCells(row).map(function (c) {
+                    return '<td>' + renderInline(c, docPath) + '</td>';
+                }).join('') + '</tr>';
+            }).join('') + '</tbody>' : '';
+            html.push('<div class="table-wrap"><table>' + thead + tbody + '</table></div>');
+        }
+
+        function closeBlocks() {
+            closeList();
+            closeTable();
+        }
+
         for (let i = 0; i < lines.length; i += 1) {
             const line = lines[i];
 
+            // Block math: $$ ... $$ (multi-line)
+            if (!inCode && line.trim() === '$$') {
+                closeBlocks();
+                if (!inMath) {
+                    inMath = true;
+                    mathBuffer = [];
+                } else {
+                    html.push('<div class="math-display">$$' + mathBuffer.join('\n') + '$$</div>');
+                    inMath = false;
+                }
+                continue;
+            }
+
+            if (inMath) {
+                mathBuffer.push(line);
+                continue;
+            }
+
             if (line.trim().startsWith('```')) {
-                closeList();
+                closeBlocks();
                 if (!inCode) {
                     inCode = true;
                     codeBuffer = [];
@@ -307,20 +359,28 @@
             }
 
             if (!line.trim()) {
-                closeList();
+                closeBlocks();
                 continue;
             }
 
             const heading = line.match(/^(#{1,4})\s+(.*)$/);
             if (heading) {
-                closeList();
+                closeBlocks();
                 const level = heading[1].length;
                 html.push('<h' + level + '>' + renderInline(heading[2], docPath) + '</h' + level + '>');
                 continue;
             }
 
+            // GFM table row
+            if (line.trim().startsWith('|')) {
+                closeList();
+                tableRows.push(line.trim());
+                continue;
+            }
+
             const ordered = line.match(/^\d+\.\s+(.*)$/);
             if (ordered) {
+                closeTable();
                 if (listType !== 'ol') {
                     closeList();
                     listType = 'ol';
@@ -332,6 +392,7 @@
 
             const unordered = line.match(/^[-*+]\s+(.*)$/);
             if (unordered) {
+                closeTable();
                 if (listType !== 'ul') {
                     closeList();
                     listType = 'ul';
@@ -342,16 +403,16 @@
             }
 
             if (line.startsWith('> ')) {
-                closeList();
+                closeBlocks();
                 html.push('<blockquote><p>' + renderInline(line.slice(2), docPath) + '</p></blockquote>');
                 continue;
             }
 
-            closeList();
+            closeBlocks();
             html.push('<p>' + renderInline(line, docPath) + '</p>');
         }
 
-        closeList();
+        closeBlocks();
         return html.join('');
     }
 
@@ -390,6 +451,15 @@
             const title = markdown.match(/^#\s+(.+)$/m);
             readerTitle.textContent = title ? title[1] : docPath.split('/').pop();
             readerContent.innerHTML = renderMarkdown(markdown, docFetchPath);
+            if (typeof window.renderMathInElement === 'function') {
+                window.renderMathInElement(readerContent, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
             requestAnimationFrame(function () {
                 readerPanel.scrollIntoView({behavior: 'smooth', block: 'start'});
             });

@@ -4,7 +4,8 @@
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>918822019 | 个人技术博客</title>
-    <link href="assets/styles.css?v=20260410-3" rel="stylesheet"/>
+    <link href="assets/styles.css?v=20260415-4" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous"/>
 </head>
 <body>
 <div class="bg-orb orb-a"></div>
@@ -13,10 +14,18 @@
 
 <header class="topbar">
     <div class="topbar-inner">
-        <a class="brand" href="/">918822019</a>
+        <a class="brand" href="/">BOOK SEARCH CONSOLE</a>
         <div class="top-actions">
-            <button id="theme-toggle" aria-label="切换主题" class="menu-btn">夜间</button>
-            <button id="sidebar-toggle" aria-label="打开目录" class="menu-btn">目录</button>
+            <nav class="console-nav" aria-label="统一导航">
+                <a class="console-link" href="/">统一中台</a>
+                <a class="console-link" href="/admin">数据库管理台</a>
+                <a class="console-link is-active" href="/frontend/">文档前端</a>
+                <a class="console-link" href="/frontend/data-inspector.html">数据观察台</a>
+            </nav>
+            <div class="console-tools">
+                <button id="theme-toggle" aria-label="切换主题" class="menu-btn">夜间</button>
+                <button id="sidebar-toggle" aria-label="打开目录" class="menu-btn">目录</button>
+            </div>
         </div>
     </div>
 </header>
@@ -115,6 +124,8 @@
     </div>
 </footer>
 
-<script src="assets/app.js?v=20260410-3"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script src="assets/app.js?v=20260415-4"></script>
 </body>
 </html>

@@ -2,5 +2,15 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/OpenCL-Headers" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/cutlass" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/cutlass_fpA_intB_gemm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/cutlass_fpA_intB_gemm/cutlass" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/libflash_attn" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/libflash_attn/cutlass" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/tvm-ffi" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/tvm-ffi/3rdparty/dlpack" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/project/tvm/3rdparty/tvm-ffi/3rdparty/libbacktrace" vcs="Git" />
   </component>
 </project>

@@ -8,6 +8,10 @@ import sys
 def build_tree(current_path, root_dir):
     name = os.path.basename(current_path)
     if os.path.isdir(current_path):
+        # Skip nbconvert asset directories (e.g. MyNotebook_files/)
+        if name.endswith("_files"):
+            return None
+
         children = []
         for item in os.listdir(current_path):
             if item in ("index.json", ".DS_Store"):
@@ -30,6 +34,9 @@ def build_tree(current_path, root_dir):
         return {"name": name, "type": "folder", "children": children}
 
     if os.path.isfile(current_path):
+        # Skip raw notebook files (they are converted to .md before publishing)
+        if name.endswith(".ipynb"):
+            return None
         rel = os.path.relpath(current_path, root_dir).replace(os.path.sep, "/")
         return {"name": name, "type": "file", "path": rel}
 
