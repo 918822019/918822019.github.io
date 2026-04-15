@@ -57,6 +57,33 @@
       ]
     },
     {
+      "name": "infra",
+      "type": "folder",
+      "children": [
+        {
+          "name": "TVM",
+          "type": "folder",
+          "children": [
+            {
+              "name": "1.什么是TVM.md",
+              "type": "file",
+              "path": "docs/infra/TVM/1.什么是TVM.md"
+            },
+            {
+              "name": "2.安装TVM.md",
+              "type": "file",
+              "path": "docs/infra/TVM/2.安装TVM.md"
+            },
+            {
+              "name": "3.tvm基础测试.ipynb",
+              "type": "file",
+              "path": "docs/infra/TVM/3.tvm基础测试.ipynb"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "RAG",
       "type": "folder",
       "children": [
