@@ -345,6 +345,53 @@ body {
     display: block;
 }
 
+.table-wrap {
+    overflow-x: auto;
+    margin: 0 0 1.2em;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.93em;
+}
+
+.markdown-body th,
+.markdown-body td {
+    padding: 8px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+}
+
+.markdown-body th {
+    background: rgba(15, 106, 115, 0.07);
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.markdown-body tr:last-child td {
+    border-bottom: none;
+}
+
+.markdown-body tbody tr:hover {
+    background: rgba(15, 106, 115, 0.04);
+}
+
+body[data-theme='dark'] .markdown-body th {
+    background: rgba(15, 106, 115, 0.18);
+}
+
+body[data-theme='dark'] .table-wrap {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+body[data-theme='dark'] .markdown-body th,
+body[data-theme='dark'] .markdown-body td {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
 .panel h2 {
     margin: 0;
     font-size: 18px;
