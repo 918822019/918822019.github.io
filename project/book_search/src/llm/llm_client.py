@@ -4,7 +4,7 @@ LLM 客户端模块
 """
 
 import json
-from typing import Optional
+from typing import Any, Dict, Optional
 from urllib import error, request
 
 from .env import config
@@ -40,11 +40,15 @@ class LLMClient:
             "model": self.model_name,
         }
 
-    def _post_chat_completion(self, messages: list, **kwargs) -> str:
+    def _post_chat_completion(
+        self,
+        messages: list[dict[str, str]],
+        **kwargs: Any,
+    ) -> str:
         if not self.api_key:
             raise ValueError("LLM_API_KEY 未设置，无法调用模型。")
 
-        payload = {
+        payload: Dict[str, Any] = {
             "model": self.model_name,
             "messages": messages,
             "temperature": kwargs.pop("temperature", 0.2),
@@ -58,7 +62,12 @@ class LLMClient:
             "Authorization": f"Bearer {self.api_key}",
         }
 
-        req = request.Request(api_url, data=body, headers=headers, method="POST")
+        req = request.Request(
+            api_url,
+            data=body,
+            headers=headers,
+            method="POST",
+        )
         timeout = kwargs.get("timeout", config.REQUEST_TIMEOUT)
         try:
             with request.urlopen(req, timeout=timeout) as resp:
@@ -78,7 +87,10 @@ class LLMClient:
             raise RuntimeError(f"LLM 返回解析失败: {resp_data}") from exc
 
     def generate(
-        self, prompt: str, system_prompt: Optional[str] = None, **kwargs
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        **kwargs: Any,
     ) -> str:
         """
         生成文本响应
@@ -91,18 +103,23 @@ class LLMClient:
         Returns:
             生成的文本
         """
-        messages = []
+        messages: list[dict[str, str]] = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
         return self._post_chat_completion(messages=messages, **kwargs)
 
-    def chat(self, messages: list, **kwargs) -> str:
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        **kwargs: Any,
+    ) -> str:
         """
         对话式调用
 
         Args:
-            messages: 消息列表，格式为 [{"role": "user/assistant/system", "content": "..."}]
+            messages: 消息列表，格式为
+                [{"role": "user/assistant/system", "content": "..."}]
             **kwargs: 其他参数
 
         Returns:
@@ -110,7 +127,12 @@ class LLMClient:
         """
         return self._post_chat_completion(messages=messages, **kwargs)
 
-    def generate_with_context(self, query: str, context: str, **kwargs) -> str:
+    def generate_with_context(
+        self,
+        query: str,
+        context: str,
+        **kwargs: Any,
+    ) -> str:
         """
         基于上下文生成回答（适用于 RAG 场景）
 
