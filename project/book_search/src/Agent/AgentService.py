@@ -222,7 +222,17 @@ class Agent:
         """
         并发执行多种查询重写策略。
 
-        任一路失败时自动降级为原始查询，避免阻断整体流程。
+        通过线程池并行调用不同的重写模式（如扩展、澄清、HyDE），
+        提升多路召回的效率。任一路失败时自动降级为原始查询，
+        避免单个重写失败阻断整体检索流程。
+
+        Args:
+            query: 原始查询文本
+            context: 可选的对话历史或上下文信息
+            modes: 要执行的重写模式列表，默认为 ["expansion", "clarification", "hyde"]
+
+        Returns:
+            字典，键为重写模式，值为重写后的查询文本
         """
         selected_modes = list(modes or ["expansion", "clarification", "hyde"])
         if not selected_modes:
@@ -256,7 +266,20 @@ class Agent:
         candidate_embeddings: List[List[float]],
         top_k: int,
     ) -> List[SearchResult]:
-        """基于查询向量在候选向量中执行一次召回。"""
+        """
+        基于查询向量在候选向量中执行一次向量相似度召回。
+
+        将查询文本转换为向量后，与候选文档的预计算向量进行相似度比较，
+        返回最相似的 top_k 个结果。
+
+        Args:
+            search_query: 用于检索的查询文本
+            candidate_embeddings: 候选文档的向量表示列表
+            top_k: 返回前 k 个最相似的结果
+
+        Returns:
+            按相似度排序的 (原始索引, 相似度分数) 元组列表
+        """
         if not candidate_embeddings:
             return []
 
@@ -278,7 +301,21 @@ class Agent:
         top_k: int,
         candidate_embeddings: Optional[List[List[float]]] = None,
     ) -> List[str]:
-        """执行单路召回，返回供 rerank 使用的候选文本。"""
+        """
+        执行单路向量召回，返回供 rerank 重排序使用的候选文本列表。
+
+        如果未提供预计算的候选向量，则先批量计算向量表示。
+        召回数量会适当放大（top_k * 2），为后续重排序留出更多候选。
+
+        Args:
+            search_query: 用于检索的查询文本
+            candidate_texts: 候选文档的文本列表
+            top_k: 期望的最终返回数量
+            candidate_embeddings: 可选的预计算候选向量，避免重复计算
+
+        Returns:
+            召回的候选文本列表（未重排序）
+        """
         if not candidate_texts:
             return []
 
@@ -299,9 +336,20 @@ class Agent:
         candidate_embeddings: Optional[List[List[float]]] = None,
     ) -> List[str]:
         """
-        对多个重写结果分别执行召回，再用 RRF 融合。
+        对多个重写查询分别执行向量召回，再用 RRF（倒数秩融合）算法合并结果。
 
-        这里的索引始终基于原始 candidate_texts，避免多路检索后索引漂移。
+        通过并发执行多路检索（如扩展查询、澄清查询、HyDE 查询），
+        提升召回的多样性和覆盖率。所有检索路径共享同一套候选向量，
+        确保索引一致性，避免多路检索后出现索引漂移问题。
+
+        Args:
+            rewritten_map: 重写模式到重写查询的映射字典
+            candidate_texts: 候选文档的文本列表
+            top_k: 期望的最终返回数量
+            candidate_embeddings: 可选的预计算候选向量，避免重复计算
+
+        Returns:
+            经 RRF 融合后的候选文本列表（未重排序）
         """
         if not candidate_texts or not rewritten_map:
             return []
@@ -343,7 +391,21 @@ class Agent:
         top_k: int,
         k_constant: int = 60,
     ) -> List[int]:
-        """使用 RRF 融合多路检索结果，并返回去重后的原始索引。"""
+        """
+        使用 RRF（Reciprocal Rank Fusion，倒数秩融合）算法融合多路检索结果。
+
+        RRF 是一种不依赖具体相似度分数的排名融合方法，通过累加各路的
+        倒数排名得分来综合评估文档的相关性。公式：RRF_score = Σ(1 / (k + rank))
+        其中 k 为常数（默认 60），rank 为文档在该路检索中的排名。
+
+        Args:
+            all_results: 多路检索结果列表，每路包含 (模式名, 搜索结果列表)
+            top_k: 融合后返回的前 k 个结果
+            k_constant: RRF 算法的平滑常数，默认为 60
+
+        Returns:
+            按 RRF 分数降序排列的原始索引列表
+        """
         rrf_scores: Dict[int, float] = defaultdict(float)
 
         for _, ranked_list in all_results:
@@ -362,7 +424,19 @@ class Agent:
         base_context: Optional[str],
         documents: List[str],
     ) -> Optional[str]:
-        """将外部上下文和检索结果拼接成最终回答上下文。"""
+        """
+        将外部上下文和检索到的相关文档拼接成最终的回答上下文。
+
+        按照「外部上下文 + 检索文档」的顺序组织内容，各部分之间用双换行符分隔，
+        便于 LLM 理解信息的层次结构。
+
+        Args:
+            base_context: 可选的外部上下文信息（如对话历史）
+            documents: 检索并重排序后的相关文档列表
+
+        Returns:
+            拼接后的上下文字符串，如果两者都为空则返回 None
+        """
         sections: List[str] = []
         if base_context:
             sections.append(base_context)
@@ -383,19 +457,32 @@ class Agent:
         context: Optional[str] = None,
     ) -> str:
         """
-        完整的搜索问答流程：rewrite -> retrieval -> rerank -> generate。
+        完整的搜索问答流程：查询重写 -> 向量检索 -> 重排序 -> 生成回答。
+
+        支持两种检索策略：
+        - single（单路）：使用单一重写查询进行检索，简单高效
+        - multi（多路）：并发执行多种重写策略，通过 RRF 融合结果，提升召回质量
+
+        工作流程：
+        1. 查询重写（可选）：根据策略扩展、澄清或生成假设性文档
+        2. 向量召回：将查询和候选文档转换为向量，计算相似度
+        3. 重排序：使用 Reranker 模型对召回结果精排
+        4. 生成回答：基于最相关的文档和上下文，调用 LLM 生成最终答案
 
         Args:
-            query: 用户查询
-            candidate_texts: 候选文本列表
-            top_k: 重排序后保留的文档数量
-            use_rewrite: 是否使用查询重写
-            rewrite_mode: 单路检索时的查询重写模式
-            search_strategy: 检索策略，支持 single 和 multi
+            query: 用户查询文本
+            candidate_texts: 候选文档的文本列表
+            top_k: 重排序后保留的文档数量，默认为 5
+            use_rewrite: 是否启用查询重写，默认为 True
+            rewrite_mode: 单路检索时的查询重写模式，默认为 "expansion"
+            search_strategy: 检索策略，"single"（单路）或 "multi"（多路），默认为 "single"
             context: 可选的对话历史或外部上下文信息
 
         Returns:
-            基于最相关文档生成的回答
+            基于最相关文档生成的自然语言回答
+
+        Raises:
+            ValueError: 当 search_strategy 不是 "single" 或 "multi" 时抛出异常
         """
         if search_strategy not in {"single", "multi"}:
             raise ValueError(
