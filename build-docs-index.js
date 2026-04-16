@@ -10,9 +10,15 @@ function buildTree(currentPath) {
     const name = path.basename(currentPath);
 
     if (stat.isDirectory()) {
+        // Skip nbconvert asset directories like MyNotebook_files/
+        if (name.endsWith('_files')) {
+            return null;
+        }
+
         const children = fs.readdirSync(currentPath)
             .filter(item => item !== 'index.json' && item !== '.DS_Store')
             .map(item => buildTree(path.join(currentPath, item)))
+            .filter(Boolean)
             .sort((a, b) => {
                 if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
                 return a.name.localeCompare(b.name, 'zh-CN');
@@ -26,6 +32,11 @@ function buildTree(currentPath) {
     }
 
     if (stat.isFile()) {
+        // Raw notebooks are converted to .md before publishing.
+        if (name.endsWith('.ipynb')) {
+            return null;
+        }
+
         return {
             name,
             type: 'file',

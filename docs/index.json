@@ -75,11 +75,6 @@
               "path": "docs/infra/TVM/2.安装TVM.md"
             },
             {
-              "name": "3.tvm基础测试.ipynb",
-              "type": "file",
-              "path": "docs/infra/TVM/3.tvm基础测试.ipynb"
-            },
-            {
               "name": "3.tvm基础测试.md",
               "type": "file",
               "path": "docs/infra/TVM/3.tvm基础测试.md"
