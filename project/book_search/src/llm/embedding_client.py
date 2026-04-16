@@ -5,7 +5,7 @@ Embedding 客户端模块
 
 import json
 import numpy as np
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 from urllib import error, request
 
 from .env import config
@@ -42,7 +42,9 @@ class EmbeddingClient:
         }
 
     def _post_embeddings(
-        self, input_data: Union[str, List[str]], **kwargs
+        self,
+        input_data: Union[str, List[str]],
+        **kwargs: Any,
     ) -> List[List[float]]:
         """调用 OpenAI 兼容 embeddings 接口。"""
         if not self.api_key:
@@ -61,7 +63,12 @@ class EmbeddingClient:
             "Authorization": f"Bearer {self.api_key}",
         }
 
-        req = request.Request(api_url, data=body, headers=headers, method="POST")
+        req = request.Request(
+            api_url,
+            data=body,
+            headers=headers,
+            method="POST",
+        )
         timeout = kwargs.get("timeout", config.REQUEST_TIMEOUT)
         try:
             with request.urlopen(req, timeout=timeout) as resp:
@@ -138,7 +145,7 @@ class EmbeddingClient:
         query_embedding: List[float],
         candidates: List[List[float]],
         top_k: int = 5,
-    ) -> List[tuple]:
+    ) -> List[Tuple[int, float]]:
         """
         在候选向量中搜索最相似的向量
 
