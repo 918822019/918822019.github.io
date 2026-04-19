@@ -9,7 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/project/book_search/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="$USER_HOME$/miniforge3" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="uv (918822019.github.io) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
