@@ -7,6 +7,22 @@
       "type": "folder",
       "children": [
         {
+          "name": "Qwen2.5-omni",
+          "type": "folder",
+          "children": [
+            {
+              "name": "img.png",
+              "type": "file",
+              "path": "docs/模型相关的论文/Qwen2.5-omni/img.png"
+            },
+            {
+              "name": "Qwen2.5-Omni.md",
+              "type": "file",
+              "path": "docs/模型相关的论文/Qwen2.5-omni/Qwen2.5-Omni.md"
+            }
+          ]
+        },
+        {
           "name": "Qwen3-TTS",
           "type": "folder",
           "children": [
@@ -26,11 +42,6 @@
               "path": "docs/模型相关的论文/Qwen3-TTS/Qwen3-TTS.md"
             }
           ]
-        },
-        {
-          "name": "Qwen2.5-Omni.md",
-          "type": "file",
-          "path": "docs/模型相关的论文/Qwen2.5-Omni.md"
         }
       ]
     },
