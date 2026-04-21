@@ -230,16 +230,65 @@ python3 tools/db_viewer.py
 
 ## 上传到 ModelScope
 
+以下示例默认是 Ubuntu 环境（bash）。
+
 先安装依赖：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-设置 token 后，可以把当前项目里的 data 目录直接上传到 ModelScope dataset 仓库：
+如果你希望命令更短，也可以使用封装好的脚本：
+
+```bash
+chmod +x script/upload_modelscope.sh
+```
+
+默认是 dry-run（只检查不上传）：
+
+```bash
+./script/upload_modelscope.sh \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data
+```
+
+确认后正式上传（加 `--run`）：
+
+```bash
+./script/upload_modelscope.sh \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data \
+	--run
+```
+
+对 shards 增量上传：
+
+```bash
+./script/upload_modelscope.sh \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data/shards \
+	--incremental \
+	--run
+```
+
+设置 token：
 
 ```bash
 export MODELSCOPE_API_TOKEN="你的 token"
+```
+
+先 dry-run 检查将上传哪些文件（不实际上传）：
+
+```bash
+python tools/upload_modelscope_dataset.py \
+	--repo-id wzywuan/Novel-Collection \
+	--folder-path data \
+	--dry-run
+```
+
+确认后执行正式上传：
+
+```bash
 python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
 	--folder-path data \
@@ -248,14 +297,25 @@ python tools/upload_modelscope_dataset.py \
 
 如果只想上传默认的 data 目录，`--folder-path` 可以省略。
 
-脚本默认会尝试对 `data/books.db` 做一致性快照，再上传快照目录，而不是直接上传正在写入的活动数据库文件。
+脚本的 SQLite 优化策略（默认开启）：
 
-如果你想保留这份临时快照，方便重复上传或人工检查，可以加上：
+- 自动跳过 SQLite 运行时文件：`*.db-wal`、`*.db-shm`、`*.db-journal`
+- 当检测到 `.db` 旁边有 WAL/SHM 时，会先生成一致性快照再上传
+- 增量模式比较 `.db` 变化时，会把 `-wal/-shm` 的变化也纳入判断，避免漏传
+
+可以通过 `--sqlite-snapshot` 控制行为：
+
+- `auto`（默认）：检测到 WAL/SHM 时才快照
+- `always`：所有 `.db` 一律先快照
+- `never`：直接上传原始 `.db`
+
+例如：强制所有 `.db` 都走快照上传
 
 ```bash
 python tools/upload_modelscope_dataset.py \
 	--repo-id wzywuan/Novel-Collection \
-	--keep-snapshot
+	--folder-path data \
+	--sqlite-snapshot always
 ```
 
 脚本位置：

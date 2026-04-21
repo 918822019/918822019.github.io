@@ -13,6 +13,9 @@ __pycache__/
 *.log
 *.tmp
 
+# Crawler debug response dumps
+data_get/debug_responses/
+
 # ModelScope / caches
 .modelscope-cache/
 *.modelscope-upload-manifest.json
