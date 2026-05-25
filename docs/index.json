@@ -72,6 +72,17 @@
       "type": "folder",
       "children": [
         {
+          "name": "量化",
+          "type": "folder",
+          "children": [
+            {
+              "name": "1.为什么INT8量化更快.md",
+              "type": "file",
+              "path": "docs/infra/量化/1.为什么INT8量化更快.md"
+            }
+          ]
+        },
+        {
           "name": "TVM",
           "type": "folder",
           "children": [
