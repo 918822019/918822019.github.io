@@ -1,6 +1,4 @@
-def main():
-    print("Hello from book-search!")
+"""兼容入口：python main.py → 委托给 src.main"""
+from src.main import main
 
-
-if __name__ == "__main__":
-    main()
+main()

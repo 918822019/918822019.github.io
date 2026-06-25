@@ -1,1 +1,1 @@
-# Tests directory for database viewer
+# Tests package marker

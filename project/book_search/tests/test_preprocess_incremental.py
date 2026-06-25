@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from typing import Any, cast
 
-from src.process.preprocess import (
+from src.process.pipeline import (
     _load_existing_tagging_result,
     _merge_existing_tags,
 )

@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 import unittest
 
-from src.process.book_profile_polish import (
+from src.process.polish import (
     CHAPTER_PREVIEW_MAX_CHARS,
     build_prompt,
     fetch_chapter_previews,

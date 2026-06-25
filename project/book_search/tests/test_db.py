@@ -40,8 +40,7 @@ def test_database():
         print(f"❌ 错误: 数据库文件不存在: {DB_PATH}")
         print()
         print("请先运行数据抓取脚本:")
-        print("  cd data_get")
-        print("  python main.py crawl-books --start 1 --end 100")
+        print("  python -m src.crawler.engine crawl-books --start 1 --end 100")
         return False
     
     print(f"✅ 数据库文件存在: {DB_PATH}")
@@ -104,14 +103,8 @@ def test_database():
         conn.close()
         
         print("=" * 60)
-        print("✅ 数据库测试通过! 可以启动可视化界面")
+        print("✅ 数据库测试通过!")
         print("=" * 60)
-        print()
-        print("启动命令:")
-        print("  python3 db_viewer.py")
-        print()
-        print("或者使用启动脚本:")
-        print("  ./script/start_viewer.sh")
         print()
         
         return True

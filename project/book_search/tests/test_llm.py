@@ -5,9 +5,9 @@ import importlib
 import pytest
 
 # Ensure project root is on sys.path so tests can import the package when run from the tests folder
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from book_search.src.llm.llm_client import LLMClient
+from src.llm.client import LLMClient
 
 
 def test_generate_builds_messages_and_calls_transport(monkeypatch):
@@ -70,7 +70,7 @@ def test_generate_with_context_calls_generate(monkeypatch):
 
 
 def test_env_get_llm_config():
-    from book_search.src.llm.env import EnvConfig
+    from src.config import EnvConfig
 
     cfg = EnvConfig.get_llm_config()
     assert set(cfg.keys()) >= {"base_url", "api_key", "model_name"}
@@ -83,14 +83,14 @@ def test_env_client_reads_env(monkeypatch):
 	monkeypatch.setenv("LLM_BASE_URL", "https://example.com/api")
 	monkeypatch.setenv("EMBEDDING_API_KEY", "embed-key")
 
-	import book_search.src.llm.env as env_mod
-	import book_search.src.llm.llm_client as llm_mod
+	import src.config as env_mod
+	import src.llm.client as llm_mod
 
 	importlib.reload(env_mod)
 	importlib.reload(llm_mod)
 
-	from book_search.src.llm.env import EnvConfig
-	from book_search.src.llm.llm_client import LLMClient
+	from src.config import EnvConfig
+	from src.llm.client import LLMClient
 
 	cfg = EnvConfig.get_llm_config()
 	assert cfg["model_name"] == "env-model"

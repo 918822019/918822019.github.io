@@ -14,7 +14,7 @@ __pycache__/
 *.tmp
 
 # Crawler debug response dumps
-data_get/debug_responses/
+src/crawler/debug_responses/
 
 # ModelScope / caches
 .modelscope-cache/
