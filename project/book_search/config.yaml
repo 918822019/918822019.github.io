@@ -1,0 +1,50 @@
+# ============================================================
+#  应用程序配置（非敏感参数）
+#  敏感信息（API Key 等）请放在 .env 文件中
+# ============================================================
+
+# ---- LLM 配置 ----
+llm:
+  model_name: gpt-3.5-turbo
+  # base_url / api_key 优先从 .env 读取
+
+# ---- Embedding 配置 ----
+embedding:
+  model_name: text-embedding-ada-002
+
+# ---- Reranker 配置 ----
+reranker:
+  model_name: bge-reranker-base
+
+# ---- 请求参数 ----
+request:
+  timeout: 30
+  max_retries: 3
+
+# ---- 数据目录与文件 ----
+data:
+  dir: data
+  db_name: books.db
+  shards_dir: shards
+  faiss_index_suffix: .polish_embedding.faiss
+
+# ---- 爬虫配置 ----
+crawler:
+  log_file: data/crawler.log
+  base_site_url: https://www.69shu.com
+  default_start_id: 10000
+  default_end_id: 20000
+  min_request_interval: 0.5
+  request_jitter: 0.3
+  max_workers: 8
+
+# ---- 润色与搜索配置 ----
+polish:
+  chapter_preview_count: 5
+  chapter_preview_max_chars: 1200
+  polish_table: book_polish
+  embed_table: book_polish_embedding
+
+# ---- 数据库 ----
+database:
+  synchronous_mode: normal
