@@ -1,0 +1,35 @@
+{
+  "book_search": {
+    "modelscope_repo": "wzywuan/Novel-Collection",
+    "local_path": "data/book_search",
+    "db_name": "books.db",
+    "shards_dir": "shards",
+    "faiss_index_suffix": ".polish_embedding.faiss"
+  },
+  "models": {
+    "huggingface_repos": {
+      "Qwen3.5-0.8B": "Qwen/Qwen3.5-0.8B",
+      "Qwen3.5-9B": "Qwen/Qwen3.5-9B",
+      "Qwen3.5-35B-A3B": "Qwen/Qwen3.5-35B-A3B"
+    },
+    "modelscope_repos": {
+      "Qwen3.5-0.8B": "Qwen/Qwen3.5-0.8B",
+      "Qwen3.5-9B": "Qwen/Qwen3.5-9B",
+      "Qwen3.5-35B-A3B": "Qwen/Qwen3.5-35B-A3B"
+    },
+    "local_path": "data/models"
+  },
+  "cache": {
+    "local_path": "data/cache",
+    "logits_cache_dir": "logits_cache"
+  },
+  "exports": {
+    "local_path": "data/exports",
+    "sample_size": 100
+  },
+  "scripts": {
+    "book_search_tools": "project/book_search/src/tools",
+    "modelscope_reader": "scripts/data/modelscope_reader.py",
+    "data_validate": "scripts/data/data_validate.py"
+  }
+}
