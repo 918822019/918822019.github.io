@@ -22,7 +22,7 @@ from src.process.polish import (
 class BookSearchEngine:
     """小说搜索引引擎 - 整合向量化和检索功能"""
 
-    def __init__(self, db_path: str = "data/books.db"):
+    def __init__(self, db_path: str = "../../data/book_search/books.db"):
         self.db_path = Path(db_path)
         self.agent = Agent()
         self.faiss_index = None
@@ -250,7 +250,7 @@ def main():
     print("📚 小说智能搜索系统")
     print("=" * 70 + "\n")
     
-    engine = BookSearchEngine(db_path="data/books.db")
+    engine = BookSearchEngine(db_path="../../data/book_search/books.db")
     
     try:
         # Step 1: 连接数据库

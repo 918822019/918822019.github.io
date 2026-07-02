@@ -548,7 +548,7 @@ def main() -> None:
 
     token = resolve_token(args.token)
     api = HubApi()
-    login(api, token)
+    login(token)
 
     manifest_path = (
         Path(args.manifest_path).expanduser().resolve()

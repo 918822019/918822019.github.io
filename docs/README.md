@@ -1,50 +1,41 @@
 # 技术文档总览
 
-欢迎来到文档区。这个目录下面会存放你所有的技术文档文件。
+```
+docs/
+├── 架构设计/         # 项目架构与设计文档
+│   └── 数据架构.md   # 集中式数据管理架构
+├── 模型相关的论文/   # AI 论文阅读笔记
+├── 数学/             # 数学相关笔记
+├── AI搜索/           # AI 搜索技术对比
+├── infra/            # 基础设施笔记
+└── RAG/              # RAG 相关笔记
 
-- `architecture/`：架构设计
-- `guides/`：开发指导
-- `faqs/`：常见问题
+项目文档（独立部署，非 docs/ 内）:
+├── project/book_search/docs/   # 起点搜书完整文档
+├── project/quant/svd_quant/docs/ # 量化实验文档
+└── scripts/data/README.md      # 数据管理脚本文档
+```
 
-请根据目录结构继续新增文档，然后更新 `docs/index.json`。
+## 本地查看
+
+```bash
+# 在仓库根目录启动静态服务器
+python -m http.server 8000
+# 打开 http://localhost:8000
+```
 
 ## 自动生成目录
 
-本仓库包含自动生成 `docs/index.json` 的机制：
-
-1. `build-docs-index.js` 会递归扫描 `docs/`，生成树状结构 JSON。
-2. 在 `push` 到 `doc` 时，由 GitHub Actions 工作流 `.github/workflows/auto-build-docs-index.yml` 执行。
-
-手动执行（也可本地预览）：
+`docs/index.json` 由 `scripts/build-docs-index.py` 自动生成，供前端导航使用。
 
 ```bash
-node build-docs-index.js
+py scripts/build-docs-index.py
 ```
 
-如果文件内容变更，工作流会自动提交并推送更新后的 `docs/index.json`。
-
-## 一键发布（推荐）
-
-仓库提供了 `scripts/publish-doc.sh`，可一键完成“更新索引 + 提交 + 推送到 `doc`”。
-
-### 用法
-
-```bash
-bash scripts/publish-doc.sh "docs: update notes"
-```
-
-或使用 npm：
+## 一键发布
 
 ```bash
 npm run publish-doc -- "docs: update notes"
 ```
 
-### 脚本会做什么
-
-1. `git pull --rebase origin doc`
-2. 生成 `docs/index.json`（优先 `node`，回退 `python3`）
-3. `git add -A`
-4. 若无变化则退出
-5. 自动提交并推送到 `doc`
-
-注意：本地需具备 `git` 推送权限，并安装 `node` 或 `python3`。
+脚本会：`git pull` → 生成 `docs/index.json` → `git commit` → `git push` 到 `doc` 分支。

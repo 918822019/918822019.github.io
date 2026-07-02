@@ -23,14 +23,14 @@ request:
 
 # ---- 数据目录与文件 ----
 data:
-  dir: data
+  dir: ../../data/book_search
   db_name: books.db
   shards_dir: shards
   faiss_index_suffix: .polish_embedding.faiss
 
 # ---- 爬虫配置 ----
 crawler:
-  log_file: data/crawler.log
+  log_file: ../../data/book_search/crawler.log
   base_site_url: https://www.69shu.com
   default_start_id: 10000
   default_end_id: 20000

@@ -8,13 +8,11 @@
 quant/
 ├── svd_quant/              # 基于SVD的MoE模型量化工具
 ├── llama.cpp/              # 高性能LLM推理引擎 (C/C++)
-├── model/                  # Qwen模型权重目录
-│   ├── Qwen3.5-0.8B/      # Qwen3.5 0.8B参数模型
-│   ├── Qwen3.5-9B/        # Qwen3.5 9B参数模型
-│   └── Qwen3.5-35B-A3B/   # Qwen3.5 35B参数MoE模型
 ├── main.py                 # 模型结构查看工具
 └── README.md               # 本文件
 ```
+
+模型权重已集中存放于仓库根目录的 `data/models/`。
 
 ## 🚀 子项目概览
 
@@ -40,8 +38,8 @@ quant/
 
 详细文档请查看 [llama.cpp/README.md](llama.cpp/README.md)
 
-### 3. model - 模型权重
-存放Qwen系列模型权重，用于量化实验和推理测试。
+### 3. 模型权重
+Qwen系列模型权重存放于仓库根目录 `data/models/`，用于量化实验和推理测试。
 
 **支持的模型：**
 - Qwen3.5-0.8B: 轻量级模型，适合边缘设备

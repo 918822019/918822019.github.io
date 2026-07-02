@@ -35,7 +35,7 @@ jobs:
 
       - name: Build docs index
         run: |
-          node build-docs-index.js
+          node scripts/build-docs-index.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4

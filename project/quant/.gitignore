@@ -1,0 +1,37 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Virtual env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Built wheels (platform-specific)
+*.whl
+
+# Model weights (symlinked from data/models/)
+model/
+weights/
+*.safetensors
+*.bin
+
+# Output binaries from quantization
+svd_quant/output/*.bin
+
+# Build artifacts (llama.cpp)
+build/
+cmake-build-*/
+
+# Editor temp files
+*~
+*.swp

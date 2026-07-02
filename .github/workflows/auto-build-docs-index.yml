@@ -36,7 +36,7 @@ jobs:
 
       - name: Build docs index
         run: |
-          node build-docs-index.js
+          node scripts/build-docs-index.js
 
       - name: Commit and push updated docs/index.json
         run: |

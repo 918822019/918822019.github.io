@@ -3,6 +3,88 @@
   "type": "folder",
   "children": [
     {
+      "name": "AI搜索",
+      "type": "folder",
+      "children": [
+        {
+          "name": "一些方案的比较.md",
+          "type": "file",
+          "path": "docs/AI搜索/一些方案的比较.md"
+        }
+      ]
+    },
+    {
+      "name": "infra",
+      "type": "folder",
+      "children": [
+        {
+          "name": "TVM",
+          "type": "folder",
+          "children": [
+            {
+              "name": "1.什么是TVM.md",
+              "type": "file",
+              "path": "docs/infra/TVM/1.什么是TVM.md"
+            },
+            {
+              "name": "2.安装TVM.md",
+              "type": "file",
+              "path": "docs/infra/TVM/2.安装TVM.md"
+            },
+            {
+              "name": "3.tvm基础测试.md",
+              "type": "file",
+              "path": "docs/infra/TVM/3.tvm基础测试.md"
+            }
+          ]
+        },
+        {
+          "name": "量化",
+          "type": "folder",
+          "children": [
+            {
+              "name": "1.为什么INT8量化更快.md",
+              "type": "file",
+              "path": "docs/infra/量化/1.为什么INT8量化更快.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RAG",
+      "type": "folder",
+      "children": [
+        {
+          "name": "embedding",
+          "type": "folder",
+          "children": [
+            {
+              "name": "独热编码.md",
+              "type": "file",
+              "path": "docs/RAG/embedding/独热编码.md"
+            },
+            {
+              "name": "为什么在高维度空间中距离失效.md",
+              "type": "file",
+              "path": "docs/RAG/embedding/为什么在高维度空间中距离失效.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "架构设计",
+      "type": "folder",
+      "children": [
+        {
+          "name": "数据架构.md",
+          "type": "file",
+          "path": "docs/架构设计/数据架构.md"
+        }
+      ]
+    },
+    {
       "name": "模型相关的论文",
       "type": "folder",
       "children": [
@@ -53,77 +135,6 @@
           "name": "STE.md",
           "type": "file",
           "path": "docs/数学/STE.md"
-        }
-      ]
-    },
-    {
-      "name": "AI搜索",
-      "type": "folder",
-      "children": [
-        {
-          "name": "一些方案的比较.md",
-          "type": "file",
-          "path": "docs/AI搜索/一些方案的比较.md"
-        }
-      ]
-    },
-    {
-      "name": "infra",
-      "type": "folder",
-      "children": [
-        {
-          "name": "量化",
-          "type": "folder",
-          "children": [
-            {
-              "name": "1.为什么INT8量化更快.md",
-              "type": "file",
-              "path": "docs/infra/量化/1.为什么INT8量化更快.md"
-            }
-          ]
-        },
-        {
-          "name": "TVM",
-          "type": "folder",
-          "children": [
-            {
-              "name": "1.什么是TVM.md",
-              "type": "file",
-              "path": "docs/infra/TVM/1.什么是TVM.md"
-            },
-            {
-              "name": "2.安装TVM.md",
-              "type": "file",
-              "path": "docs/infra/TVM/2.安装TVM.md"
-            },
-            {
-              "name": "3.tvm基础测试.md",
-              "type": "file",
-              "path": "docs/infra/TVM/3.tvm基础测试.md"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "RAG",
-      "type": "folder",
-      "children": [
-        {
-          "name": "embedding",
-          "type": "folder",
-          "children": [
-            {
-              "name": "独热编码.md",
-              "type": "file",
-              "path": "docs/RAG/embedding/独热编码.md"
-            },
-            {
-              "name": "为什么在高维度空间中距离失效.md",
-              "type": "file",
-              "path": "docs/RAG/embedding/为什么在高维度空间中距离失效.md"
-            }
-          ]
         }
       ]
     },

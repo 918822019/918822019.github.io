@@ -1,0 +1,129 @@
+Qwen3.5-35B-A3B MoE模型秩分析详细结果
+======================================================================
+
+
+attention_k:
+--------------------------------------------------
+  model.language_model.layers.15.self_attn.k_proj.weight:
+    Shape: (512, 2048)
+    Rank: 359/512 (70.1%)
+    Top 10 Singular Values: [1.9860584 1.6761905 1.6113864 1.590327  1.5727091 1.5609394 1.5535159
+ 1.5412024 1.5254947 1.514376 ]
+  model.language_model.layers.31.self_attn.k_proj.weight:
+    Shape: (512, 2048)
+    Rank: 321/512 (62.7%)
+    Top 10 Singular Values: [2.3142698 1.9609902 1.9549543 1.9117082 1.9110192 1.8944381 1.8762552
+ 1.8642392 1.8483316 1.8318758]
+  model.language_model.layers.35.self_attn.k_proj.weight:
+    Shape: (512, 2048)
+    Rank: 240/512 (46.9%)
+    Top 10 Singular Values: [2.5205114 1.9072727 1.8538591 1.8362908 1.8234278 1.8103461 1.8022687
+ 1.792545  1.785125  1.7777858]
+
+attention_v:
+--------------------------------------------------
+  model.language_model.layers.35.self_attn.v_proj.weight:
+    Shape: (512, 2048)
+    Rank: 371/512 (72.5%)
+    Top 10 Singular Values: [1.4863268 1.4054351 1.3965725 1.395699  1.3840324 1.3768783 1.367503
+ 1.35833   1.3541454 1.3499461]
+  model.language_model.layers.23.self_attn.v_proj.weight:
+    Shape: (512, 2048)
+    Rank: 374/512 (73.0%)
+    Top 10 Singular Values: [1.3461975 1.2093654 1.1789278 1.1190181 1.1003534 1.0950465 1.0850785
+ 1.0667465 1.0590096 1.0496745]
+  model.language_model.layers.19.self_attn.v_proj.weight:
+    Shape: (512, 2048)
+    Rank: 419/512 (81.8%)
+    Top 10 Singular Values: [1.133452   0.9129421  0.90846074 0.8966628  0.8834297  0.8770715
+ 0.8767844  0.8678399  0.8610738  0.854387  ]
+
+moe_gate_up_proj:
+--------------------------------------------------
+  model.language_model.layers.17.mlp.experts.gate_up_proj:
+    Shape: (256, 1024, 2048)
+    Rank: 745.8/1024 (72.8%)
+    Top 10 Singular Values: [1.4723366 1.3169533 1.216769  1.1955662 1.166714  1.1593131 1.1416624
+ 1.1343004 1.1190675 1.1018499]
+  model.language_model.layers.28.mlp.experts.gate_up_proj:
+    Shape: (256, 1024, 2048)
+    Rank: 739.3/1024 (72.2%)
+    Top 10 Singular Values: [1.4791052 1.3719957 1.3410097 1.2501816 1.1953747 1.168498  1.1643515
+ 1.1475818 1.1082782 1.098172 ]
+  model.language_model.layers.22.mlp.experts.gate_up_proj:
+    Shape: (256, 1024, 2048)
+    Rank: 741.6/1024 (72.4%)
+    Top 10 Singular Values: [1.8793436 1.7237401 1.6173033 1.582749  1.5219944 1.4886006 1.4674582
+ 1.4393927 1.4016434 1.3761243]
+
+moe_down_proj:
+--------------------------------------------------
+  model.language_model.layers.6.mlp.experts.down_proj:
+    Shape: (256, 2048, 512)
+    Rank: 428.4/512 (83.7%)
+    Top 10 Singular Values: [0.9549933  0.8736601  0.8534936  0.8378897  0.82302976 0.8099234
+ 0.80270106 0.79726607 0.78143    0.77973944]
+  model.language_model.layers.28.mlp.experts.down_proj:
+    Shape: (256, 2048, 512)
+    Rank: 418.9/512 (81.8%)
+    Top 10 Singular Values: [1.1540545  1.026415   0.9326622  0.90825874 0.8806455  0.87359005
+ 0.8623773  0.8514941  0.85011977 0.8325599 ]
+  model.language_model.layers.22.mlp.experts.down_proj:
+    Shape: (256, 2048, 512)
+    Rank: 419.5/512 (81.9%)
+    Top 10 Singular Values: [1.4732542  1.1928673  1.1482563  1.1197627  1.0754344  1.0606353
+ 1.0496714  1.0054828  0.9940494  0.95872885]
+
+shared_gate_proj:
+--------------------------------------------------
+  model.language_model.layers.20.mlp.shared_expert.gate_proj.weight:
+    Shape: (512, 2048)
+    Rank: 379/512 (74.0%)
+    Top 10 Singular Values: [1.8968441  1.3843244  1.2923058  1.1634029  1.0998621  1.0376502
+ 0.96295506 0.9368512  0.92036873 0.90873474]
+  model.language_model.layers.9.mlp.shared_expert.gate_proj.weight:
+    Shape: (512, 2048)
+    Rank: 385/512 (75.2%)
+    Top 10 Singular Values: [1.8271513 1.4146433 1.2695264 1.1909715 1.156974  1.1397588 1.0951115
+ 1.029809  1.0150325 0.9860953]
+  model.language_model.layers.10.mlp.shared_expert.gate_proj.weight:
+    Shape: (512, 2048)
+    Rank: 388/512 (75.8%)
+    Top 10 Singular Values: [1.5376775  1.2324787  1.1059307  1.0543625  1.0305713  0.98122376
+ 0.9485452  0.9066929  0.8839661  0.85985035]
+
+shared_up_proj:
+--------------------------------------------------
+  model.language_model.layers.30.mlp.shared_expert.up_proj.weight:
+    Shape: (512, 2048)
+    Rank: 393/512 (76.8%)
+    Top 10 Singular Values: [1.7295098 1.6095142 1.3511579 1.2544341 1.1930114 1.1740772 1.1418031
+ 1.1356728 1.0789305 1.0327255]
+  model.language_model.layers.11.mlp.shared_expert.up_proj.weight:
+    Shape: (512, 2048)
+    Rank: 389/512 (76.0%)
+    Top 10 Singular Values: [1.3608321  1.1455961  1.0330473  1.0187845  0.99641913 0.9895404
+ 0.97249377 0.9611844  0.92005235 0.90873504]
+  model.language_model.layers.28.mlp.shared_expert.up_proj.weight:
+    Shape: (512, 2048)
+    Rank: 382/512 (74.6%)
+    Top 10 Singular Values: [1.5062519 1.4240383 1.296157  1.2477682 1.2096277 1.1623966 1.1286908
+ 1.107558  1.094921  1.0810736]
+
+shared_down_proj:
+--------------------------------------------------
+  model.language_model.layers.9.mlp.shared_expert.down_proj.weight:
+    Shape: (2048, 512)
+    Rank: 388/512 (75.8%)
+    Top 10 Singular Values: [1.9329404  1.2881602  1.1897554  1.1314039  1.0543367  1.0483408
+ 1.0001322  0.974402   0.94776696 0.9421105 ]
+  model.language_model.layers.6.mlp.shared_expert.down_proj.weight:
+    Shape: (2048, 512)
+    Rank: 411/512 (80.3%)
+    Top 10 Singular Values: [2.196753   1.1480112  1.0071075  0.9744209  0.9470153  0.8827014
+ 0.86629397 0.86245674 0.8479842  0.84243387]
+  model.language_model.layers.0.mlp.shared_expert.down_proj.weight:
+    Shape: (2048, 512)
+    Rank: 403/512 (78.7%)
+    Top 10 Singular Values: [1.7914971  1.5407025  1.2460554  1.1083059  1.0765504  1.0410187
+ 1.0318778  0.99406606 0.96737933 0.9451342 ]

@@ -1,0 +1,108 @@
+{
+  "fsq_levels": {
+    "16": {
+      "gate_proj": {
+        "error": 0.10410965979099274,
+        "bits_per_element": 4.0,
+        "compression_ratio": 8.0,
+        "utilization": 1.0,
+        "used_levels": 16,
+        "total_levels": 16,
+        "final_loss": 3.814911906374618e-06
+      },
+      "up_proj": {
+        "error": 0.10601314157247543,
+        "bits_per_element": 4.0,
+        "compression_ratio": 8.0,
+        "utilization": 1.0,
+        "used_levels": 16,
+        "total_levels": 16,
+        "final_loss": 1.9258252450526925e-06
+      },
+      "down_proj": {
+        "error": 0.11986707895994186,
+        "bits_per_element": 4.0,
+        "compression_ratio": 8.0,
+        "utilization": 1.0,
+        "used_levels": 16,
+        "total_levels": 16,
+        "final_loss": 1.592442458786536e-06
+      }
+    },
+    "8": {
+      "gate_proj": {
+        "error": 0.22313544154167175,
+        "bits_per_element": 3.0,
+        "compression_ratio": 10.666666666666666,
+        "utilization": 1.0,
+        "used_levels": 8,
+        "total_levels": 8,
+        "final_loss": 1.752383468556218e-05
+      },
+      "up_proj": {
+        "error": 0.227566659450531,
+        "bits_per_element": 3.0,
+        "compression_ratio": 10.666666666666666,
+        "utilization": 1.0,
+        "used_levels": 8,
+        "total_levels": 8,
+        "final_loss": 8.87320584297413e-06
+      },
+      "down_proj": {
+        "error": 0.2564091086387634,
+        "bits_per_element": 3.0,
+        "compression_ratio": 10.666666666666666,
+        "utilization": 1.0,
+        "used_levels": 8,
+        "total_levels": 8,
+        "final_loss": 7.286452728294535e-06
+      }
+    },
+    "4": {
+      "gate_proj": {
+        "error": 0.5221337676048279,
+        "bits_per_element": 2.0,
+        "compression_ratio": 16.0,
+        "utilization": 1.0,
+        "used_levels": 4,
+        "total_levels": 4,
+        "final_loss": 9.59387980401516e-05
+      },
+      "up_proj": {
+        "error": 0.5355879664421082,
+        "bits_per_element": 2.0,
+        "compression_ratio": 16.0,
+        "utilization": 1.0,
+        "used_levels": 4,
+        "total_levels": 4,
+        "final_loss": 4.91465070808772e-05
+      },
+      "down_proj": {
+        "error": 0.6063381433486938,
+        "bits_per_element": 2.0,
+        "compression_ratio": 16.0,
+        "utilization": 1.0,
+        "used_levels": 4,
+        "total_levels": 4,
+        "final_loss": 4.074252865393646e-05
+      }
+    }
+  },
+  "huffman_results": {
+    "16": {
+      "entropy": 3.6102921197460254,
+      "huffman_bpw": 3.6102921197460254,
+      "huffman_compression": 8.863548693187496
+    },
+    "8": {
+      "entropy": 2.5456688142604094,
+      "huffman_bpw": 2.5456688142604094,
+      "huffman_compression": 12.570370434968355
+    },
+    "4": {
+      "entropy": 1.4613771834074711,
+      "huffman_bpw": 1.4613771834074711,
+      "huffman_compression": 21.897153153428935
+    }
+  }
+}

@@ -21,7 +21,7 @@ def _add_common_args(parser: argparse.ArgumentParser) -> None:
     """添加通用的 --db-path 参数。"""
     parser.add_argument(
         "--db-path",
-        default="data/books.db",
+        default="../../data/book_search/books.db",
         help="SQLite 数据库路径（默认 data/books.db）",
     )
 

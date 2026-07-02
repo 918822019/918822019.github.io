@@ -1,85 +1,115 @@
 # 918822019.github.io - 个人技术博客与项目集合
 
-这是我的个人技术博客仓库，同时也包含了多个 AI、量化、搜索推荐等方向的子项目。
+个人技术博客仓库，同时汇集 AI 量化、搜索推荐、继续预训练等方向的实验项目。
 
-## 📁 项目结构
+## 项目结构
 
 ```
 .
-├── index.html                 # 博客前端主页
-├── assets/                    # 静态资源
-│   ├── styles.css            # 样式文件
-│   └── app.js                # 主要交互逻辑
-├── frontend/                  # 前端演示页面
-├── project/                   # 核心子项目目录
-│   ├── quant/                # 模型量化相关项目
-│   ├── ContinuePretrain/     # 继续预训练项目
-│   ├── book_search/          # 起点搜书 - 书籍推荐系统
-│   └── tvm/                  # Apache TVM 编译器框架
-├── scripts/                   # 构建部署脚本
-└── 时间规划.md               # 个人时间规划笔记
+├── data/                       # [集中数据管理] 所有项目的数据统一存放
+│   ├── book_search/           # book_search 的数据库、分片、Faiss 索引
+│   ├── models/                # 模型权重 (Qwen3.5-0.8B/9B/35B-A3B)
+│   ├── cache/                 # 训练缓存 (logits_cache 等)
+│   └── exports/               # 前端导出数据
+├── frontend/                   # 前端演示页面 (博客阅读器 + 数据巡检台)
+├── project/                    # 子项目代码目录 (仅代码，数据引用 data/)
+│   ├── book_search/           # 起点搜书 - 书籍推荐系统
+│   ├── quant/                 # 模型量化工具集 (SVD/FSQ/RVQ)
+│   ├── ContinuePretrain/      # 继续预训练实验
+│   └── tvm/                   # Apache TVM 编译器 (submodule)
+├── scripts/                    # 构建与数据管理脚本
+│   ├── data/                  # 数据管理脚本 (上传/下载/校验/远程直读)
+│   ├── build-docs-index.py    # 文档索引生成
+│   ├── publish-doc.ps1        # 文档发布 (Windows)
+│   └── publish-doc.sh         # 文档发布 (macOS/Linux)
+└── docs/                       # 技术文档 / 博客内容
 ```
 
-## 🚀 子项目概览
+## 集中式数据管理
 
-### 1. quant - 模型量化工具集
-包含多个量化相关的子项目：
-- **svd_quant** - 基于 SVD 的 MoE 模型量化工具
-- **llama.cpp** - 高性能 LLM 推理引擎 (C/C++)
-- **model/** - 多个 Qwen 模型权重
-  - Qwen3.5-0.8B
-  - Qwen3.5-9B
-  - Qwen3.5-35B-A3B
+所有项目的数据统一存放在 `data/` 目录下，项目代码只通过相对路径引用。
 
-### 2. ContinuePretrain - 继续预训练
-- 基于 Qwen3.5-0.8B 的继续预训练实验
-- 包含数据处理管道和训练脚本
+```powershell
+# 从 ModelScope 拉取最新数据
+.\scripts\data\download_data.ps1
 
-### 3. book_search - 起点搜书推荐系统
-- 基于用户查询的书籍推荐系统
-- 支持 SQLite 数据存储、增量爬取、LLM 打标签
-- 支持 ModelScope 数据集上传/下载
+# 上传数据到 ModelScope
+.\scripts\data\upload_data.ps1 -Incremental -CommitMessage "update"
 
-### 4. tvm - Apache TVM
-- 开源机器学习编译框架
-- 支持多种硬件后端部署
+# 同步模型权重
+.\scripts\data\sync_models.ps1
 
-## 🌐 博客访问
+# 远程直读 / 选择性下载 / 数据导入
+py scripts/data/modelscope_reader.py list
+py scripts/data/modelscope_reader.py bootstrap --shards 3 --create-db
+
+# 导出数据库到前端
+py scripts/data/export_to_frontend.py
+
+# 数据完整性校验
+py scripts/data/data_validate.py
+```
+
+详见 [数据架构文档](docs/架构设计/数据架构.md)。
+
+## 子项目
+
+### book_search - 起点搜书
+基于向量检索 + LLM 的小说推荐系统。支持爬虫、标签、向量化、RAG 问答全流程。
+
+| 模块 | 说明 |
+|------|------|
+| `crawler/` | 爬取 69shu.com 小说目录与正文 |
+| `process/polish/` | LLM 润色 + Embedding 向量化 |
+| `process/agent/` | 智能问答 Agent |
+| `tools/` | ModelScope 上传/下载、CLI 工具 |
+
+### quant - 模型量化工具集
+MoE 模型量化实验 (SVD + FSQ + KL 蒸馏)。
+
+| 子项目 | 说明 |
+|--------|------|
+| `svd_quant/` | SVD 量化 + FSQ + 知识蒸馏 |
+| `llama.cpp/` | 高性能 LLM 推理引擎 (submodule) |
+| `data/models/` | 模型权重 (Qwen3.5-0.8B/9B/35B-A3B) |
+
+### ContinuePretrain - 继续预训练
+基于 Qwen3.5-0.8B 的继续预训练实验，包含数据清洗（去噪、去重）管道。
+
+### tvm - Apache TVM
+机器学习编译器框架 (submodule)。
+
+## 博客
 
 访问 [https://918822019.github.io](https://918822019.github.io) 查看博客内容。
 
-## 📦 快速开始
-
-### 博客本地预览
+### 本地预览
 ```bash
-# 使用任意静态服务器，例如：
 python -m http.server 8000
-# 或
-npx serve .
+# 打开 http://localhost:8000
 ```
 
-### 更新文档索引
+### 发布文档
 ```bash
-bash scripts/publish-doc.sh "docs: update notes"
+npm run publish-doc -- "docs: update notes"
 ```
 
-## 🛠️ 技术栈
+## 技术栈
 
-- **前端**: 原生 HTML/CSS/JS
-- **后端**: Python (Flask, FastAPI)
-- **AI/ML**: PyTorch, Transformers, Hugging Face
-- **量化**: llama.cpp, GGUF, SVD 量化
-- **数据**: SQLite, ModelScope
-- **部署**: GitHub Pages, GitHub Actions
+| 领域 | 技术 |
+|------|------|
+| 前端 | 原生 HTML/CSS/JS |
+| AI/ML | PyTorch, Transformers, HuggingFace |
+| 量化 | SVD, FSQ, RVQ, KL 蒸馏, llama.cpp |
+| 搜索 | Faiss, Embedding, RAG |
+| 数据 | SQLite, ModelScope |
+| 部署 | GitHub Pages, GitHub Actions |
 
-## 📄 许可证
-
-各子项目遵循各自的许可证，详见对应目录下的 LICENSE 文件。
-
-## 🔗 相关链接
+## 链接
 
 - [GitHub 仓库](https://github.com/918822019/918822019.github.io)
 - [ModelScope 数据集](https://modelscope.cn/datasets/wzywuan/Novel-Collection)
 
 ---
-*持续更新时间: 2026-06-23
+
+*最后更新: 2026-06-26*

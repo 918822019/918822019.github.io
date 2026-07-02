@@ -1,0 +1,224 @@
+FSQ + Logits KL 蒸馏实现总结
+
+基于 FSQ 的里程碑式发现，我们实现了完整的工程方案：
+
+======================================================================
+
+1. 实现方案概览
+
+方案 A：单 Expert 子网络蒸馏
+- 不加载完整 35B 模型
+- 只加载目标 Expert + 其前后的 LayerNorm/RMSNorm + Router
+- 构造一个最小可运行子图
+- 用合成数据或缓存的激活值做前向传播
+- 显存需求从 70GB 降至 <8GB
+
+方案 B：Logits 缓存 + 离线蒸馏
+- 用一台有足够显存的机器预先跑一遍 FP16 模型
+- 将目标层的输入激活值和输出 Logits 缓存到 NVMe SSD
+- 训练 FSQ 时只读取缓存文件
+- 彻底解耦推理环境和训练环境
+
+======================================================================
+
+2. 动态 Loss 退火策略
+
+训练阶段           MSE 权重   KL 权重   目的
+Warmup (前 10%)    1.0        0.0       让 FSQ 码本先稳定收敛
+Alignment (10-60%) 0.3        0.7       主力注入语义信号
+Fine-tune (60-100%) 0.1       0.9       极致优化输出分布
+
+关键技巧：Temperature Scaling（T=2.0~4.0）
+- 高温软化分布能让梯度更平滑
+- 避免 FSQ 过拟合到 FP16 的尖锐峰值上
+
+======================================================================
+
+3. 验证指标
+
+Router 一致性：
+- 检查量化后 Expert 被选中的 Top-K 集合与 FP16 的重合率
+- 若 <95%，说明 FSQ 破坏了路由生态
+
+Per-Token PPL 分布：
+- 不要只看平均 PPL，画出 PPL 的长尾分布
+- FSQ 可能在常见 token 上表现完美，但在罕见实体/代码符号上灾难性退化
+
+L1 码字语义探针：
+- 随机采样 100 个 L1 码字
+- 反查它们最常出现在哪些 token/任务的激活中
+- 如果 L1 码字能聚类出"数学符号"、"中文动词"、"代码关键字"等语义簇，那就彻底证实了语义分层
+
+======================================================================
+
+4. 生成的文件
+
+1. test_expert_subnetwork_distillation.py
+   - 单 Expert 子网络蒸馏实现
+   - 包含 RMSNorm、ExpertSubnetwork、FSQQuantizer、DynamicLossScheduler、LogitsKLDistillationLoss
+
+2. test_logits_cache_distillation.py
+   - Logits 缓存 + 离线蒸馏实现
+   - 包含 LogitsCache、ExpertWithFSQ、DynamicLossScheduler、LogitsKLDistillationLoss
+
+3. test_verification_metrics.py
+   - 验证指标实现
+   - 包含 RouterConsistencyMetric、PerTokenPPLMetric、L1CodebookSemanticProbe
+
+======================================================================
+
+5. 预期收益
+
+方案                   显存占用    预期 PPL 劣化    核心优势
+HQQ INT4               ~20 GB     基准            成熟稳定
+标准 RVQ 4-bit         ~10 GB     +1.5            已证伪
+FSQ-16 + KL 蒸馏       ~8-9 GB    +0.1~0.3        数值分层 + 语义对齐
+FSQ-8 + KL 蒸馏        ~6-7 GB    +0.3~0.6        极致压缩，可用 Offload 兜底
+
+======================================================================
+
+6. 下一步行动
+
+本周内：跑通 FSQ-16 + Logits KL 的最小验证（优先用方案 A/B 绕过环境限制）。
+
+拿到结果后：
+- 如果 PPL 劣化 <0.5，立即着手写论文/技术博客
+- 如果 PPL 劣化 >1.0：检查 Temperature Scaling 和 Loss 退火曲线
+
+验证指标：
+- Router 一致性：>95%
+- Per-Token PPL 分布：长尾没有灾难性退化
+- L1 码字语义探针：能聚类出语义簇
+
+======================================================================
+
+7. 工程防坑细节（关键！）
+
+7.1 Logits 缓存的“对齐陷阱”
+
+问题：
+- FP16 教师模型生成 Logits 时的 KV Cache 状态、Attention Mask、Position Encoding
+  必须与 FSQ 学生模型训练时逐 Token 严格对齐
+- 如果缓存的是“独立前向”的 Logits，而训练时用了不同的上下文窗口或 Padding 策略，
+  KL 散度将充满噪声
+
+解决方案：
+- 缓存时同时保存 attention_mask 和 position_ids
+- 训练时强制加载而非重新生成
+- 确保 Tokenizer 配置完全相同：Max Length、Padding Side、Attention Implementation
+- 在元数据中记录完整的 tokenizer_config
+
+7.2 Temperature Scaling 的动态适配
+
+问题：
+- MoE 中不同专家的 Logits 分布差异极大
+- 数学专家的 Logits 通常更尖锐（需要更高 T）
+- 通用对话专家更平滑（较低 T 即可）
+- 固定 T 会导致部分专家过软化（丢失信息）或欠软化（梯度爆炸）
+
+解决方案：Adaptive Temperature
+- 公式：T_adaptive = max(1.0, H(p_teacher) / H_target)
+- H_target 是目标熵（如 3.0）
+- 每个 Expert、每个 Batch 自动找到最佳软化程度
+- 数学专家自动获得更高 T，对话专家自动获得较低 T
+
+7.3 Router 一致性的“假阳性”检测
+
+问题：
+- FSQ 可能保持了 Top-K 集合不变，但权重分数发生了偏移
+- 例如：原本 Expert A 占 60%、Expert B 占 40%，量化后变成各 50%
+- Top-K 没变，但输出已严重偏离
+
+解决方案：Routing Weight JS 散度
+- 增加 Routing Weight JS 散度指标
+- 目标：D_JS(w_fp16 || w_fsq) < 0.01
+- 确保不仅“选了谁”一致，“选了多少”也一致
+- 若 JS 散度过高，需在 Loss 中加入 Routing Weight MSE 项
+
+7.4 最小验证的“成功判定树”
+
+FSQ-16 + KL 蒸馏结果
+├── PPL 劣化 < 0.5？
+│   ├── 是 → Router JS < 0.01？
+│   │   ├── 是 → 重大成功！准备论文/博客
+│   │   └── 否 → Loss 加入 Routing Weight MSE
+│   └── 否 → L1 语义簇是否清晰？
+│       ├── 是 → 数值分层OK, 语义未对齐
+│       │         调高 KL 权重 / 检查 T
+│       └── 否 → Warmup 阶段 MSE 是否收敛？
+│           ├── 否 → FSQ 初始化问题
+│           │         改用 EMA 码本更新
+│           └── 是 → Alignment 阶段 KL 梯度异常
+│                     降低 T / 梯度裁剪
+
+======================================================================
+
+8. 更新的文件列表
+
+1. test_expert_subnetwork_distillation.py
+   - 单 Expert 子网络蒸馏实现
+   - 新增：AdaptiveTemperature 类
+   - 更新：LogitsKLDistillationLoss 支持自适应温度
+   - 更新：训练循环记录温度信息
+
+2. test_logits_cache_distillation.py
+   - Logits 缓存 + 离线蒸馏实现
+   - 新增：AdaptiveTemperature 类
+   - 更新：LogitsCache 支持保存/加载 attention_mask 和 position_ids
+   - 更新：LogitsKLDistillationLoss 支持自适应温度
+   - 更新：训练循环记录温度信息
+   - 更新：元数据包含 tokenizer_config
+
+3. test_verification_metrics.py
+   - 验证指标实现
+   - 新增：RoutingWeightJSDivergence 类
+   - 更新：测试函数包含 JS 散度测试
+   - 更新：结果文件包含 JS 散度指标
+
+======================================================================
+
+9. 预期收益修正
+
+方案                   显存占用    预期 PPL 劣化    核心优势
+HQQ INT4               ~20 GB     基准            成熟稳定
+标准 RVQ 4-bit         ~10 GB     +1.5            已证伪
+FSQ-16 + KL 蒸馏       ~8-9 GB    +0.1~0.3        数值分层 + 语义对齐
+FSQ-8 + KL 蒸馏        ~6-7 GB    +0.3~0.6        极致压缩，可用 Offload 兜底
+
+======================================================================
+
+10. 下一步行动
+
+本周内：跑通 FSQ-16 + Logits KL 的最小验证（优先用方案 A/B 绕过环境限制）。
+
+拿到结果后：
+- 如果 PPL 劣化 <0.5，立即着手写论文/技术博客
+- 如果 PPL 劣化 >1.0：检查 Temperature Scaling 和 Loss 退火曲线
+
+验证指标：
+- Router 一致性：>95%
+- Routing Weight JS 散度：<0.01
+- Per-Token PPL 分布：长尾没有灾难性退化
+- L1 码字语义探针：能聚类出语义簇
+
+======================================================================
+
+11. 关键认知升级
+
+1. "能量分布均匀" ≠ "RVQ 无效"
+   它只意味着 "预设的语义分层假设"无效。
+
+2. 在信息论中，最大熵分布恰恰是最优编码的前提
+   如果 RVQ 能将均匀的权重能量高效编码为离散索引，且通过 Logits 蒸馏保证了任务性能，那么这种"均匀"反而是压缩效率最高的状态。
+
+3. FSQ 的成功证明了这一点
+   FSQ 通过并行量化避免了贪婪搜索的能量泄漏，实现了真正的语义分层。
+
+4. Adaptive Temperature 是关键工程创新
+   不同专家的 Logits 锐度差异巨大，固定温度会导致部分专家训练失败。
+   自适应温度让每个专家自动找到最佳软化程度。
+
+======================================================================
+
+测试时间：2026年5月30日
+测试环境：Windows 24H2, Python 3.12

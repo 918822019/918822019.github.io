@@ -7,16 +7,13 @@
 ```
 ContinuePretrain/
 ├── main.py                     # 入口脚本
-├── data/
-│   └── books.db                # SQLite 数据库（小说数据）
-├── Qwen3.5-0.8B/               # 基础模型权重
-│   ├── config.json             # 模型配置
-│   ├── model.safetensors       # 模型权重
-│   ├── tokenizer.json          # 分词器
-│   └── ...                     # 其他配置文件
-└── process/                    # 数据处理管道
-    ├── pipeline.py             # 核心：文本去噪去重处理器
-    └── preview.py              # 数据库预览工具
+├── process/                    # 数据处理管道
+│   ├── pipeline.py             # 核心：文本去噪去重处理器
+│   └── preview.py              # 数据库预览工具
+│
+# 数据统一存放在仓库根目录 data/ 下：
+#   data/book_search/books.db         ← SQLite 数据库
+#   data/models/Qwen3.5-0.8B/    ← 基础模型权重
 ```
 
 ## 🔧 核心功能

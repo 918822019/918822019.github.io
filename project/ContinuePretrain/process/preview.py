@@ -40,5 +40,5 @@ def read_and_print_db(db_path: str):
 
 
 if __name__ == "__main__":
-    db_file = ".db"  # ← 修改为你的数据库文件路径
+    db_file = "../../data/book_search/books.db"
     read_and_print_db(db_file)

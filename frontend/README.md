@@ -9,7 +9,7 @@
 
 ```bash
 # 在仓库根目录运行（推荐）
-python3 -m http.server 8000
+python -m http.server 8000
 # 然后打开 http://localhost:8000/frontend/
 ```
 
@@ -28,7 +28,7 @@ python3 -m http.server 8000
 使用方法（在仓库根目录启动静态服务器）：
 
 ```bash
-python3 -m http.server 8000
+python -m http.server 8000
 # 打开 http://localhost:8000/frontend/data-inspector.html
 ```
 
@@ -46,13 +46,13 @@ python3 -m http.server 8000
 要观察完整的拉下来的数据（数据库内的 books/chapters），先运行导出脚本将 SQLite 导出到 `frontend/data/`：
 
 ```bash
-python3 scripts/export_db_to_frontend.py \
-	--db-path project/起点搜书/data/books.db \
-	--output-dir frontend/data \
+py scripts/data/export_to_frontend.py \
+	--db-path data/book_search/books.db \
+	--output-dir data/exports \
 	--sample-size 200
 ```
 
-脚本会在 `frontend/data/` 下生成：
+脚本会在 `data/exports/` 下生成：
 
 - `manifest.json`（包含 counts 和文件名）
 - `books_full.ndjson` / `chapters_full.ndjson`（完整 NDJSON，可供下载）
@@ -62,12 +62,12 @@ python3 scripts/export_db_to_frontend.py \
 
 推荐观察顺序：
 
-- 先看 `project/book_search/data/shards/index.json`：确认哪些分片正文覆盖率为 0 或仍在补抓
-- 再看 `frontend/data/manifest.json`：检查导出的 books/chapters 样本是否完整、字段是否稳定
-- 最后看 `project/book_search/data/books.json` 或自定义路径：做通用 JSON / NDJSON 结构观察
+- 先看 `data/book_search/shards/index.json`：确认哪些分片正文覆盖率为 0 或仍在补抓
+- 再看 `data/exports/manifest.json`：检查导出的 books/chapters 样本是否完整、字段是否稳定
+- 最后看 `data/book_search/books.json` 或自定义路径：做通用 JSON / NDJSON 结构观察
 
 如果需要我可以：
 
-- 自动扫描 `project/book_search/data/shards/` 目录并列出所有分片文件；
+- 自动扫描 `data/book_search/shards/` 目录并列出所有分片文件；
 - 增加更多导出格式（Parquet/Excel）；
 - 对非常大的文件做流式采样以避免一次性加载全部内容。

@@ -44,7 +44,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="全线统计")
     parser.add_argument(
         "--db-path",
-        default="data/books.db",
+        default="../../data/book_search/books.db",
         help="SQLite 数据库路径（默认 data/books.db）",
     )
     parser.add_argument(

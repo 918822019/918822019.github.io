@@ -27,25 +27,25 @@ Write-Host "[1/5] Pulling remote $branch ..." -ForegroundColor Cyan
 git pull --rebase origin $branch
 
 Write-Host "[1.5/5] Converting Jupyter notebooks ..." -ForegroundColor Cyan
-if (Get-Command python3 -ErrorAction SilentlyContinue) {
-    python3 scripts/convert-notebooks.py
+if (Get-Command py -ErrorAction SilentlyContinue) {
+    py -3 scripts/convert-notebooks.py
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Warning: Some notebooks conversion failed, continuing with existing content." -ForegroundColor Yellow
     }
 }
 else {
-    Write-Host "Warning: python3 not found, skipping notebook conversion." -ForegroundColor Yellow
+    Write-Host "Warning: py not found, skipping notebook conversion." -ForegroundColor Yellow
 }
 
 Write-Host "[2/5] Generating docs/index.json ..." -ForegroundColor Cyan
 if (Get-Command node -ErrorAction SilentlyContinue) {
-    node build-docs-index.js
+    node scripts/build-docs-index.js
 }
-elseif (Get-Command python3 -ErrorAction SilentlyContinue) {
-    python3 scripts/build-docs-index.py
+elseif (Get-Command py -ErrorAction SilentlyContinue) {
+    py -3 scripts/build-docs-index.py
 }
 else {
-    Write-Host "Error: Neither node nor python3 found." -ForegroundColor Red
+    Write-Host "Error: Neither node nor py found." -ForegroundColor Red
     exit 1
 }
 
