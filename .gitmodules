@@ -1,3 +1,0 @@
-[submodule "project/quant/llama.cpp"]
-	path = project/quant/llama.cpp
-	url = https://github.com/ggml-org/llama.cpp.git
