@@ -12,26 +12,13 @@ def process_with_mtp(
     model,
     tokenizer,
     prompt_ids: torch.LongTensor,
-    max_new_tokens: int,
     device: str = "cpu",
 ) -> dict:
     model.eval()
-    seq_len = prompt_ids.shape[1]
     prompt_ids = prompt_ids.to(device)
 
-    # manual generation loop (no KV cache — full sequence each step to avoid accelerate hook issues)
-    generated_tokens = []
-    cur_ids = prompt_ids
-    for step in range(max_new_tokens):
-        outputs = model(input_ids=cur_ids, use_cache=False, return_dict=True)
-        next_token = outputs.logits[:, -1:, :].argmax(dim=-1)
-        generated_tokens.append(next_token.item())
-        cur_ids = torch.cat([cur_ids, next_token], dim=1)
-
-    full_ids = torch.cat([prompt_ids, torch.tensor(generated_tokens, device=device).unsqueeze(0)], dim=1)
-
     outputs = model(
-        input_ids=full_ids,
+        input_ids=prompt_ids,
         output_router_logits=True,
         use_cache=False,
         return_dict=True,
@@ -39,20 +26,40 @@ def process_with_mtp(
 
     all_router = outputs.router_logits
 
-    decoder_router_tup = all_router[-2]
-    mtp_router_tup = all_router[-1]
+    num_decoder_layers = len(all_router) - 1
 
-    decoder_router = decoder_router_tup[0]
-    mtp_router = mtp_router_tup[0]
+    decoder_router = all_router[-2][0]
+    mtp_router = all_router[-1][0]
 
-    full_len = full_ids.shape[1]
+    layer_routers = torch.stack(
+        [all_router[i][0].squeeze(0) for i in range(num_decoder_layers)]
+    )
 
-    mtp_pred = mtp_router[:, :full_len - 1, :]
-    actual = decoder_router[:, 1:, :]
+    full_len = prompt_ids.shape[1]
+
+    mtp_pred = mtp_router[:, :full_len - 1, :].squeeze(0)
+    actual = decoder_router[:, 1:, :].squeeze(0)
+
+    # LM head predicting next token: lm_logits[:, t, :] predicts token[t+1]
+    lm_logits = outputs.logits[:, :-1, :].squeeze(0)           # [full_len-1, V]
+
+    mtp_logits_raw = getattr(outputs, "mtp_logits", None)
+    mtp_token_logits = None
+    lm_logits_for_mtp = None  # LM at positions where it predicts same target as MTP
+    if mtp_logits_raw is not None and len(mtp_logits_raw) > 0:
+        # MTP head: mtp_logits[0][:, t, :] predicts token[t+2]
+        # (input_ids is shifted by -1 internally, so MTP at t sees tok[t+1]'s embedding)
+        mtp_token_logits = mtp_logits_raw[0][:, :-1, :].squeeze(0)  # [full_len-1, V]
+        # LM at position t+1 also predicts token[t+2], align by target token
+        lm_logits_for_mtp = outputs.logits[:, 1:, :].squeeze(0)     # [full_len-1, V]
 
     return {
-        "output_ids": full_ids,
-        "generated": generated_tokens,
-        "actual_logits": list(actual.squeeze(0).unbind(0)),
-        "mtp_pred_logits": list(mtp_pred.squeeze(0).unbind(0)),
+        "output_ids": prompt_ids,
+        "num_decoder_layers": num_decoder_layers,
+        "decoder_router": actual,
+        "mtp_router": mtp_pred,
+        "lm_logits": lm_logits,
+        "mtp_token_logits": mtp_token_logits,
+        "lm_logits_for_mtp": lm_logits_for_mtp,
+        "layer_routers": layer_routers,
     }

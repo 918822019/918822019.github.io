@@ -7,9 +7,9 @@ import torch
 @dataclass
 class Config:
     model_path: str = "data/models/Ling-mini-base-2.0"
-    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    device: str = "cpu"
     torch_dtype: str = "bfloat16"
-    max_new_tokens: int = 8
+    max_new_tokens: int = 4
     max_prompt_len: int = 64
     num_experts: int = 256
     num_experts_per_tok: int = 8

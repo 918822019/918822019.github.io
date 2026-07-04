@@ -12,7 +12,16 @@ _pkg_dir = Path(__file__).parent.resolve()
 if str(_pkg_dir) not in sys.path:
     sys.path.insert(0, str(_pkg_dir))
 
-from compare import aggregate_results, compute_metrics
+from compare import (
+    aggregate_results,
+    compute_metrics,
+    compute_entropy_confidence_metrics,
+    compute_expert_overlap_metrics,
+    compute_layerwise_metrics,
+    compute_output_logits_corr_metrics,
+    compute_position_trends,
+    compute_token_accuracy,
+)
 from config import Config
 from decoder import process_with_mtp
 from model_utils import load_model_and_tokenizer
@@ -46,27 +55,54 @@ def run_single_prompt(
         model=model,
         tokenizer=tokenizer,
         prompt_ids=input_ids,
-        max_new_tokens=cfg.max_new_tokens,
         device=device,
     )
 
-    actual = result["actual_logits"]
-    mtp_pred = result["mtp_pred_logits"]
+    decoder_router = result["decoder_router"]   # [T, E]
+    mtp_router = result["mtp_router"]           # [T, E]
+    lm_logits = result["lm_logits"]             # [T, V]
+    mtp_token_logits = result["mtp_token_logits"]  # [T, V] or None
+    layer_routers = result["layer_routers"]     # [L, full_len, E]
+    T = decoder_router.shape[0]
 
-    aligned = []
-    for t in range(len(mtp_pred)):
-        metrics = compute_metrics(
-            actual[t].unsqueeze(0), mtp_pred[t].unsqueeze(0),
+    # ---- 原有逐位置 Router 对比 ----
+    step_metrics = []
+    for t in range(T):
+        m = compute_metrics(
+            decoder_router[t].unsqueeze(0),
+            mtp_router[t].unsqueeze(0),
             top_k=cfg.num_experts_per_tok,
         )
-        aligned.append(metrics)
+        step_metrics.append(m)
 
-    avg_metrics = {}
-    if aligned:
-        for key in aligned[0]:
-            avg_metrics[key] = sum(m[key] for m in aligned) / len(aligned)
-    else:
-        logger.warning("No aligned comparison pairs for prompt.")
+    avg_routing_metrics = {}
+    if step_metrics:
+        for key in step_metrics[0]:
+            avg_routing_metrics[key] = sum(s[key] for s in step_metrics) / len(step_metrics)
+
+    # ---- 1) Router 置信度 / 熵 ----
+    entropy_conf = compute_entropy_confidence_metrics(mtp_router, decoder_router)
+
+    # ---- 2) Expert 命中分析 ----
+    expert_overlap = compute_expert_overlap_metrics(
+        mtp_router, decoder_router, k=cfg.num_experts_per_tok,
+    )
+
+    # ---- 3) 逐层 Router 对比 ----
+    layerwise = compute_layerwise_metrics(
+        layer_routers[:, :T, :], mtp_router, k=cfg.num_experts_per_tok,
+    )
+
+    # ---- 4) 输出 logits 相关 (LM 置信度与 MTP 置信度关联) ----
+    output_corr = compute_output_logits_corr_metrics(lm_logits, mtp_router)
+
+    # ---- 5) 位置趋势 ----
+    position_trends = compute_position_trends(step_metrics)
+
+    # ---- 6) Token 贪心解码准确率 ----
+    # lm_logits_for_mtp 与 mtp_token_logits 预测同一目标 token (tok[t+2])
+    lm_logits_mtp = result.get("lm_logits_for_mtp")
+    token_acc = compute_token_accuracy(lm_logits_mtp, mtp_token_logits)
 
     generated_text = tokenizer.decode(
         result["output_ids"][0], skip_special_tokens=True
@@ -75,24 +111,42 @@ def run_single_prompt(
     return {
         "prompt": prompt,
         "generated_text": generated_text,
-        "num_generated": len(result["generated"]),
-        "num_comparisons": len(aligned),
-        "avg_metrics": avg_metrics,
-        "step_metrics": aligned,
+        "num_generated": 0,
+        "num_comparisons": T,
+        "avg_routing_metrics": avg_routing_metrics,
+        "step_metrics": step_metrics,
+        "entropy_confidence": entropy_conf,
+        "expert_overlap": expert_overlap,
+        "layerwise": layerwise,
+        "output_corr": output_corr,
+        "position_trends": position_trends,
+        "token_accuracy": token_acc,
     }
+
+
+def _fmt(v, dec=4):
+    if isinstance(v, float):
+        return f"{v:.{dec}f}"
+    return str(v)
+
+
+def _table_row(key, val, dec=4):
+    return f"| {key} | {_fmt(val, dec)} |"
 
 
 def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config) -> str:
     lines = []
-    lines.append("# MTP vs Router 一致性测试报告")
+    lines.append("# MTP 多维度分析报告")
     lines.append("")
     lines.append(f"**模型**: {cfg.model_path}")
     lines.append(f"**设备**: {cfg.device}")
-    lines.append(f"**max_new_tokens**: {cfg.max_new_tokens}")
+    lines.append(f"**分析模式**: 单次前向传播 (不生成新 token)")
     lines.append(f"**用时**: {elapsed:.1f}s")
     lines.append(f"**测试样本数**: {len(results)}")
     lines.append("")
-    lines.append("## 聚合指标")
+
+    # ============== 0) 原有路由一致性指标 ==============
+    lines.append("## 0) Router 一致性指标")
     lines.append("")
     lines.append("| 指标 | 均值 | 最小值 | 最大值 |")
     lines.append("|------|------|--------|--------|")
@@ -105,26 +159,149 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
                 f"| {base} | {agg[key]:.4f} | {agg.get(min_k, 0):.4f} | {agg.get(max_k, 0):.4f} |"
             )
     lines.append("")
+
+    # ============== 1) 熵 & 置信度 ==============
+    lines.append("## 1) Router 置信度 / 熵分析")
+    lines.append("")
+    lines.append("| 指标 | 含义 | 值 |")
+    lines.append("|------|------|-----|")
+    keys_describe = {
+        "mtp_entropy_mean": "MTP Router 熵（越高越不确定）",
+        "actual_entropy_mean": "Decoder Router 熵",
+        "entropy_diff_mean": "熵差 (MTP - Decoder)",
+        "mtp_confidence_mean": "MTP Router 置信度 (top-1 prob)",
+        "actual_confidence_mean": "Decoder Router 置信度",
+        "confidence_diff_mean": "置信度差 (MTP - Decoder)",
+    }
+    for r in results:
+        lines.append(f"### 样本 {results.index(r)+1}")
+        ec = r.get("entropy_confidence", {})
+        for k, desc in keys_describe.items():
+            if k in ec:
+                lines.append(_table_row(desc, ec[k]))
+        lines.append("")
+
+    # ============== 2) Expert 命中 ==============
+    lines.append("## 2) Expert 命中分析")
+    lines.append("")
+    lines.append("| 指标 | 含义 | 值 |")
+    lines.append("|------|------|-----|")
+    eo_keys = {
+        "avg_overlap_count": "平均重叠 expert 数 (top-k 中)",
+        "max_overlap_count": "最大重叠 expert 数",
+        "min_overlap_count": "最小重叠 expert 数",
+        "overlap_ratio": "重叠比例 (overlap/k)",
+        "zero_overlap_ratio": "零重叠比例 (完全不命中)",
+        "full_overlap_ratio": "完全重叠比例 (k/k)",
+    }
+    for r in results:
+        lines.append(f"### 样本 {results.index(r)+1}")
+        eo = r.get("expert_overlap", {})
+        for k, desc in eo_keys.items():
+            if k in eo:
+                lines.append(_table_row(desc, eo[k]))
+        lines.append("")
+
+    # ============== 3) 逐层对比 ==============
+    lines.append("## 3) 逐层 Router 对比 (MTP vs 各 Decoder Layer)")
+    lines.append("")
+    lines.append("| 指标 | 值 |")
+    lines.append("|------|-----|")
+    lw_keys = {
+        "layerwise_cosine_mean": "逐层 Cosine 均值",
+        "layerwise_topk_iou_mean": "逐层 Top-K IoU 均值",
+        "last_layer_cosine": "最后一层 Cosine (即原指标)",
+        "last_layer_iou": "最后一层 Top-K IoU",
+        "layerwise_cosine_improvement": "末层 Cosine - 首层 Cosine",
+    }
+    for r in results:
+        lines.append(f"### 样本 {results.index(r)+1}")
+        lw = r.get("layerwise", {})
+        for k, desc in lw_keys.items():
+            if k in lw:
+                lines.append(_table_row(desc, lw[k]))
+        lines.append("")
+        # 简短的趋势说明
+        cos_list = lw.get("layerwise_cosine", [])
+        if cos_list:
+            lines.append("逐层 Cosine 序列 (浅→深):")
+            lines.append("")
+            n = len(cos_list)
+            # 显示头部、中间、尾部
+            snippet = cos_list[:3] + (["..."] if n > 6 else []) + cos_list[-3:]
+            lines.append(f"`{', '.join(f'{v:.3f}' for v in cos_list[:3])} ... {', '.join(f'{v:.3f}' for v in cos_list[-3:])}`")
+            lines.append("")
+
+    # ============== 4) 输出 logits 关联 ==============
+    lines.append("## 4) 输出 logits 关联分析 (LM Head vs MTP Router)")
+    lines.append("")
+    lines.append("| 指标 | 含义 | 值 |")
+    lines.append("|------|------|-----|")
+    oc_keys = {
+        "lm_mtp_confidence_corr": "LM 置信度 vs MTP 置信度 相关系数",
+        "lm_confidence_mean": "LM Head 平均置信度",
+        "lm_confidence_std": "LM Head 置信度标准差",
+    }
+    for r in results:
+        lines.append(f"### 样本 {results.index(r)+1}")
+        oc = r.get("output_corr", {})
+        for k, desc in oc_keys.items():
+            if k in oc:
+                lines.append(_table_row(desc, oc[k]))
+        lines.append("")
+
+    # ============== 5) 位置趋势 ==============
+    lines.append("## 5) 位置趋势分析")
+    lines.append("")
+    for r in results:
+        lines.append(f"### 样本 {results.index(r)+1}")
+        pt = r.get("position_trends", {})
+        if pt:
+            lines.append("| 指标 | 前半均值 | 后半均值 | 趋势 |")
+            lines.append("|------|----------|----------|------|")
+            for key, trend in pt.items():
+                lines.append(
+                    f"| {key} | {trend['first_half_avg']:.4f} | "
+                    f"{trend['second_half_avg']:.4f} | {trend['trend_direction']} |"
+                )
+        else:
+            lines.append("*无趋势数据*")
+        lines.append("")
+
+    # ============== 6) Token 贪心解码准确率 ==============
+    lines.append("## 6) Token 贪心解码准确率")
+    lines.append("")
+    lines.append("比较 Decoder (LM Head) 和 MTP Head 在贪心解码下预测的 token 是否一致。")
+    lines.append("")
+    lines.append("| 样本 | 准确率 | 正确数/总数 |")
+    lines.append("|------|--------|-------------|")
+    for i, r in enumerate(results):
+        ta = r.get("token_accuracy", {})
+        acc = ta.get("token_accuracy")
+        if acc is not None:
+            correct = ta.get("token_correct_count", 0)
+            total = ta.get("token_total_count", 0)
+            lines.append(f"| 样本 {i+1} | {acc:.2%} | {correct}/{total} |")
+        else:
+            lines.append(f"| 样本 {i+1} | N/A (无 MTP token logits) | - |")
+    lines.append("")
+
+    # ============== 样本详情 ==============
     lines.append("## 各样本详情")
     lines.append("")
     for i, r in enumerate(results):
         lines.append(f"### 样本 {i+1}")
         lines.append("")
         lines.append(f"**Prompt**: `{r['prompt'][:80]}`")
-        lines.append(f"**生成长度**: {r['num_generated']}")
-        lines.append(f"**比较对数**: {r['num_comparisons']}")
+        lines.append(f"**可比较位置数**: {r['num_comparisons']}")
         lines.append("")
-        if r["avg_metrics"]:
-            lines.append("| 指标 | 值 |")
-            lines.append("|------|-----|")
-            for k, v in r["avg_metrics"].items():
-                lines.append(f"| {k} | {v:.4f} |")
+        if r.get("avg_routing_metrics"):
+            lines.append("| 路由指标 | 值 |")
+            lines.append("|----------|-----|")
+            for k, v in r["avg_routing_metrics"].items():
+                lines.append(_table_row(k, v))
         lines.append("")
-        lines.append(f"**生成文本预览**:")
-        lines.append(f"```")
-        lines.append(r["generated_text"][:200])
-        lines.append("```")
-        lines.append("")
+
     return "\n".join(lines)
 
 
@@ -156,13 +333,25 @@ def main():
         logger.error("No results collected.")
         sys.exit(1)
 
-    all_avg = [r["avg_metrics"] for r in results if r["avg_metrics"]]
+    # 聚合路由指标
+    all_avg = [r["avg_routing_metrics"] for r in results if r.get("avg_routing_metrics")]
     agg = aggregate_results(all_avg) if all_avg else {}
 
     report = generate_report(results, agg, elapsed, cfg)
     report_path = output_dir / "report.md"
     report_path.write_text(report, encoding="utf-8")
     logger.info("Report saved to %s", report_path)
+
+    # 清理 tensor 数据使 JSON 可序列化
+    clean_results = []
+    for r in results:
+        cr = dict(r)
+        for key in ("step_metrics", "entropy_confidence", "expert_overlap",
+                     "layerwise", "output_corr", "position_trends"):
+            if key in cr and isinstance(cr[key], dict):
+                cr[key] = {k: v for k, v in cr[key].items()
+                           if isinstance(v, (int, float, str, bool, list))}
+        clean_results.append(cr)
 
     results_json = {
         "config": {
@@ -171,7 +360,7 @@ def main():
             "max_new_tokens": cfg.max_new_tokens,
         },
         "aggregated": agg,
-        "results": results,
+        "results": clean_results,
         "elapsed_seconds": elapsed,
     }
     json_path = output_dir / "results.json"

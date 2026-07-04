@@ -33,10 +33,11 @@ def load_model_and_tokenizer(
     logger.info("Loading model from %s", model_path)
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
-        dtype=torch_dtype,
-        device_map="auto",
+        torch_dtype=torch_dtype,
+        device_map="cpu",
         trust_remote_code=True,
         attn_implementation="eager",
+        low_cpu_mem_usage=True,
     )
     model.eval()
     model_device = model.model.word_embeddings.weight.device
