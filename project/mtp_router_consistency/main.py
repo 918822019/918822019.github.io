@@ -18,6 +18,7 @@ from compare import (
     compute_entropy_confidence_metrics,
     compute_expert_overlap_metrics,
     compute_layerwise_metrics,
+    compute_lm_mtp_logit_alignment,
     compute_output_logits_corr_metrics,
     compute_position_trends,
     compute_token_accuracy,
@@ -104,6 +105,9 @@ def run_single_prompt(
     lm_logits_mtp = result.get("lm_logits_for_mtp")
     token_acc = compute_token_accuracy(lm_logits_mtp, mtp_token_logits)
 
+    # ---- 7) LM head vs MTP head 完整 logits 分布对比（对齐 target token）----
+    logit_alignment = compute_lm_mtp_logit_alignment(lm_logits, mtp_token_logits)
+
     generated_text = tokenizer.decode(
         result["output_ids"][0], skip_special_tokens=True
     )
@@ -121,6 +125,7 @@ def run_single_prompt(
         "output_corr": output_corr,
         "position_trends": position_trends,
         "token_accuracy": token_acc,
+        "logit_alignment": logit_alignment,
     }
 
 
@@ -286,6 +291,33 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
             lines.append(f"| 样本 {i+1} | N/A (无 MTP token logits) | - |")
     lines.append("")
 
+    # ============== 7) LM head vs MTP head 完整 logits 分布 ==============
+    lines.append("## 7) LM head vs MTP head 完整 Logits 分布对比")
+    lines.append("")
+    lines.append("对齐目标： `lm_logits[:, t+1, :]` vs `mtp_logits[:, t, :]` 都预测 `token[t+2]`")
+    lines.append("")
+    lines.append("| 指标 | 含义 | 样本1 | 样本2 |")
+    lines.append("|------|------|-------|-------|")
+    la_keys = [
+        ("lm_mtp_logit_cosine", "Cosine 相似度"),
+        ("lm_mtp_logit_kl", "KL 散度"),
+        ("lm_mtp_logit_js", "JS 散度"),
+        ("lm_mtp_logit_spearman", "Spearman 相关"),
+        ("lm_mtp_logit_top8_iou", "Top-8 IoU"),
+        ("lm_mtp_logit_prob_dot", "概率分布点积"),
+        ("lm_mtp_logit_l2", "Logits L2 距离"),
+    ]
+    la_vals = [r.get("logit_alignment", {}) for r in results]
+    for key, desc in la_keys:
+        v1 = la_vals[0].get(key, "N/A") if len(la_vals) > 0 else "N/A"
+        v2 = la_vals[1].get(key, "N/A") if len(la_vals) > 1 else "N/A"
+        v1s = f"{v1:.4f}" if isinstance(v1, float) else str(v1)
+        v2s = f"{v2:.4f}" if isinstance(v2, float) else str(v2)
+        lines.append(f"| {key} | {desc} | {v1s} | {v2s} |")
+    lines.append("")
+    lines.append("**解读**: Cosine ~1.0 且 KL/JS ≈ 0 说明两个 logits 分布几乎相同，与 injectivity 理论一致。")
+    lines.append("")
+
     # ============== 样本详情 ==============
     lines.append("## 各样本详情")
     lines.append("")
@@ -347,7 +379,7 @@ def main():
     for r in results:
         cr = dict(r)
         for key in ("step_metrics", "entropy_confidence", "expert_overlap",
-                     "layerwise", "output_corr", "position_trends"):
+                     "layerwise", "output_corr", "position_trends", "logit_alignment"):
             if key in cr and isinstance(cr[key], dict):
                 cr[key] = {k: v for k, v in cr[key].items()
                            if isinstance(v, (int, float, str, bool, list))}

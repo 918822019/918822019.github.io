@@ -255,6 +255,54 @@ def compute_token_accuracy(
 
 
 # ============================================================
+# 7) LM head vs MTP head 完整 logits 分布对比（对齐 target token）
+# ============================================================
+# 定理：Language Models are Injective (Sapienza 2025)
+# → lm_head(mtp_hidden[t]) 预测 token[t+2]
+# → lm_head(decoder_hidden[t+1]) 也预测 token[t+2]
+# 如果模型的 hidden state 是单射的，则这两个分布应该高度一致
+
+def compute_lm_mtp_logit_alignment(
+    lm_logits: torch.Tensor,     # [T, V], LM head logits predicting tok[t+1]
+    mtp_logits: torch.Tensor,    # [T, V], MTP head logits predicting tok[t+2]
+) -> dict[str, float]:
+    if mtp_logits is None:
+        return {"lm_mtp_logit_alignment": None}
+
+    # Align by target token: LM at t+1 vs MTP at t both predict tok[t+2]
+    # lm_logits has shape [T, V] where T = full_len-1
+    # mtp_logits has shape [T, V] where T = full_len-1
+    # LM at position t predicts tok[t+1], so position 1..T predicts tok[2]..tok[T+1]
+    # MTP at position t predicts tok[t+2], so position 0..T-1 predicts tok[2]..tok[T+1]
+    lm_aligned = lm_logits[1:, :]     # [T-1, V]
+    mtp_aligned = mtp_logits[:-1, :]  # [T-1, V]
+
+    cosine = F.cosine_similarity(lm_aligned.float(), mtp_aligned.float(), dim=-1).mean().item()
+    kl = kl_divergence(lm_aligned, mtp_aligned).item()
+    js = js_divergence(lm_aligned, mtp_aligned).item()
+    spearman = spearman_rank_corr(lm_aligned, mtp_aligned).item()
+    iou_k = top_k_iou(lm_aligned, mtp_aligned, k=8).item()
+
+    # Per-token softmax dot product (prob distribution overlap)
+    lm_prob = F.softmax(lm_aligned.float(), dim=-1)
+    mtp_prob = F.softmax(mtp_aligned.float(), dim=-1)
+    prob_dot = (lm_prob * mtp_prob).sum(dim=-1).mean().item()
+
+    # L2 distance of logits
+    l2_dist = (lm_aligned.float() - mtp_aligned.float()).norm(dim=-1).mean().item()
+
+    return {
+        "lm_mtp_logit_cosine": cosine,
+        "lm_mtp_logit_kl": kl,
+        "lm_mtp_logit_js": js,
+        "lm_mtp_logit_spearman": spearman,
+        "lm_mtp_logit_top8_iou": iou_k,
+        "lm_mtp_logit_prob_dot": prob_dot,
+        "lm_mtp_logit_l2": l2_dist,
+    }
+
+
+# ============================================================
 # 聚合 (扩展支持嵌套指标)
 # ============================================================
 
@@ -264,7 +312,7 @@ def aggregate_results(
     agg = {}
     skip_keys = {"prompt", "generated_text", "step_metrics", "entropy_confidence",
                   "expert_overlap", "layerwise", "output_corr", "position_trends",
-                  "token_accuracy"}
+                  "token_accuracy", "logit_alignment"}
     for key in results[0]:
         if key in skip_keys:
             continue
