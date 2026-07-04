@@ -14,6 +14,7 @@ if str(_pkg_dir) not in sys.path:
 
 from compare import (
     aggregate_results,
+    compute_accuracy_vs_ground_truth,
     compute_metrics,
     compute_entropy_confidence_metrics,
     compute_expert_overlap_metrics,
@@ -108,6 +109,13 @@ def run_single_prompt(
     # ---- 7) LM head vs MTP head 完整 logits 分布对比（对齐 target token）----
     logit_alignment = compute_lm_mtp_logit_alignment(lm_logits, mtp_token_logits)
 
+    # ---- 8) 对真实 token (Ground Truth) 的预测精度 ----
+    gt_lm = result.get("ground_truth_lm")
+    gt_mtp = result.get("ground_truth_mtp")
+    gt_accuracy = compute_accuracy_vs_ground_truth(
+        lm_logits, mtp_token_logits, gt_lm, gt_mtp,
+    )
+
     generated_text = tokenizer.decode(
         result["output_ids"][0], skip_special_tokens=True
     )
@@ -126,6 +134,7 @@ def run_single_prompt(
         "position_trends": position_trends,
         "token_accuracy": token_acc,
         "logit_alignment": logit_alignment,
+        "gt_accuracy": gt_accuracy,
     }
 
 
@@ -318,6 +327,26 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
     lines.append("**解读**: Cosine ~1.0 且 KL/JS ≈ 0 说明两个 logits 分布几乎相同，与 injectivity 理论一致。")
     lines.append("")
 
+    # ============== 8) 对真实 token 的预测精度 ==============
+    lines.append("## 8) 对真实 Token (Ground Truth) 的预测精度")
+    lines.append("")
+    lines.append("比较 LM Head / MTP Head 的贪心解码结果与序列中的真实 token。")
+    lines.append("")
+    lines.append("| 样本 | LM→tok[t+1] 精度 | MTP→tok[t+2] 精度 | MTP-LM 差距 |")
+    lines.append("|------|-------------------|-------------------|-------------|")
+    for i, r in enumerate(results):
+        ga = r.get("gt_accuracy", {})
+        lma = ga.get("lm_gt_accuracy")
+        mtpa = ga.get("mtp_gt_accuracy")
+        gap = ga.get("mtp_gt_gap")
+        lma_s = f"{lma:.2%}" if lma is not None else "N/A"
+        mtpa_s = f"{mtpa:.2%}" if mtpa is not None else "N/A"
+        gap_s = f"{gap:+.2%}" if gap is not None else "N/A"
+        lines.append(f"| 样本 {i+1} | {lma_s} ({ga.get('lm_gt_correct','-')}/{ga.get('lm_gt_total','-')}) | {mtpa_s} ({ga.get('mtp_gt_correct','-')}/{ga.get('mtp_gt_total','-')}) | {gap_s} |")
+    lines.append("")
+    lines.append("**解读**: LM 精度反映了模型对 prompt 内已知 token 的拟合程度; MTP 精度反映其在看到 tok[t+1] 嵌入后预测 tok[t+2] 的能力。")
+    lines.append("")
+
     # ============== 样本详情 ==============
     lines.append("## 各样本详情")
     lines.append("")
@@ -379,7 +408,8 @@ def main():
     for r in results:
         cr = dict(r)
         for key in ("step_metrics", "entropy_confidence", "expert_overlap",
-                     "layerwise", "output_corr", "position_trends", "logit_alignment"):
+                     "layerwise", "output_corr", "position_trends",
+                     "logit_alignment", "gt_accuracy"):
             if key in cr and isinstance(cr[key], dict):
                 cr[key] = {k: v for k, v in cr[key].items()
                            if isinstance(v, (int, float, str, bool, list))}

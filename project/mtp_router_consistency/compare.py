@@ -303,6 +303,42 @@ def compute_lm_mtp_logit_alignment(
 
 
 # ============================================================
+# 8) 对真实 token（Ground Truth）的预测精度
+# ============================================================
+
+def compute_accuracy_vs_ground_truth(
+    lm_logits: torch.Tensor | None,       # [T, V], LM predicting tok[t+1]
+    mtp_logits: torch.Tensor | None,      # [T, V], MTP predicting tok[t+2]
+    gt_lm: torch.Tensor | None,           # [T], ground truth for LM
+    gt_mtp: torch.Tensor | None,          # [T-1], ground truth for MTP
+    tokenizer=None,
+) -> dict[str, float]:
+    result = {}
+
+    # LM head accuracy vs ground truth (predicting token[t+1])
+    if lm_logits is not None and gt_lm is not None:
+        lm_pred = lm_logits.argmax(dim=-1)
+        lm_correct = (lm_pred == gt_lm)
+        result["lm_gt_accuracy"] = lm_correct.float().mean().item()
+        result["lm_gt_correct"] = lm_correct.sum().item()
+        result["lm_gt_total"] = gt_lm.shape[0]
+
+    # MTP head accuracy vs ground truth (predicting token[t+2])
+    # mtp_logits[t] predicts token[t+2], gt_mtp[t] = input_ids[t+2]
+    # Both must be aligned: mtp_logits[:-1, :] vs gt_mtp
+    if mtp_logits is not None and gt_mtp is not None:
+        mtp_aligned = mtp_logits[:-1, :]  # [T-1, V]
+        mtp_pred = mtp_aligned.argmax(dim=-1)
+        mtp_correct = (mtp_pred == gt_mtp)
+        result["mtp_gt_accuracy"] = mtp_correct.float().mean().item()
+        result["mtp_gt_correct"] = mtp_correct.sum().item()
+        result["mtp_gt_total"] = gt_mtp.shape[0]
+        result["mtp_gt_gap"] = result.get("mtp_gt_accuracy", 0) - result.get("lm_gt_accuracy", 0)
+
+    return result
+
+
+# ============================================================
 # 聚合 (扩展支持嵌套指标)
 # ============================================================
 
@@ -312,7 +348,7 @@ def aggregate_results(
     agg = {}
     skip_keys = {"prompt", "generated_text", "step_metrics", "entropy_confidence",
                   "expert_overlap", "layerwise", "output_corr", "position_trends",
-                  "token_accuracy", "logit_alignment"}
+                  "token_accuracy", "logit_alignment", "gt_accuracy"}
     for key in results[0]:
         if key in skip_keys:
             continue

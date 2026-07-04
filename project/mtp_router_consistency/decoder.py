@@ -53,6 +53,12 @@ def process_with_mtp(
         # LM at position t+1 also predicts token[t+2], align by target token
         lm_logits_for_mtp = outputs.logits[:, 1:, :].squeeze(0)     # [full_len-1, V]
 
+    # Ground truth tokens for verification
+    # lm_logits[:, t, :] predicts token[t+1] → ground truth is input_ids[t+1]
+    ground_truth_lm = prompt_ids[:, 1:].squeeze(0)  # [full_len-1]
+    # mtp_logits[0][:, t, :] predicts token[t+2] → ground truth is input_ids[t+2]
+    ground_truth_mtp = prompt_ids[:, 2:].squeeze(0) if prompt_ids.shape[1] > 2 else None  # [full_len-2] or None
+
     return {
         "output_ids": prompt_ids,
         "num_decoder_layers": num_decoder_layers,
@@ -62,4 +68,6 @@ def process_with_mtp(
         "mtp_token_logits": mtp_token_logits,
         "lm_logits_for_mtp": lm_logits_for_mtp,
         "layer_routers": layer_routers,
+        "ground_truth_lm": ground_truth_lm,
+        "ground_truth_mtp": ground_truth_mtp,
     }
