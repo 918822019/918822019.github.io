@@ -1,5 +1,0 @@
-Input shape: torch.Size([1, 5])
-Forward pass succeeded
-Has mtp_logits: True
-mtp_logits[0] shape: torch.Size([1, 5, 157184])
-Token accuracy: 0.0000
