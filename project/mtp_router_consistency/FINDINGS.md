@@ -1,23 +1,24 @@
-# MTP Router Consistency Analysis - Findings Summary
+# MTP Router 一致性分析 - 发现汇总
 
-## Goal
-Investigate whether MTP (Multi-Token Prediction) layer's routing decisions can be used to predict decoder's expert loading in CPU offload scenarios.
+## 目标
+研究 MTP（多 token 预测）层的路由决策能否用于预判 Decoder 的 Expert 加载，以加速 CPU offload 场景下的推理。
 
-## Model
-- **Architecture**: BailingMoeV2 (Ling-mini-base-2.0)
-- **Parameters**: 12B
-- **MoE**: 256 experts per layer, top-8 routing
-- **Layers**: 19 MoE layers + 1 MTP layer (20 decoder layers total, 1 dense layer)
-- **Hidden size**: 2048
-- **Vocab**: 157184
+## 模型
+- **架构**: BailingMoeV2 (Ling-mini-base-2.0)
+- **参数量**: 12B
+- **MoE**: 每层 256 experts，top-8 路由
+- **层数**: 19 层 MoE + 1 层 MTP（共 20 层 decoder，1 层 dense）
+- **隐层维度**: 2048
+- **词表大小**: 157184
 
 ---
 
-## Key Findings
+## 关键发现
 
-### 1. MTP Layer Architecture
-MTP layer has its **own 256 experts**, completely independent from decoder's 256 experts per layer.
+### 1. MTP 层架构
+MTP 层拥有 **自己独立的 256 个 expert**，与 Decoder 每层的 256 experts 完全不共享参数。
 
+```
 Decoder Layer (×19):
   input → Self-Attention → MoE Block (256 experts) → output
 
@@ -25,94 +26,94 @@ MTP Layer (×1):
   [shifted tok[t+1] emb, decoder_last_hidden[t]] → eh_proj → Self-Attention → MoE Block (256 experts) → lm_head → tok[t+2]
 ```
 
-### 2. Token Prediction Accuracy
-| Metric | Sample 1 (def fibonacci(n):) | Sample 2 (def merge_sort(arr):) |
-|--------|------------------------------|----------------------------------|
-| LM→tok[t+1] accuracy | 75.00% (3/4) | 25.00% (1/4) |
-| MTP→tok[t+2] accuracy | 100.00% (3/3) | 33.33% (1/3) |
-| MTP-LM gap | +25.00% | +8.33% |
+### 2. Token 预测精度
+| 指标 | 样本 1 (def fibonacci(n):) | 样本 2 (def merge_sort(arr):) |
+|------|----------------------------|-------------------------------|
+| LM→tok[t+1] 精度 | 75.00% (3/4) | 25.00% (1/4) |
+| MTP→tok[t+2] 精度 | 100.00% (3/3) | 33.33% (1/3) |
+| MTP-LM 差距 | +25.00% | +8.33% |
 
-**Insight**: MTP sees tok[t+1]'s embedding (via internal roll), giving it an information advantage.
+**结论**: MTP 通过内部 `roll` 操作看到了 tok[t+1] 的嵌入，比 LM 多一个信息优势。
 
-### 3. LM Head vs MTP Head Logit Distribution
-When aligned by target token (both predict tok[t+2]):
-| Metric | Sample 1 | Sample 2 |
-|--------|-----------|-----------|
-| Cosine similarity | 0.9715 | 0.9650 |
-| Spearman | 0.8342 | 0.7867 |
-| KL divergence | 0.3144 | 0.4777 |
-| JS divergence | 0.0833 | 0.1050 |
+### 3. LM Head vs MTP Head Logits 分布（按目标 token 对齐）
+两者都预测 tok[t+2] 时：
+| 指标 | 样本 1 | 样本 2 |
+|------|--------|--------|
+| Cosine 相似度 | 0.9715 | 0.9650 |
+| Spearman 相关 | 0.8342 | 0.7867 |
+| KL 散度 | 0.3144 | 0.4777 |
+| JS 散度 | 0.0833 | 0.1050 |
 | Top-8 IoU | 0.5362 | 0.5111 |
-| Prob dot product | 0.3631 | 0.4414 |
+| 概率分布点积 | 0.3631 | 0.4414 |
 
-**Insight**: LM and MTP logits are very similar (Cosine ~0.97), consistent with injectivity theory.
+**结论**: LM 和 MTP 的 logits 分布非常接近（Cosine ~0.97），与 injectivity（双射）理论一致：不同路径的 hidden state 经 lm_head 投影后输出相似。
 
-### 4. Router Consistency
-MTP router vs Decoder router (last layer):
-| Metric | Value |
-|--------|-------|
-| Cosine similarity | ~0.87 |
+### 4. Router 一致性
+MTP Router vs Decoder Router（最后一层）：
+| 指标 | 值 |
+|------|-----|
+| Cosine 相似度 | ~0.87 |
 | Top-8 IoU | ~0.02 |
 | Hit Rate (top-1/3/5) | 0.0000 |
 
-**Insight**: MTP router predicts similar direction but selects completely different experts (IoU ~0.02).
+**结论**: MTP 路由的方向大致一致（Cosine=0.87），但选中的 expert 编码完全不同（IoU=0.02）。
 
-### 5. Token → Expert Mapping Stability
-| Token | Occurrences | Layer 0 (shallow) | Layer 9 (middle) | Layer 18 (deep) |
-|-------|-------------|-------------------|-------------------|------------------|
+### 5. Token → Expert 映射稳定性
+| Token | 出现次数 | Layer 0（浅层） | Layer 9（中层） | Layer 18（深层） |
+|-------|---------|-----------------|-----------------|------------------|
 | `' x'` | 3 | **1.0000** | 0.5030 | 0.5219 |
 | `' +'` | 2 | **1.0000** | 0.7778 | 0.6000 |
 | `'(x'` | 2 | 0.6000 | 0.2308 | 0.4545 |
 
-**Insight**:
-- **Shallow layers (Layer 0)**: Routing is token-deterministic (IoU=1.0)
-- **Middle layers (Layer 9)**: Partially context-dependent (IoU~0.5-0.78)
-- **Deep layers (Layer 18)**: Highly context-dependent (IoU~0.45-0.60)
+**结论**:
+- **浅层（Layer 0）**: 路由由 token 唯一决定（IoU=1.0）
+- **中层（Layer 9）**: 部分依赖上下文（IoU~0.5-0.78）
+- **深层（Layer 18）**: 高度依赖上下文（IoU~0.45-0.60）
 
 ### 6. MTP Hidden State vs Decoder Hidden State
-MTP[t] vs Decoder[layer][t+1] Cosine similarity:
-| Layer | Avg Cosine |
-|-------|------------|
-| layer_0 (embeds) | 0.0225 |
+MTP[t] 与 Decoder[layer][t+1] 的 Cosine 相似度（两者都编码 tok[t+2]）：
+| 层 | 平均 Cosine |
+|------|------------|
+| layer_0 (嵌入) | 0.0225 |
 | layer_5 | 0.1800 |
-| layer_10 (middle) | 0.2437 |
+| layer_10 (中层) | 0.2437 |
 | layer_15 | 0.3490 |
 | layer_19 | 0.3751 |
-| layer_20 (decoder output) | **0.8278** |
+| layer_20 (decoder 输出) | **0.8278** |
 
-**Insight**: MTP's single layer is almost equivalent to all 20 decoder layers combined. MTP hidden state ≈ decoder's final output (Cosine ~0.83).
+**结论**: MTP 单层的 hidden state 几乎等价于 20 层 decoder 堆叠后的输出（Cosine=0.83）。余弦从浅到深单调递增，在最后一层跳升，说明 MTP 学透了整个 decoder 的变换。
 
-### 7. Speculative Decoding Savings
-| N draft tokens | Sequential loads | Speculative loads | Savings |
-|----------------|------------------|-------------------|---------|
+### 7. Speculative Decoding 搬运量节省
+| N 个 draft token | 逐步加载 | 一次性验证 | 节省 |
+|------------------|---------|-----------|------|
 | N=2 | 304 | 296 | 2.6% |
 | N=4 | 608 | 419 | 31.1% |
 | N=8 | 1216 | 714 | 41.3% |
 | N=16 | 2432 | 924 | 62.0% |
 
-**Insight**: Routing diversity is very high. Adjacent positions activate almost completely disjoint expert sets (N=2: 15.6/16 possible experts). Real savings come from cross-position reuse at larger N.
+**结论**: 路由多样性很高。相邻两步的 expert 集几乎完全不重叠（N=2: 15.6/16）。节省来自大 N 下跨位置的 expert 复用。
 
 ---
 
-## Core Question
-Can MTP's routing decision be used to pre-fetch decoder's expert loading in CPU offload?
+## 核心问题
+MTP 的路由决策能否用于预取 Decoder 的 Expert 加载（CPU offload 场景）？
 
-### Current Evidence
-1. **Token alone cannot predict deep layer routing** (context-dependent)
-2. **MTP hidden state ≈ decoder's final output** (cos=0.83)
-3. **Injectivity theory**: Input sequence → hidden state is injective, so routing is uniquely determined by full context, not just token
-4. **MTP router vs Decoder router IoU ~0.02**: Completely different experts
+### 已有证据
+1. **Token 本身不能预测深层路由**（深层路由依赖完整上下文，不只是当前 token）
+2. **MTP hidden state ≈ Decoder 最终输出**（Cosine=0.83）
+3. **Injectivity（双射）理论**: Input 序列 → hidden state 是双射，路由由完整上下文唯一决定
+4. **MTP Router vs Decoder Router IoU ~0.02**: 两者选择了完全不同的 experts
 
-### Open Questions
-- Can MTP's routing inform decoder's routing?
-- Can MTP hidden state be used to predict decoder's expert selection?
-- What is the cost-benefit of MTP's own expert loading vs savings from pre-fetching?
+### 开放问题
+- MTP 的 routing 能否用来推断 decoder 的 routing？
+- MTP 的 hidden state 能否预测 decoder 的 expert 选择？
+- MTP 自身 1 层 MoE 的搬运开销 vs 预取节省的搬运，净收益如何？
 
 ---
 
-## Files
-- `decoder.py`: Single forward pass, MTP data extraction
-- `compare.py`: All metric functions (8 groups)
-- `main.py`: Pipeline + report generation
-- `analyze_routing.py`: Token→expert mapping analysis
-- `verify_spec.py`: Speculative decoding simulation
+## 文件
+- `decoder.py`: 单次前向传播，MTP 数据提取
+- `compare.py`: 所有指标函数（8 组）
+- `main.py`: 流水线 + 报告生成
+- `analyze_routing.py`: Token→expert 映射分析
+- `verify_spec.py`: Speculative decoding 模拟
