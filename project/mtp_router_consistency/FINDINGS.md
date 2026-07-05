@@ -184,6 +184,8 @@ pos  source  Draft     Ground truth    Match?
 
 **注意**：MTP 的 roll_tensor(shifts=-1) 导致最后一个位置的输入回绕到 tok[0]。取 mtp_hidden[-1]（最后一位置）是错的，应取 mtp_hidden[-2]（倒数第二位置，roll 后这里才是最新的 token）。
 
+**对自然语言无效的原因**：英语 prompt 的 token 熵（4.50）远高于代码（2.94）。高熵意味着 LM 本身就不确定下一个 token，MTP 自回归时每次用自己的预测作条件，微小 logit 变化就导致 argmax 跳到另一个合理但不同的 token。验证时 reject。代码的 token 分布是尖峰型（def→空格→fib→...），MTP 自回归非常适合这种确定性场景。
+
 **结合预取的总体加速**：speculative decoding（~4x） + 路由预取流水线（~7x）理论上可叠加。
 
 ---
