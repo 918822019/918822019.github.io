@@ -197,32 +197,48 @@ MTP 前向:  position t → MTP hidden state[t] (2048维)
           预取 top-8 experts → GPU 预加载
 ```
 
+### 11. 多 Prompt 跨类型验证 (multi_test.py)
+
+**目的**：验证 MTP hidden → routing 预测在不同 prompt 类型下是否一致。
+
+| Prompt | 类型 | Avg Cos | 深层(L13+)Cos |
+|--------|------|---------|--------------|
+| `def foo(x):...` | 代码 | 0.7443 | 0.80-0.82 |
+| `def fibonacci(n):...` | 长代码 | 0.7937 | 0.84-0.87 |
+| `a = [1,2,3]...` | Python | 0.7914 | 0.87-0.90 |
+| `Machine learning...` | 技术文 | 0.6756 | 0.91-0.92 |
+| `The quick brown fox...` | 英文 | **0.0857** | **0.78-0.87** |
+
+**关键发现**：
+- **浅层（L1-L10）路由预测不稳定**（跨 prompt std=0.3~0.5），英文下甚至负相关（-0.66）
+- **深层（L11-L18）路由预测跨 prompt 稳定**（std=0.03~0.1），所有类型 Cos≥0.78
+- 英文 prompt 浅层负相关（MTP hidden 和 decoder shallow routing 方向相反），但深层正常
+
+**原因**：MTP hidden state 编码的是语义/上下文信息，与深层 routing 所需信号一致；浅层 routing 由 token 类型决定，与语义无关。
+
 ---
 
-## 核心问题
-MTP 的路由决策能否用于预取 Decoder 的 Expert 加载（CPU offload 场景）？
+## 最终方案
 
-### 已确认
-1. **Token 本身不能预测深层路由**（deep layer 路由依赖完整上下文，不只是当前 token）
-2. **MTP hidden state ≈ Decoder 最终输出**（Cosine=0.83）
-3. **MTP routing → Decoder experts 可行**：MoE 输出 Cos=0.58~0.72
-4. **Expert 选择高度冗余**：不同 8-expert 子集可达等效输出
-5. **两层压缩路径**：routing差异 → MoE输出差异(Cos 0.58) → lm_head(Cos 0.97)
-6. **分层可行性**：深层(L14-L18)可安全替换(92.9%)，中层(L5-L13)不可替换(14.3%)
-7. **MTP hidden → gate 预测**：零样本 Cos=0.81，可用于全层 expert 预取
-7. **全层坍缩**：全部 18 层同时替换导致输出坍缩到单一 token
+利用两种互补的预取策略，覆盖全部 18 层：
 
-### 建议方案
-对于 CPU offload 场景中利用 MTP 路由预取 expert：
-1. **仅替换深层（L14-L18，共 5 层）的路由**，保留 L1-L13 的 decoder 原生路由
-2. 深层占总搬运量的 5/18 ≈ **28%**，可节省这部分 PCIe 等待时间
-3. 深层替换后 token 匹配率 92.9%，误判风险低
-4. 配合 speculative decoding 的 verify 阶段可兜底剩余 7.1% 差异
+```
+浅层 L1-L10 (10 层):  token → expert 查表预取
+                     (token 决定 routing，IoU=0.5~1.0，无需 MTP)
+                     
+深层 L11-L18 (8 层):  MTP hidden → decoder[l].gate 预测预取
+                     (语义决定 routing，Cos=0.83~0.87 跨 prompt 稳定)
+```
+
+**覆盖范围**：
+- 浅层 10 层 token 查表：虽非 100% 准确，但 IoU~0.5 意味着至少一半 expert 猜对
+- 深层 8 层 MTP 预测：Cos~0.85，top-8 overlap ~2.5/8
+- 总覆盖 18/18 层 = **100%**（之前方案只覆盖 5 层 28%）
 
 ### 开放问题
-- MTP 的 routing 能否用来推断 decoder deep layer 的 routing？（已验证部分可行）
-- 中间层的误差放大机制是什么？能否通过校准解决？
-- 实际 offload 系统中，MTP 1 层开销 vs 28% 搬运节省的净收益如何？
+- 浅层 token 查表的命中率实际能到多少？
+- 两层预取策略的联合命中率 vs 随机加载？
+- 实际 offload 系统中，MTP 1 层开销 vs 100% 预取覆盖的净收益？
 
 ---
 
