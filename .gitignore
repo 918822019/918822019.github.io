@@ -3,6 +3,10 @@
 .vscode/
 .idea/
 
+# Python cache
+__pycache__/
+*.pyc
+
 # Temp test files
 **/test_forward.py
 **/output/stderr.txt

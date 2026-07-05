@@ -26,7 +26,7 @@ class Config:
     hidden_size: int = 2048
 
     # Output
-    output_dir: str = str(Path(__file__).parent / "output")
+    output_dir: str = str(Path(__file__).resolve().parent.parent / "output")
 
     # Test prompts
     prompts: list = field(default_factory=lambda: [
