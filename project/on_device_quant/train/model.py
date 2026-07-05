@@ -1,42 +1,95 @@
-import torch, torch.nn as nn, torch.nn.functional as F, math
+"""
+EdgeTransformer 模型定义
 
+核心架构：混合注意力（Hybrid Attention）
+  - CSA: Cross-Stream Attention，线性注意力，decay=0.99，关注跨流信息
+  - HCA: Hybrid-Channel Attention，线性注意力，decay=0.999，长程场景覆盖
+  - SWA: Sliding Window Attention，标准 softmax 因果注意力 + RoPE，保局部精度
+
+三个分支通过可学习门控（softmax gate）加权融合。
+"""
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+
+# ── 旋转位置编码（RoPE）──
 
 class RoPE(nn.Module):
+    """旋转位置编码：通过复数乘法实现相对位置编码"""
+
     def __init__(self, dim, base=10000.0):
         super().__init__()
+        # 频率倒数：1 / (base^(2i/dim))，i=0,1,...,dim/2-1
         inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float() / dim))
         self.register_buffer("inv_freq", inv_freq)
 
     def forward(self, x, offset=0):
+        """
+        计算旋转角度嵌入
+        x: [B, H, T, D] → 返回 [B, H, T, D]
+        """
         t = torch.arange(offset, offset + x.shape[-2], device=x.device).type_as(self.inv_freq)
-        freqs = t.unsqueeze(-1) @ self.inv_freq.unsqueeze(0)
-        return torch.cat([freqs, freqs], -1)
+        freqs = t.unsqueeze(-1) @ self.inv_freq.unsqueeze(0)  # [T, D/2]
+        return torch.cat([freqs, freqs], -1)  # [T, D]，两半相同
 
 
 def apply_rope(x, emb):
+    """
+    应用旋转位置编码到 tensor
+    将实数对视为复数，通过复数乘法实现旋转
+    x: [..., D] → [..., D]
+    """
     s = x.shape[-1] // 2
+    # 将最后一维两两配对视为复数 [x0,x1,x2,x3] → [(x0,x1), (x2,x3)]
     xc = torch.view_as_complex(x.reshape(*x.shape[:-1], s, 2).contiguous())
     ec = torch.view_as_complex(emb.reshape(*emb.shape[:-1], s, 2).contiguous())
     return torch.view_as_real(xc * ec).reshape(*x.shape[:-1], -1)
 
 
+# ── 线性注意力（O(1) KV cache）──
+
 def linear_attn(q, k, v, decay=0.99, eps=1e-6):
+    """
+    线性注意力：不存 KV cache，用累积状态矩阵 S 代替
+    复杂度 O(T × D²)，内存恒定 O(D²)
+
+    特征映射：relu(x)² + 0.1（替代 elu，避免 DirectML 兼容问题）
+
+    q, k, v: [B, H, T, D]
+    decay: 指数衰减因子，越小越关注近期
+    """
     B, H, T, D = q.shape
+    # 特征映射：确保非负（类似 softmax 的正值特性）
     qf = F.relu(q).pow(2) + 0.1
     kf = F.relu(k).pow(2) + 0.1
     vf = F.relu(v).pow(2) + 0.1
+    # 累积状态 S: [B, H, D, D]（外积矩阵的指数移动平均）
     S = torch.zeros(B, H, D, D, device=q.device, dtype=q.dtype)
+    # 归一化项 z: [B, H, D]
     z = torch.zeros(B, H, D, device=q.device, dtype=q.dtype)
     outs = []
     for i in range(T):
+        # 累积：S = decay × S + kᵀv（外积）
         S = decay * S + kf[:, :, i : i + 1].transpose(-1, -2) @ vf[:, :, i : i + 1]
+        # 归一化累积：z = decay × z + k
         z = decay * z + kf[:, :, i]
+        # 输出：q × S / (q × z)，除以归一化项
         out = (qf[:, :, i : i + 1] @ S) / (qf[:, :, i : i + 1] @ z.unsqueeze(-1)).clamp(min=eps)
         outs.append(out)
     return torch.cat(outs, dim=-2)
 
 
+# ── 三分支注意力模块 ──
+
 class CSA(nn.Module):
+    """
+    Cross-Stream Attention（跨流注意力）
+    线性注意力，1 个头，衰减因子 0.99
+    功能：捕捉中等粒度的跨流信息，压缩比 4:1
+    """
+
     def __init__(self, dim, hd):
         super().__init__()
         self.q = nn.Linear(dim, hd, bias=False)
@@ -55,6 +108,12 @@ class CSA(nn.Module):
 
 
 class HCA(nn.Module):
+    """
+    Hybrid-Channel Attention（混合通道注意力）
+    线性注意力，1 个头，衰减因子 0.999（更慢衰减 = 更长记忆）
+    功能：场景级长程覆盖，压缩比 128:1
+    """
+
     def __init__(self, dim, hd):
         super().__init__()
         self.q = nn.Linear(dim, hd, bias=False)
@@ -73,6 +132,12 @@ class HCA(nn.Module):
 
 
 class SWA(nn.Module):
+    """
+    Sliding Window Attention（滑动窗口注意力）
+    标准 softmax 因果注意力 + RoPE 旋转位置编码
+    功能：保局部精度，窗口内全量注意力
+    """
+
     def __init__(self, dim, num_heads, head_dim):
         super().__init__()
         self.num_heads = num_heads
@@ -83,25 +148,36 @@ class SWA(nn.Module):
 
     def forward(self, x):
         B, T, D = x.shape
+        # 合并投影 Q/K/V → 拆分为多头
         qkv = self.qkv(x).reshape(B, T, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
+        # 应用旋转位置编码
         emb = self.rope(k)
         q = apply_rope(q, emb)
         k = apply_rope(k, emb)
+        # 因果注意力（PyTorch 原生实现，自动使用 FlashAttention/内存高效实现）
         out = F.scaled_dot_product_attention(q, k, v, is_causal=True)
         out = out.transpose(1, 2).reshape(B, T, D)
         return self.proj(out)
 
 
+# ── 混合注意力块 ──
+
 class HybridBlock(nn.Module):
+    """
+    混合注意力块：CSA + HCA + SWA 三分支并行
+    通过可学习门控 softmax(gate) 加权融合
+    """
+
     def __init__(self, dim, num_heads, head_dim, ffn_mult=4, dropout=0.0):
         super().__init__()
-        self.norm1 = nn.LayerNorm(dim)
-        self.csa = CSA(dim, head_dim)
-        self.hca = HCA(dim, head_dim)
-        self.swa = SWA(dim, num_heads, head_dim)
-        self.gate = nn.Parameter(torch.ones(3))
+        self.norm1 = nn.LayerNorm(dim)           # 前归一化
+        self.csa = CSA(dim, head_dim)             # 跨流注意力
+        self.hca = HCA(dim, head_dim)             # 混合通道注意力
+        self.swa = SWA(dim, num_heads, head_dim)  # 滑动窗口注意力
+        self.gate = nn.Parameter(torch.ones(3))   # 可学习门控（初始均等）
         self.norm2 = nn.LayerNorm(dim)
+        # 前馈网络：Linear → GELU → Linear
         self.ffn = nn.Sequential(
             nn.Linear(dim, dim * ffn_mult),
             nn.GELU(),
@@ -110,33 +186,48 @@ class HybridBlock(nn.Module):
         self.drop = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
 
     def forward(self, x):
+        # 三分支并行计算
         h = self.norm1(x)
-        oc = self.csa(h)
-        oh = self.hca(h)
-        os = self.swa(h)
+        oc = self.csa(h)   # 跨流注意力输出
+        oh = self.hca(h)   # 混合通道注意力输出
+        os = self.swa(h)   # 滑动窗口注意力输出
+        # softmax 门控融合 + 残差连接
         g = F.softmax(self.gate, dim=0)
         x = x + self.drop(g[0] * oc + g[1] * oh + g[2] * os)
+        # FFN + 残差连接
         x = x + self.drop(self.ffn(self.norm2(x)))
         return x
 
 
+# ── 主模型 ──
+
 class EdgeTransformer(nn.Module):
-    def __init__(self, vocab_size=4096, dim=512, num_layers=4, num_heads=8, head_dim=64,
-                 ffn_mult=4, dropout=0.0, max_seq_len=512, weight_tie=True):
+    """
+    EdgeTransformer：端侧混合注意力语言模型
+
+    结构：
+      Embedding → [HybridBlock × N] → LayerNorm → Linear LM Head
+
+    每个 HybridBlock 内含 CSA + HCA + SWA 三分支并行注意力
+    """
+
+    def __init__(self, vocab_size=4096, dim=512, num_layers=4, num_heads=8,
+                 head_dim=64, ffn_mult=4, dropout=0.0, max_seq_len=512, weight_tie=True):
         super().__init__()
-        self.tok = nn.Embedding(vocab_size, dim)
-        self.pos = nn.Parameter(torch.randn(1, max_seq_len, dim) * 0.02)
+        self.tok = nn.Embedding(vocab_size, dim)                        # 词嵌入
+        self.pos = nn.Parameter(torch.randn(1, max_seq_len, dim) * 0.02) # 可学习位置编码
         self.layers = nn.ModuleList([
             HybridBlock(dim, num_heads, head_dim, ffn_mult, dropout)
             for _ in range(num_layers)
         ])
-        self.norm = nn.LayerNorm(dim)
-        self.head = nn.Linear(dim, vocab_size, bias=False)
+        self.norm = nn.LayerNorm(dim)     # 最终归一化
+        self.head = nn.Linear(dim, vocab_size, bias=False)  # LM 输出头
         if weight_tie:
-            self.head.weight = self.tok.weight
+            self.head.weight = self.tok.weight  # 权重共享：embedding 和 LM head 共用
         self._init_weights()
 
     def _init_weights(self):
+        """初始化权重：Linear 和 Embedding 用 N(0, 0.02)"""
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.normal_(m.weight, std=0.02)
@@ -146,6 +237,10 @@ class EdgeTransformer(nn.Module):
                 nn.init.normal_(m.weight, std=0.02)
 
     def forward(self, x):
+        """
+        前向传播
+        x: [B, T] token ids → [B, T, vocab_size] logits
+        """
         h = self.tok(x) + self.pos[:, : x.size(1)]
         for layer in self.layers:
             h = layer(h)
@@ -153,4 +248,5 @@ class EdgeTransformer(nn.Module):
 
 
 def count_params(model):
+    """统计模型可训练参数量"""
     return sum(p.numel() for p in model.parameters())

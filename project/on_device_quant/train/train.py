@@ -1,11 +1,24 @@
 """
-EdgeTransformer Training Pipeline
-Usage:
-    python train.py                          # default config, COCO data
-    python train.py --steps 20000 --lr 5e-4  # override params
-    python train.py --resume checkpoints/edge_transformer/last.pt
+EdgeTransformer 训练流水线
+
+使用方法：
+    python train.py                          # 默认配置，COCO 数据
+    python train.py --steps 20000 --lr 5e-4  # 覆盖超参数
+    python train.py --resume checkpoints/edge_transformer/last.pt  # 恢复训练
+
+特性：
+  - 混合注意力架构（CSA + HCA + SWA）
+  - AMP 混合精度训练（FP16 + FP32）
+  - 梯度累积（等效放大 batch size）
+  - 余弦退火学习率调度
+  - Checkpoint 自动保存（best/last/定期）
+  - JSON 日志记录
 """
-import argparse, os, sys, time, math, json
+import argparse
+import os
+import sys
+import time
+import math
 from pathlib import Path
 
 import torch
@@ -13,38 +26,47 @@ import torch.nn.functional as F
 
 from config import RunConfig, ModelConfig, DataConfig, TrainConfig
 from model import EdgeTransformer, count_params
-from data import load_data, get_dataloader, BPETokenizer
+from data import load_data, get_dataloader
 from utils import get_cosine_lr, Logger, save_checkpoint, load_checkpoint
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="EdgeTransformer Training")
-    p.add_argument("--config", type=str, default="", help="config json path")
-    p.add_argument("--exp_name", type=str, default="edge_transformer")
-    p.add_argument("--output_dir", type=str, default="checkpoints")
+    """解析命令行参数"""
+    p = argparse.ArgumentParser(description="EdgeTransformer 训练")
+    # 运行配置
+    p.add_argument("--config", type=str, default="", help="配置 JSON 路径")
+    p.add_argument("--exp_name", type=str, default="edge_transformer", help="实验名称")
+    p.add_argument("--output_dir", type=str, default="checkpoints", help="输出目录")
     p.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
-    p.add_argument("--resume", type=str, default="")
-    p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--resume", type=str, default="", help="恢复训练的 checkpoint 路径")
+    p.add_argument("--seed", type=int, default=42, help="随机种子")
 
-    p.add_argument("--dim", type=int, default=512)
-    p.add_argument("--num_layers", type=int, default=4)
-    p.add_argument("--num_heads", type=int, default=8)
-    p.add_argument("--head_dim", type=int, default=64)
-    p.add_argument("--seq_len", type=int, default=512)
-    p.add_argument("--batch_size", type=int, default=8)
-    p.add_argument("--steps", type=int, default=10000)
-    p.add_argument("--lr", type=float, default=3e-4)
-    p.add_argument("--weight_decay", type=float, default=0.1)
-    p.add_argument("--warmup_steps", type=int, default=200)
-    p.add_argument("--grad_clip", type=float, default=1.0)
-    p.add_argument("--grad_accum", type=int, default=1)
-    p.add_argument("--use_amp", action="store_true", default=True)
-    p.add_argument("--no_amp", action="store_true")
-    p.add_argument("--log_every", type=int, default=50)
-    p.add_argument("--eval_every", type=int, default=500)
-    p.add_argument("--ckpt_every", type=int, default=1000)
-    p.add_argument("--coco_zip", type=str, default="")
-    p.add_argument("--tokenizer_path", type=str, default="bpe_tokenizer.pkl")
+    # 模型配置
+    p.add_argument("--dim", type=int, default=512, help="隐藏层维度")
+    p.add_argument("--num_layers", type=int, default=4, help="Transformer 层数")
+    p.add_argument("--num_heads", type=int, default=8, help="SWA 多头注意力头数")
+    p.add_argument("--head_dim", type=int, default=64, help="每个头的维度")
+    p.add_argument("--seq_len", type=int, default=512, help="序列长度")
+    p.add_argument("--batch_size", type=int, default=8, help="批大小")
+
+    # 训练配置
+    p.add_argument("--steps", type=int, default=10000, help="总训练步数")
+    p.add_argument("--lr", type=float, default=3e-4, help="学习率")
+    p.add_argument("--weight_decay", type=float, default=0.1, help="权重衰减")
+    p.add_argument("--warmup_steps", type=int, default=200, help="预热步数")
+    p.add_argument("--grad_clip", type=float, default=1.0, help="梯度裁剪")
+    p.add_argument("--grad_accum", type=int, default=1, help="梯度累积步数")
+    p.add_argument("--use_amp", action="store_true", default=True, help="使用混合精度")
+    p.add_argument("--no_amp", action="store_true", help="禁用混合精度")
+
+    # 日志与保存
+    p.add_argument("--log_every", type=int, default=50, help="每 N 步打印日志")
+    p.add_argument("--eval_every", type=int, default=500, help="每 N 步验证")
+    p.add_argument("--ckpt_every", type=int, default=1000, help="每 N 步保存 checkpoint")
+
+    # 数据
+    p.add_argument("--coco_zip", type=str, default="", help="COCO zip 路径")
+    p.add_argument("--tokenizer_path", type=str, default="bpe_tokenizer.pkl", help="BPE tokenizer 路径")
 
     args = p.parse_args()
     if args.no_amp:
@@ -53,6 +75,7 @@ def parse_args():
 
 
 def build_config(args):
+    """从命令行参数构建运行配置"""
     model = ModelConfig(
         dim=args.dim,
         num_layers=args.num_layers,
@@ -91,6 +114,7 @@ def build_config(args):
 
 
 def find_coco_zip():
+    """自动查找 COCO 数据集 zip 文件"""
     candidates = [
         os.path.expanduser("~/Desktop/918822019.github.io/data/coco/PAI/COCO2017/annotations_trainval2017.zip"),
         "data/coco/PAI/COCO2017/annotations_trainval2017.zip",
@@ -105,6 +129,13 @@ def find_coco_zip():
 
 @torch.no_grad()
 def evaluate(model, val_loader, device, vocab_size, num_batches=20):
+    """
+    验证：在验证集上计算平均 loss
+
+    model: 待评估模型
+    val_loader: 验证集 DataLoader
+    num_batches: 取多少个 batch 计算平均（控制验证时间）
+    """
     model.eval()
     total_loss, count = 0.0, 0
     for i, (x, y) in enumerate(val_loader):
@@ -119,30 +150,45 @@ def evaluate(model, val_loader, device, vocab_size, num_batches=20):
 
 
 def train(config):
+    """
+    主训练循环
+
+    流程：
+      1. 设置随机种子和设备
+      2. 加载数据和 tokenizer
+      3. 构建模型、优化器、AMP scaler
+      4. 训练循环：前向 → 损失 → 反向 → 梯度裁剪 → 参数更新
+      5. 定期验证和保存 checkpoint
+    """
+    # 固定随机种子
     torch.manual_seed(config.train.seed)
     device = torch.device(config.device)
-    print(f"Device: {device}")
+    print(f"设备: {device}")
     if device.type == "cuda":
         print(f"GPU: {torch.cuda.get_device_name(0)}")
-        print(f"VRAM: {torch.cuda.get_device_properties(0).total_mem / 1e9:.1f} GB")
+        print(f"显存: {torch.cuda.get_device_properties(0).total_mem / 1e9:.1f} GB")
 
+    # 自动查找 COCO 数据
     if not config.data.coco_zip:
         config.data.coco_zip = find_coco_zip()
     if not config.data.coco_zip:
-        print("ERROR: COCO data not found. Use --coco_zip <path>")
+        print("错误: 未找到 COCO 数据，请使用 --coco_zip <路径> 指定")
         sys.exit(1)
-    print(f"Data: {config.data.coco_zip}")
+    print(f"数据: {config.data.coco_zip}")
 
-    print("Loading data...")
+    # 加载数据和 tokenizer
+    print("加载数据...")
     train_ids, val_ids, tokenizer = load_data(config.data)
     vocab_size = len(tokenizer.vocab)
     config.model.vocab_size = vocab_size
-    print(f"Vocab: {vocab_size} | Train tokens: {len(train_ids):,} | Val tokens: {len(val_ids):,}")
+    print(f"词表: {vocab_size} | 训练 token: {len(train_ids):,} | 验证 token: {len(val_ids):,}")
 
+    # 构建 DataLoader
     train_loader = get_dataloader(train_ids, config.data.seq_len, config.data.batch_size, shuffle=True)
     val_loader = get_dataloader(val_ids, config.data.seq_len, config.data.batch_size, shuffle=False)
 
-    print("Building model...")
+    # 构建模型
+    print("构建模型...")
     model = EdgeTransformer(
         vocab_size=config.model.vocab_size,
         dim=config.model.dim,
@@ -153,55 +199,70 @@ def train(config):
         max_seq_len=config.model.max_seq_len,
         weight_tie=config.model.weight_tie,
     ).to(device)
-    print(f"Params: {count_params(model):,}")
+    print(f"参数量: {count_params(model):,}")
 
+    # 优化器：AdamW with weight decay
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=config.train.lr,
         weight_decay=config.train.weight_decay,
         betas=(0.9, 0.95),
     )
+    # AMP 混合精度缩放器（仅 CUDA 可用）
     scaler = torch.amp.GradScaler(enabled=config.train.use_amp) if device.type == "cuda" else None
     start_step = 0
 
+    # 创建 checkpoint 目录并保存配置
     ckpt_dir = Path(config.output_dir) / config.exp_name
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     config.save(str(ckpt_dir / "config.json"))
 
+    # 恢复训练（如果指定）
     if config.resume_from and os.path.exists(config.resume_from):
-        print(f"Resuming from {config.resume_from}")
+        print(f"从 {config.resume_from} 恢复训练...")
         start_step, _ = load_checkpoint(config.resume_from, model, optimizer, scaler)
-        print(f"Resumed at step {start_step}")
+        print(f"已恢复到第 {start_step} 步")
 
+    # 初始化日志
     logger = Logger(str(ckpt_dir / "log.json"))
     best_val_loss = float("inf")
     t0 = time.time()
     total_steps = config.train.steps
 
+    # 打印训练配置
     print(f"\n{'=' * 60}")
-    print(f"Training {total_steps} steps | dim={config.model.dim} | layers={config.model.num_layers} | heads={config.model.num_heads}")
-    print(f"batch={config.data.batch_size} x seq={config.data.seq_len} | AMP={'ON' if config.train.use_amp else 'OFF'}")
+    print(f"训练 {total_steps} 步 | dim={config.model.dim} | 层数={config.model.num_layers} | 头数={config.model.num_heads}")
+    print(f"batch={config.data.batch_size} x seq={config.data.seq_len} | 混合精度={'开启' if config.train.use_amp else '关闭'}")
     print(f"{'=' * 60}\n")
 
+    # ── 训练主循环 ──
     for step in range(start_step, total_steps):
+        # 更新学习率（余弦退火 + 预热）
         lr = get_cosine_lr(step, config.train.warmup_steps, total_steps, config.train.lr)
         for pg in optimizer.param_groups:
             pg["lr"] = lr
 
         model.train()
         micro_loss = 0.0
+
+        # 梯度累积：将大 batch 拆成多个 micro-batch 依次前向反向
         for micro_step in range(config.train.grad_accum):
             x, y = next(iter(train_loader))
             x, y = x.to(device), y.to(device)
+
+            # 混合精度前向传播
             with torch.amp.autocast(device_type=device.type, enabled=config.train.use_amp):
                 logits = model(x)
                 loss = F.cross_entropy(logits.reshape(-1, vocab_size), y.reshape(-1)) / config.train.grad_accum
+
+            # 反向传播（带 AMP 缩放）
             if scaler:
                 scaler.scale(loss).backward()
             else:
                 loss.backward()
             micro_loss += loss.item()
 
+        # 梯度裁剪 + 参数更新
         if scaler:
             scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(model.parameters(), config.train.grad_clip)
@@ -212,6 +273,7 @@ def train(config):
             optimizer.step()
         optimizer.zero_grad(set_to_none=True)
 
+        # ── 定期打印训练日志 ──
         if step % config.train.log_every == 0:
             ppl = math.exp(min(micro_loss * config.train.grad_accum, 20))
             dt = time.time() - t0
@@ -221,6 +283,7 @@ def train(config):
             logger.scalar("train_ppl", ppl, step)
             logger.scalar("lr", lr, step)
 
+        # ── 定期验证 ──
         if step > 0 and step % config.train.eval_every == 0:
             val_loss = evaluate(model, val_loader, device, vocab_size, config.train.val_batches)
             val_ppl = math.exp(min(val_loss, 20))
@@ -228,18 +291,20 @@ def train(config):
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 save_checkpoint(model, optimizer, scaler, step, val_loss, str(ckpt_dir / "best.pt"))
-                tag = " * best"
-            print(f"  [val] loss {val_loss:.4f} | ppl {val_ppl:8.2f}{tag}")
+                tag = " ★ 最佳"
+            print(f"  [验证] loss {val_loss:.4f} | ppl {val_ppl:8.2f}{tag}")
             logger.scalar("val_loss", val_loss, step)
             logger.scalar("val_ppl", val_ppl, step)
 
+        # ── 定期保存 checkpoint ──
         if step > 0 and step % config.train.ckpt_every == 0:
             save_checkpoint(model, optimizer, scaler, step, micro_loss, str(ckpt_dir / f"step{step}.pt"))
 
+    # 保存最终 checkpoint
     save_checkpoint(model, optimizer, scaler, total_steps, 0, str(ckpt_dir / "last.pt"))
     print(f"\n{'=' * 60}")
-    print(f"Done! {time.time() - t0:.0f}s | Best val loss: {best_val_loss:.4f} | ppl: {math.exp(min(best_val_loss, 20)):.2f}")
-    print(f"Checkpoints: {ckpt_dir}")
+    print(f"训练完成! 耗时 {time.time() - t0:.0f}s | 最佳验证 loss: {best_val_loss:.4f} | ppl: {math.exp(min(best_val_loss, 20)):.2f}")
+    print(f"Checkpoint 目录: {ckpt_dir}")
     print(f"{'=' * 60}")
 
 
