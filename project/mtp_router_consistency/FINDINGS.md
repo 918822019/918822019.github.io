@@ -123,24 +123,32 @@ MTP[t] 与 Decoder[layer][t+1] 的 Cosine 相似度（两者都编码 tok[t+2]�
 
 **结论**：MTP 的路由可以直接喂给 decoder 的 expert 权重，即使选了完全不同的 8 个 expert 编号（IoU~0），最终 token 预测几乎不变（Cos=0.97）。路由高度冗余。
 
-### 8. 全层路由交换测试 (full_test.py)
+### 8. 分层路由交换测试 (layer_test.py)
 
-**端到端验证**：用 forward hook 在推理时替换所有 18 层 MoE 的路由为 MTP 路由。
+**测试目的**：确定哪些层的路由可以用 MTP 替换而不影响最终预测。分别测试浅层、中层、深层及组合。
 
-| 修改范围 | MoE Cos | Logit Cos | Token 匹配率 |
-|----------|---------|-----------|-------------|
-| 仅最后一层 (clean) | 0.4977 | 0.9087 | 7.1% |
-| **全部 18 层** | -- | **0.9605** | **7.1%** |
+| 配置 | Token 匹配率 | LogitCos | 坍缩? | 分析 |
+|------|-------------|----------|-------|------|
+| **Deep (L14-L18)** | **92.9%** | 0.9903 | 否 | ✅ 安全 |
+| Single L9 | 100.0% | 0.9996 | 否 | ✅ 完美 |
+| Single L18 | 85.7% | 0.9987 | 否 | ✅ 安全 |
+| Shallow (L1-L4) | 57.1% | 0.9775 | 否 | ⚠️ 部分安全 |
+| Shallow+Deep | 42.9% | 0.9764 | 否 | ⚠️ 部分安全 |
+| Single L1 | 78.6% | 0.9916 | 否 | ⚠️ 部分安全 |
+| **Middle (L5-L13)** | **14.3%** | 0.9795 | 否 | ❌ 危险 |
+| **ALL 18 层** | **7.1%** | 0.9579 | **是(!)** | ❌ 灾难 |
 
 **关键发现**：
-- 全部 18 层换路由后 Logit Cos = **0.96**（几乎不变），但 token 匹配率仅 **7.1%**
-- 原因：模型对大多数位置预测置信度低（0.09~0.46），微小 logit 变化即可改变 argmax
-- 这与 injectivity 理论不矛盾：不同路由产生不同但极相似的分布
+- **深层（L14-L18）可安全替换**：92.9% token 不变，LogitCos=0.99
+- **中层（L5-L13）是误差放大器**：单独换中层掉到 14.3%，但单独换 L9 却是 100%（说明单层冗余高，级联放大误差）
+- **全层坍缩根因**：中层的误差经过深层放大后，hidden state 被 lm_head 统一映射到 `!`
+- **LogitCos 与 TokenMatch 解耦**：所有配置 LogitCos > 0.95，但 TokenMatch 从 7% 到 100% 不等。157k 词表中微小 logit 变化即可改变 argmax
 
 **对 offload 方案的影响**：
-- 对于 **高置信度 token**，routing 交换不影响预测
-- 对于 **低置信度 token**，routing 交换会改变预测，但差异在 Speculative Decoding 的 verify 阶段会被捕获并拒绝
-- 可以配合 rejection sampling 使用：MTP 路由快速 draft → 主干验证过滤错误
+- 不能一次性替换全部 18 层路由
+- 深层（L14-L18）最适合用 MTP 路由预取 expert（92.9% 匹配）
+- 浅层可部分替换（57.1% 匹配）
+- 中层建议保留 decoder 原生路由
 
 ### 9. Speculative Decoding 搬运量节省
 | N 个 draft token | 逐步加载 | 一次性验证 | 节省 |
@@ -160,14 +168,23 @@ MTP 的路由决策能否用于预取 Decoder 的 Expert 加载（CPU offload �
 ### 已确认
 1. **Token 本身不能预测深层路由**（深层路由依赖完整上下文，不只是当前 token）
 2. **MTP hidden state ≈ Decoder 最终输出**（Cosine=0.83）
-3. **MTP routing → Decoder experts 可行**：MoE 输出 Cos=0.58~0.72，Logit Cos=0.96（但 token 预测因低置信度而变化）
+3. **MTP routing → Decoder experts 可行**：MoE 输出 Cos=0.58~0.72
 4. **Expert 选择高度冗余**：不同 8-expert 子集可达等效输出
 5. **两层压缩路径**：routing差异 → MoE输出差异(Cos 0.58) → lm_head(Cos 0.97)
+6. **分层可行性**：深层(L14-L18)可安全替换(92.9%)，中层(L5-L13)不可替换(14.3%)
+7. **全层坍缩**：全部 18 层同时替换导致输出坍缩到单一 token
+
+### 建议方案
+对于 CPU offload 场景中利用 MTP 路由预取 expert：
+1. **仅替换深层（L14-L18，共 5 层）的路由**，保留 L1-L13 的 decoder 原生路由
+2. 深层占总搬运量的 5/18 ≈ **28%**，可节省这部分 PCIe 等待时间
+3. 深层替换后 token 匹配率 92.9%，误判风险低
+4. 配合 speculative decoding 的 verify 阶段可兜底剩余 7.1% 差异
 
 ### 开放问题
-- MTP 的 routing 能否用来推断 decoder 的 routing？
-- token 预测变化（93%）是噪声还是系统性偏移？能否通过校准解决？
-- 实际 offload 系统中，MTP 1 层开销 vs 搬运节省的净收益如何？
+- MTP 的 routing 能否用来推断 decoder deep layer 的 routing？（已验证部分可行）
+- 中间层的误差放大机制是什么？能否通过校准解决？
+- 实际 offload 系统中，MTP 1 层开销 vs 28% 搬运节省的净收益如何？
 
 ---
 
