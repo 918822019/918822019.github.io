@@ -190,6 +190,26 @@ pos  source  Draft     Ground truth    Match?
 
 ---
 
+## 全层坍缩机制
+
+当全部 18 层 MoE 的路由被替换为 MTP 路由时，输出坍缩到单一 token `!`（vocab id=0）。逐步替换揭示：
+
+| 替换层数 | 唯一 token | mode | 置信度 |
+|---------|-----------|------|--------|
+| 0 | 9 | \n | 0.08 |
+| 4 (L1-L4) | 4 | ! | 0.45 |
+| 7 (L1-L7) | 2 | ! | 0.64 |
+| 11 (L1-L11) | **1** | ! | 0.80 |
+| 12-18 | 1 | ! | 0.98 |
+
+**坍缩路径**：L1-L3 正常 → L4-L7 `!` 出现 → L8-L11 完全锁定 → L12-L18 维持。
+
+**注意**：坍缩后不同位置的 hidden state 仍然不同（L2 距离 ~511，正常 ~500），但 lm_head 将所有不同的 hidden state 映射到了同一个 token。`!` 是 vocab 中 ID=0 的 token，权重 norm 很低（0.96，排 151887/157184），norm 小的 token 在 lm_head 中的"吸引力盆地"大——当 hidden state 因 wrong routing 偏离正常分布后，lm_head 最近的有效输出就是 `!`。
+
+**结论**：坍缩不是 hidden state 收敛，而是 lm_head 找不到正确 token 时的回退行为。根因在浅层（L4-L7）的 routing 偏差已经让 hidden state 偏离了正常空间，中层（L8-L11）放大这个偏离直到 lm_head 回退到 `!`。
+
+---
+
 ## 文件
 
 - `decoder.py` / `compare.py` / `main.py`: 分析管道
