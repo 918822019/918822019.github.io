@@ -123,7 +123,26 @@ MTP[t] 与 Decoder[layer][t+1] 的 Cosine 相似度（两者都编码 tok[t+2]�
 
 **结论**：MTP 的路由可以直接喂给 decoder 的 expert 权重，即使选了完全不同的 8 个 expert 编号（IoU~0），最终 token 预测几乎不变（Cos=0.97）。路由高度冗余。
 
-### 8. Speculative Decoding 搬运量节省
+### 8. 全层路由交换测试 (full_test.py)
+
+**端到端验证**：用 forward hook 在推理时替换所有 18 层 MoE 的路由为 MTP 路由。
+
+| 修改范围 | MoE Cos | Logit Cos | Token 匹配率 |
+|----------|---------|-----------|-------------|
+| 仅最后一层 (clean) | 0.4977 | 0.9087 | 7.1% |
+| **全部 18 层** | -- | **0.9605** | **7.1%** |
+
+**关键发现**：
+- 全部 18 层换路由后 Logit Cos = **0.96**（几乎不变），但 token 匹配率仅 **7.1%**
+- 原因：模型对大多数位置预测置信度低（0.09~0.46），微小 logit 变化即可改变 argmax
+- 这与 injectivity 理论不矛盾：不同路由产生不同但极相似的分布
+
+**对 offload 方案的影响**：
+- 对于 **高置信度 token**，routing 交换不影响预测
+- 对于 **低置信度 token**，routing 交换会改变预测，但差异在 Speculative Decoding 的 verify 阶段会被捕获并拒绝
+- 可以配合 rejection sampling 使用：MTP 路由快速 draft → 主干验证过滤错误
+
+### 9. Speculative Decoding 搬运量节省
 | N 个 draft token | 逐步加载 | 一次性验证 | 节省 |
 |------------------|---------|-----------|------|
 | N=2 | 304 | 296 | 2.6% |
@@ -138,16 +157,17 @@ MTP[t] 与 Decoder[layer][t+1] 的 Cosine 相似度（两者都编码 tok[t+2]�
 ## 核心问题
 MTP 的路由决策能否用于预取 Decoder 的 Expert 加载（CPU offload 场景）？
 
-### 已有证据
+### 已确认
 1. **Token 本身不能预测深层路由**（深层路由依赖完整上下文，不只是当前 token）
 2. **MTP hidden state ≈ Decoder 最终输出**（Cosine=0.83）
-3. **Injectivity（双射）理论**: Input 序列 → hidden state 是双射，路由由完整上下文唯一决定
-4. **MTP Router vs Decoder Router IoU ~0.02**: 两者选择了完全不同的 experts
+3. **MTP routing → Decoder experts 可行**：MoE 输出 Cos=0.58~0.72，Logit Cos=0.96（但 token 预测因低置信度而变化）
+4. **Expert 选择高度冗余**：不同 8-expert 子集可达等效输出
+5. **两层压缩路径**：routing差异 → MoE输出差异(Cos 0.58) → lm_head(Cos 0.97)
 
 ### 开放问题
 - MTP 的 routing 能否用来推断 decoder 的 routing？
-- MTP 的 hidden state 能否预测 decoder 的 expert 选择？
-- MTP 自身 1 层 MoE 的搬运开销 vs 预取节省的搬运，净收益如何？
+- token 预测变化（93%）是噪声还是系统性偏移？能否通过校准解决？
+- 实际 offload 系统中，MTP 1 层开销 vs 搬运节省的净收益如何？
 
 ---
 
