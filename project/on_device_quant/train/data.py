@@ -131,7 +131,7 @@ class SequenceDataset(Dataset):
 
     def __init__(self, token_ids, seq_len):
         self.seq_len = seq_len
-        self.data = torch.tensor(token_ids, dtype=torch.long)
+        self.data = token_ids.clone().detach() if isinstance(token_ids, torch.Tensor) else torch.tensor(token_ids, dtype=torch.long)
         self.n = len(self.data) - seq_len - 1
 
     def __len__(self):

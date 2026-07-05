@@ -87,9 +87,11 @@ class RunConfig:
 def _to_dict(obj):
     """将 dataclass 递归转为字典"""
     if hasattr(obj, "__dataclass_fields__"):
-        return {k: _to_dict(v) for k, v in obj.__dataclass_fields__.items() if getattr(obj, k) is not None}
+        return {k: _to_dict(getattr(obj, k)) for k in obj.__dataclass_fields__ if getattr(obj, k) is not None}
     if isinstance(obj, list):
         return [_to_dict(i) for i in obj]
+    if isinstance(obj, Path):
+        return str(obj)
     return obj
 
 

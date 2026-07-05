@@ -142,8 +142,8 @@ class SWA(nn.Module):
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = head_dim
-        self.qkv = nn.Linear(dim, 3 * dim, bias=False)
-        self.proj = nn.Linear(dim, dim, bias=False)
+        self.qkv = nn.Linear(dim, 3 * num_heads * head_dim, bias=False)
+        self.proj = nn.Linear(num_heads * head_dim, dim, bias=False)
         self.rope = RoPE(head_dim)
 
     def forward(self, x):
@@ -157,7 +157,7 @@ class SWA(nn.Module):
         k = apply_rope(k, emb)
         # 因果注意力（PyTorch 原生实现，自动使用 FlashAttention/内存高效实现）
         out = F.scaled_dot_product_attention(q, k, v, is_causal=True)
-        out = out.transpose(1, 2).reshape(B, T, D)
+        out = out.transpose(1, 2).reshape(B, T, -1)
         return self.proj(out)
 
 

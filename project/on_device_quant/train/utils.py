@@ -13,6 +13,8 @@ import json
 import os
 from pathlib import Path
 
+import torch
+
 
 def get_cosine_lr(step, warmup, total, base_lr, min_lr=1e-5):
     """
