@@ -301,30 +301,22 @@ L12-L18: 维持坍缩
 project/mtp_router_consistency/
 ├── run_analysis.py         入口脚本
 ├── core/                   核心模块
-│   ├── config.py           配置参数
-│   ├── model_utils.py      模型加载工具
-│   ├── decoder.py          单次前向 MTP 数据提取
-│   ├── compare.py          8 组 metric 函数
-│   └── main.py             流水线 + 报告生成
-├── notebooks/              分析脚本 (.ipynb + .py)
-│   ├── swap_test           路由置换测试
-│   ├── layer_test          分层交换测试
-│   ├── predict_test        MTP hidden → 路由预测
-│   ├── multi_test          跨 prompt 验证
-│   ├── conf_test           置信度 + 语义分析
-│   ├── full_test           全层路由交换 end-to-end
-│   ├── collapse_test       全层坍缩机制分析
-│   ├── draft_test          MTP autoregressive drafting
-│   ├── sd_multi            跨 prompt spec decoding 对比
-│   ├── verify_spec         Spec decoding 搬运量模拟
-│   └── analyze_routing     Token→expert 映射分析
+│   ├── __init__.py         包入口（导出 Config, load_model_and_tokenizer）
+│   └── pipeline.py         核心管线（配置 + 加载 + 提取 + 指标 + 报告）
+├── notebooks/              分析脚本 (.ipynb)
+│   ├── swap_analysis.ipynb     路由置换 + 分层交换 + 坍缩机制
+│   ├── predict_analysis.ipynb  MTP 预测 + 跨 prompt + 置信度
+│   ├── spec_decode.ipynb       Spec decoding (draft + 跨 prompt + 模拟)
+│   ├── full_test.ipynb         全层路由交换 end-to-end
+│   └── analyze_routing.ipynb   Token→expert 映射分析
 ├── docs/                   文档
 │   ├── SYSTEM.md           完整系统文档
 │   └── FINDINGS.md         发现汇总
 ├── output/                 输出数据
+├── requirements.txt        依赖
 └── README.md               项目说明
 ```
 
 ---
 
-*最后更新: 2026-07-06*
+*最后更新: 2026-07-06*（合并为 5 个 notebook）

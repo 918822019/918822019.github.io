@@ -212,10 +212,9 @@ pos  source  Draft     Ground truth    Match?
 
 ## 文件
 
-- `decoder.py` / `compare.py` / `main.py`: 分析管道
-- `swap_test.py`: 路由置换测试
-- `layer_test.py`: 分层交换测试
-- `predict_test.py`: MTP hidden → routing 预测
-- `multi_test.py`: 跨 prompt 验证
-- `conf_test.py`: 置信度 + 语义分析
-- `verify_spec.py`: Speculative decoding 模拟
+- `core/pipeline.py`: 核心管线（配置 + 加载 + 提取 + 指标 + 报告）
+- `notebooks/swap_analysis.ipynb`: 路由置换 + 分层交换 + 坍缩机制
+- `notebooks/predict_analysis.ipynb`: MTP 预测 + 跨 prompt + 置信度
+- `notebooks/spec_decode.ipynb`: Spec decoding (draft + 跨 prompt + 模拟)
+- `notebooks/full_test.ipynb`: 全层路由交换 end-to-end
+- `notebooks/analyze_routing.ipynb`: Token→expert 映射分析

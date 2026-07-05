@@ -1,12 +1,12 @@
-"""MTP Router Consistency Analysis - Core Pipeline.
+"""MTP 路由一致性分析 - 核心管线。
 
-Combined from: config, model_utils, decoder, compare, main.
+合并自: config, model_utils, decoder, compare, main。
 """
 from __future__ import annotations
 
-"""Configuration for the MTP Router Consistency Analysis pipeline.
+"""MTP 路由一致性分析管线的配置。
 
-All model and analysis parameters are defined here.
+所有模型和分析参数在此定义。
 """
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -15,34 +15,33 @@ import torch
 
 @dataclass
 class Config:
-    # Model
+    # 模型
     model_path: str = "data/models/Ling-mini-base-2.0"
     device: str = "cpu"
     torch_dtype: str = "bfloat16"
 
-    # Generation (currently unused - single forward pass only)
+    # 生成（当前未使用，仅单次前向）
     max_new_tokens: int = 4
     max_prompt_len: int = 64
 
-    # MoE architecture
+    # MoE 架构
     num_experts: int = 256
     num_experts_per_tok: int = 8
     num_hidden_layers: int = 20
     hidden_size: int = 2048
 
-    # Output
+    # 输出
     output_dir: str = str(Path(__file__).resolve().parent.parent / "output")
 
-    # Test prompts
+    # 测试提示词
     prompts: list = field(default_factory=lambda: [
         "def fibonacci(n):",
         "def merge_sort(arr):",
     ])
 
-"""Model loading utilities for the MTP Router Consistency Analysis.
+"""模型加载工具。
 
-Handles path resolution, model loading with CPU offload,
-and tokenizer setup for BailingMoeV2 models.
+处理路径解析、CPU 卸载的模型加载、BailingMoeV2 的分词器设置。
 """
 import logging
 from pathlib import Path
@@ -66,12 +65,12 @@ def load_model_and_tokenizer(
     device: str = "cpu",
     torch_dtype: torch.dtype = torch.bfloat16,
 ):
-    """Load model and tokenizer with CPU offload.
+    """加载模型和分词器（CPU 卸载）。
 
-    Uses device_map='cpu' to force full CPU loading (stable for 6GB VRAM).
-    The model has ~12B params, 256 experts per layer, top-8 routing.
+    使用 device_map='cpu' 强制 CPU 加载（6GB VRAM 稳定）。
+    模型约 120 亿参数，每层 256 专家，top-8 路由。
 
-    Returns:
+    返回:
         tuple: (model, tokenizer, model_device)
     """
     model_path = _resolve_path(model_path)
@@ -94,16 +93,16 @@ def load_model_and_tokenizer(
     logger.info("Model device: %s", model_device)
     return model, tokenizer, model_device
 
-"""MTP data extraction from a single forward pass.
+"""单次前向的 MTP 数据提取。
 
-Extracts router logits, LM head logits, and MTP head logits
-from the model output. Aligns positions by target token.
+从模型输出中提取路由 logits、LM head logits 和 MTP head logits。
+按目标 token 对齐位置。
 
-Key alignment:
-  - LM head:     lm_logits[:, t, :]     predicts token[t+1]
-  - MTP head:    mtp_logits[:, t, :]    predicts token[t+2]
-  - LM aligned:  lm_logits[:, 1:, :]    predicts token[t+2]  (same as MTP)
-  - Decoder router at t+1  matches  MTP router at t  (both handle token[t+1])
+关键对齐:
+  - LM head:     lm_logits[:, t, :]     预测 token[t+1]
+  - MTP head:    mtp_logits[:, t, :]    预测 token[t+2]
+  - LM 对齐:    lm_logits[:, 1:, :]    预测 token[t+2]  (与 MTP 对齐)
+  - Decoder 路由 t+1  对应  MTP 路由 t  (都处理 token[t+1])
 """
 import logging
 
@@ -118,18 +117,18 @@ def process_with_mtp(
     prompt_ids: torch.LongTensor,
     device: str = "cpu",
 ) -> dict:
-    """Single forward pass with MTP and router logit extraction.
+    """单次前向，提取 MTP 和路由 logits。
 
-    Args:
-        model: BailingMoeV2ForCausalLM (loaded on CPU)
-        tokenizer: Corresponding tokenizer
-        prompt_ids: Tokenized input [1, seq_len]
-        device: Target device
+    参数:
+        model: BailingMoeV2ForCausalLM (CPU 加载)
+        tokenizer: 对应的分词器
+        prompt_ids: 分词后的输入 [1, seq_len]
+        device: 目标设备
 
-    Returns:
-        dict with: output_ids, decoder_router, mtp_router, lm_logits,
-                   mtp_token_logits, lm_logits_for_mtp, layer_routers,
-                   ground_truth_lm, ground_truth_mtp
+    返回:
+        包含 output_ids, decoder_router, mtp_router, lm_logits,
+             mtp_token_logits, lm_logits_for_mtp, layer_routers,
+             ground_truth_lm, ground_truth_mtp 的字典
     """
     model.eval()
     prompt_ids = prompt_ids.to(device)
@@ -141,29 +140,29 @@ def process_with_mtp(
         return_dict=True,
     )
 
-    # all_router is tuple of (router_logits, topk_idx) per MoE layer + MTP
+    # all_router 是每层 MoE + MTP 的 (router_logits, topk_idx) 元组
     all_router = outputs.router_logits
-    num_decoder_layers = len(all_router) - 1  # exclude MTP
+    num_decoder_layers = len(all_router) - 1  # 排除 MTP
 
-    # Last decoder layer router vs MTP router
+    # 最后一层 Decoder 路由 vs MTP 路由
     decoder_router = all_router[-2][0]  # [1, seq_len, E]
     mtp_router = all_router[-1][0]      # [1, seq_len, E]
 
-    # All decoder layers' routers stacked for per-layer analysis
+    # 所有 Decoder 层的路由堆叠，用于逐层分析
     layer_routers = torch.stack(
         [all_router[i][0].squeeze(0) for i in range(num_decoder_layers)]
     )  # [num_decoder_layers, seq_len, E]
 
     full_len = prompt_ids.shape[1]
 
-    # Align: MTP at position t predicts routing for token[t+1]
+    # 对齐: MTP 在位置 t 预测 token[t+1] 的路由
     mtp_pred = mtp_router[:, :full_len - 1, :].squeeze(0)
     actual = decoder_router[:, 1:, :].squeeze(0)
 
-    # LM head predicting next token: lm_logits[:, t, :] predicts token[t+1]
+    # LM head 预测下一个 token: lm_logits[:, t, :] 预测 token[t+1]
     lm_logits = outputs.logits[:, :-1, :].squeeze(0)
 
-    # MTP head predicting token[t+2] (due to internal input_ids roll)
+    # MTP head 预测 token[t+2] (因为内部 input_ids 滚动)
     mtp_logits_raw = getattr(outputs, "mtp_logits", None)
     mtp_token_logits = None
     lm_logits_for_mtp = None
@@ -171,7 +170,7 @@ def process_with_mtp(
         mtp_token_logits = mtp_logits_raw[0][:, :-1, :].squeeze(0)
         lm_logits_for_mtp = outputs.logits[:, 1:, :].squeeze(0)
 
-    # Ground truth tokens for accuracy verification
+    # 用于准确性验证的真实 token
     ground_truth_lm = prompt_ids[:, 1:].squeeze(0)
     ground_truth_mtp = prompt_ids[:, 2:].squeeze(0) if prompt_ids.shape[1] > 2 else None
 
@@ -188,18 +187,18 @@ def process_with_mtp(
         "ground_truth_mtp": ground_truth_mtp,
     }
 
-"""Metric functions for MTP vs Decoder router consistency analysis.
+"""MTP vs Decoder 路由一致性分析的指标函数。
 
-Groups:
-1-3: Basic router comparison (KL, JS, Cosine, IoU, Spearman, Hit Rate)
-4:   Entropy / confidence
-5:   Expert overlap
-6:   Layer-wise comparison
-7:   LM-MTP logit correlation
-8:   Position trends
-9:   Token accuracy
-10:  Logit alignment (injectivity test)
-11:  Ground truth accuracy
+分组:
+1-3: 基础路由比较（KL、JS、余弦、IoU、Spearman、命中率）
+4:   熵 / 置信度
+5:   专家重叠
+6:   逐层比较
+7:   LM-MTP logits 相关性
+8:   位置趋势
+9:   Token 准确率
+10:  Logits 对齐（可注入性测试）
+11:  真实 token 准确率
 """
 from typing import Any
 
@@ -207,7 +206,7 @@ import torch
 import torch.nn.functional as F
 
 # ============================================================
-# Basic comparison metrics
+# 基础比较指标
 # ============================================================
 
 def kl_divergence(p_logits: torch.Tensor, q_logits: torch.Tensor) -> torch.Tensor:
@@ -261,7 +260,7 @@ def top_k_hit_rate(
     return hits.mean()
 
 # ============================================================
-# 1) Per-step router comparison
+# 1) 逐位置路由比较
 # ============================================================
 
 def compute_metrics(
@@ -281,7 +280,7 @@ def compute_metrics(
     }
 
 # ============================================================
-# 2) Router entropy / confidence
+# 2) 路由熵 / 置信度
 # ============================================================
 
 def router_entropy(logits: torch.Tensor) -> torch.Tensor:
@@ -310,7 +309,7 @@ def compute_entropy_confidence_metrics(
     }
 
 # ============================================================
-# 3) Expert overlap analysis
+# 3) 专家重叠分析
 # ============================================================
 
 def compute_expert_overlap_metrics(
@@ -339,7 +338,7 @@ def compute_expert_overlap_metrics(
     }
 
 # ============================================================
-# 4) Layer-wise MTP vs Decoder router comparison
+# 4) 逐层 MTP vs Decoder 路由比较
 # ============================================================
 
 def compute_layerwise_metrics(
@@ -368,7 +367,7 @@ def compute_layerwise_metrics(
     }
 
 # ============================================================
-# 5) LM head vs MTP router confidence correlation
+# 5) LM head vs MTP 路由置信度相关
 # ============================================================
 
 def compute_output_logits_corr_metrics(
@@ -391,7 +390,7 @@ def compute_output_logits_corr_metrics(
     }
 
 # ============================================================
-# 6) Position trends
+# 6) 位置趋势
 # ============================================================
 
 def compute_position_trends(
@@ -414,14 +413,14 @@ def compute_position_trends(
     return trends
 
 # ============================================================
-# 7) Token greedy decoding accuracy (LM vs MTP head)
+# 7) Token 贪心解码准确率（LM vs MTP head）
 # ============================================================
 
 def compute_token_accuracy(
     lm_logits: torch.Tensor,
     mtp_token_logits: torch.Tensor,
 ) -> dict[str, float]:
-    """Compare greedy argmax of LM head and MTP head (same target token)."""
+    """比较 LM head 和 MTP head 的贪心 argmax（同一目标 token）。"""
     if mtp_token_logits is None:
         return {"token_accuracy": None, "token_exact_match": None}
 
@@ -439,17 +438,17 @@ def compute_token_accuracy(
     }
 
 # ============================================================
-# 8) LM vs MTP head full logit distribution alignment
-# (= injectivity test: different routing paths → same output)
+# 8) LM vs MTP head 完整 logits 分布对齐
+# (= 可注入性测试：不同路由路径 → 相同输出)
 # ============================================================
 
 def compute_lm_mtp_logit_alignment(
     lm_logits: torch.Tensor,
     mtp_logits: torch.Tensor,
 ) -> dict[str, float]:
-    """Compare full logit distributions when aligned by target token.
+    """按目标 token 对齐后比较完整 logits 分布。
 
-    lm_logits[:, t+1, :] and mtp_logits[:, t, :] both predict tok[t+2].
+    lm_logits[:, t+1, :] 和 mtp_logits[:, t, :] 都预测 tok[t+2]。
     """
     if mtp_logits is None:
         return {"lm_mtp_logit_alignment": None}
@@ -480,7 +479,7 @@ def compute_lm_mtp_logit_alignment(
     }
 
 # ============================================================
-# 9) Ground truth token accuracy
+# 9) 真实 token 准确率
 # ============================================================
 
 def compute_accuracy_vs_ground_truth(
@@ -489,7 +488,7 @@ def compute_accuracy_vs_ground_truth(
     gt_lm: torch.Tensor | None,
     gt_mtp: torch.Tensor | None,
 ) -> dict[str, float]:
-    """Check if LM head / MTP head predictions match actual input tokens."""
+    """检查 LM head / MTP head 的预测是否匹配实际输入 token。"""
     result = {}
 
     if lm_logits is not None and gt_lm is not None:
@@ -511,13 +510,13 @@ def compute_accuracy_vs_ground_truth(
     return result
 
 # ============================================================
-# Aggregation
+# 汇总
 # ============================================================
 
 def aggregate_results(
     results: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Aggregate numeric metrics across samples (avg/min/max)."""
+    """汇总各样本的数值指标（平均/最小/最大）。"""
     agg = {}
     skip_keys = {"prompt", "generated_text", "step_metrics", "entropy_confidence",
                   "expert_overlap", "layerwise", "output_corr", "position_trends",
@@ -532,10 +531,10 @@ def aggregate_results(
             agg[f"max_{key}"] = max(vals)
     return agg
 
-"""MTP Router Consistency Analysis - Main Pipeline.
+"""MTP 路由一致性分析 - 主流水线。
 
-Loads model, runs per-prompt analysis through all metric groups,
-generates a Markdown report and JSON results.
+加载模型，对每个提示运行所有指标组的分析，
+生成 Markdown 报告和 JSON 结果。
 """
 import json
 import logging
@@ -561,7 +560,7 @@ def run_single_prompt(
     cfg: Config,
     device: str,
 ) -> dict:
-    """Analyze MTP vs Decoder routing for a single prompt."""
+    """分析单个提示的 MTP vs Decoder 路由。"""
     logger.info("Processing prompt: %s", prompt[:60])
 
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=cfg.max_prompt_len)
@@ -572,13 +571,13 @@ def run_single_prompt(
     decoder_router = result["decoder_router"]   # [T, E]
     mtp_router = result["mtp_router"]           # [T, E]
     lm_logits = result["lm_logits"]             # [T, V]
-    mtp_token_logits = result["mtp_token_logits"]  # [T, V] or None
+    mtp_token_logits = result["mtp_token_logits"]  # [T, V] 或 None
     layer_routers = result["layer_routers"]     # [L, seq_len, E]
     gt_lm = result.get("ground_truth_lm")
     gt_mtp = result.get("ground_truth_mtp")
     T = decoder_router.shape[0]
 
-    # Per-position router comparison
+    # 逐位置路由比较
     step_metrics = []
     for t in range(T):
         m = compute_metrics(
@@ -592,33 +591,33 @@ def run_single_prompt(
         for key in step_metrics[0]:
             avg_routing_metrics[key] = sum(s[key] for s in step_metrics) / len(step_metrics)
 
-    # 1) Router entropy / confidence
+    # 1) 路由熵 / 置信度
     entropy_conf = compute_entropy_confidence_metrics(mtp_router, decoder_router)
 
-    # 2) Expert overlap
+    # 2) 专家重叠
     expert_overlap = compute_expert_overlap_metrics(
         mtp_router, decoder_router, k=cfg.num_experts_per_tok,
     )
 
-    # 3) Layer-wise router comparison
+    # 3) 逐层路由比较
     layerwise = compute_layerwise_metrics(
         layer_routers[:, :T, :], mtp_router, k=cfg.num_experts_per_tok,
     )
 
-    # 4) LM head vs MTP router confidence correlation
+    # 4) LM head vs MTP 路由置信度相关
     output_corr = compute_output_logits_corr_metrics(lm_logits, mtp_router)
 
-    # 5) Position trends
+    # 5) 位置趋势
     position_trends = compute_position_trends(step_metrics)
 
-    # 6) Token greedy decoding accuracy (LM vs MTP head)
+    # 6) Token 贪心解码准确率（LM vs MTP head）
     lm_logits_mtp = result.get("lm_logits_for_mtp")
     token_acc = compute_token_accuracy(lm_logits_mtp, mtp_token_logits)
 
-    # 7) LM vs MTP head full logit distribution alignment
+    # 7) LM vs MTP head 完整 logits 分布对齐
     logit_alignment = compute_lm_mtp_logit_alignment(lm_logits, mtp_token_logits)
 
-    # 8) Ground truth accuracy
+    # 8) 真实 token 准确率
     gt_accuracy = compute_accuracy_vs_ground_truth(lm_logits, mtp_token_logits, gt_lm, gt_mtp)
 
     generated_text = tokenizer.decode(result["output_ids"][0], skip_special_tokens=True)
@@ -649,7 +648,7 @@ def _table_row(key, val, dec=4):
     return f"| {key} | {_fmt(val, dec)} |"
 
 def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config) -> str:
-    """Generate a comprehensive Markdown report from analysis results."""
+    """从分析结果生成完整的 Markdown 报告。"""
     lines = []
     lines.append("# MTP Multi-Dimension Analysis Report")
     lines.append("")
@@ -660,7 +659,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
     lines.append(f"**Samples**: {len(results)}")
     lines.append("")
 
-    # 0) Router consistency metrics
+    # 0) 路由一致性指标
     lines.append("## 0) Router Consistency")
     lines.append("")
     lines.append("| Metric | Mean | Min | Max |")
@@ -673,7 +672,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
             lines.append(f"| {base} | {agg[key]:.4f} | {agg.get(min_k, 0):.4f} | {agg.get(max_k, 0):.4f} |")
     lines.append("")
 
-    # 1) Entropy & confidence
+    # 1) 熵 & 置信度
     lines.append("## 1) Router Entropy / Confidence")
     lines.append("")
     keys_describe = {
@@ -692,7 +691,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
                 lines.append(_table_row(desc, ec[k]))
         lines.append("")
 
-    # 2) Expert overlap
+    # 2) 专家重叠
     lines.append("## 2) Expert Overlap Analysis")
     lines.append("")
     eo_keys = {
@@ -711,7 +710,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
                 lines.append(_table_row(desc, eo[k]))
         lines.append("")
 
-    # 3) Layer-wise comparison
+    # 3) 逐层比较
     lines.append("## 3) Layer-wise Router Comparison (MTP vs Decoder Layers)")
     lines.append("")
     lw_keys = {
@@ -735,7 +734,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
             lines.append(f"`{', '.join(f'{v:.3f}' for v in cos_list[:3])} ... {', '.join(f'{v:.3f}' for v in cos_list[-3:])}`")
             lines.append("")
 
-    # 4) Logit correlation
+    # 4) Logits 相关
     lines.append("## 4) Logit Correlation (LM Head vs MTP Router)")
     lines.append("")
     oc_keys = {
@@ -751,7 +750,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
                 lines.append(_table_row(desc, oc[k]))
         lines.append("")
 
-    # 5) Position trends
+    # 5) 位置趋势
     lines.append("## 5) Position Trends")
     lines.append("")
     for i, r in enumerate(results):
@@ -768,7 +767,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
             lines.append("*No trend data*")
         lines.append("")
 
-    # 6) Token accuracy
+    # 6) Token 准确率
     lines.append("## 6) Token Greedy Decoding Accuracy")
     lines.append("")
     lines.append("Comparing LM head and MTP head greedy decoding (same target token).")
@@ -784,7 +783,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
             lines.append(f"| Sample {i+1} | N/A | - |")
     lines.append("")
 
-    # 7) Logit alignment (injectivity)
+    # 7) Logits 对齐（可注入性）
     lines.append("## 7) LM head vs MTP head Full Logit Alignment")
     lines.append("")
     lines.append("Aligned by target token: `lm_logits[:, t+1, :]` vs `mtp_logits[:, t, :]`")
@@ -808,7 +807,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
         lines.append(f"| {desc} | {v1s} | {v2s} |")
     lines.append("")
 
-    # 8) Ground truth accuracy
+    # 8) 真实 token 准确率
     lines.append("## 8) Ground Truth Token Accuracy")
     lines.append("")
     lines.append("| Sample | LM→tok[t+1] | MTP→tok[t+2] | MTP-LM Gap |")
@@ -821,7 +820,7 @@ def generate_report(results: list[dict], agg: dict, elapsed: float, cfg: Config)
         lines.append(f"| Sample {i+1} | {lma} | {mtpa} | {gap} |")
     lines.append("")
 
-    # Sample details
+    # 样本详情
     lines.append("## Sample Details")
     lines.append("")
     for i, r in enumerate(results):
@@ -866,13 +865,13 @@ def main():
     all_avg = [r["avg_routing_metrics"] for r in results if r.get("avg_routing_metrics")]
     agg = aggregate_results(all_avg) if all_avg else {}
 
-    # Write report
+    # 写报告
     report = generate_report(results, agg, elapsed, cfg)
     report_path = output_dir / "report.md"
     report_path.write_text(report, encoding="utf-8")
     logger.info("Report saved to %s", report_path)
 
-    # Write JSON (clean tensor data)
+    # 写 JSON（清理 tensor 数据）
     clean_results = []
     for r in results:
         cr = dict(r)
