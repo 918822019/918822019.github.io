@@ -297,23 +297,24 @@ L12-L18: 维持坍缩
 
 ## 8. 文件索引
 
-| 文件 | 用途 |
-|------|------|
-| `decoder.py` | 单次前向 MTP 数据提取 |
-| `compare.py` | 8 组 metric 函数 |
-| `main.py` | 流水线 + 报告生成 |
-| `swap_test.py` | 路由置换测试（MTP 路由→Decoder 权重） |
-| `layer_test.py` | 分层交换测试（确定安全交换范围） |
-| `predict_test.py` | MTP hidden → Decoder gate 零样本路由预测 |
-| `multi_test.py` | 跨 prompt 验证（5 种 prompt 类型） |
-| `conf_test.py` | 置信度 + 语义分析 |
-| `full_test.py` | 全层路由交换 end-to-end |
-| `collapse_test.py` | 全层坍缩机制分析 |
-| `draft_test.py` | MTP autoregressive drafting |
-| `sd_multi.py` | 跨 prompt spec decoding 对比 |
-| `verify_spec.py` | Speculative decoding 搬运量模拟 |
-| `analyze_routing.py` | Token→expert 映射分析 |
-| `model_utils.py` | 模型加载工具 |
+| 文件 | 类型 | 用途 |
+|------|------|------|
+| `decoder.py` | .py | 单次前向 MTP 数据提取 |
+| `compare.py` | .py | 8 组 metric 函数 |
+| `main.py` | .py | 流水线 + 报告生成 |
+| `model_utils.py` | .py | 模型加载工具 |
+| `config.py` | .py | 配置参数 |
+| `swap_test.ipynb` | notebook | 路由置换测试（MTP 路由→Decoder 权重） |
+| `layer_test.ipynb` | notebook | 分层交换测试（确定安全交换范围） |
+| `predict_test.ipynb` | notebook | MTP hidden → Decoder gate 零样本路由预测 |
+| `multi_test.ipynb` | notebook | 跨 prompt 验证（5 种 prompt 类型） |
+| `conf_test.ipynb` | notebook | 置信度 + 语义分析 |
+| `full_test.ipynb` | notebook | 全层路由交换 end-to-end |
+| `collapse_test.ipynb` | notebook | 全层坍缩机制分析 |
+| `draft_test.ipynb` | notebook | MTP autoregressive drafting |
+| `sd_multi.ipynb` | notebook | 跨 prompt spec decoding 对比 |
+| `verify_spec.ipynb` | notebook | Speculative decoding 搬运量模拟 |
+| `analyze_routing.ipynb` | notebook | Token→expert 映射分析 |
 
 ---
 
