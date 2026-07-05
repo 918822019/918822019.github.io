@@ -144,6 +144,8 @@ MTP hidden state 喂给每层 decoder gate，零样本预测 routing：
 每层加载（8 experts）：**50.3 MB**
 每 token 加载（18 层）：**906 MB**
 
+注意：显存带宽（3060=360GB/s）不是瓶颈，PCIe 带宽（16GB/s）才是。
+
 | 场景 | PCIe 3.0 (16GB/s) | PCIe 4.0 (32GB/s) | PCIe 5.0 (63GB/s) |
 |------|-------------------|-------------------|-------------------|
 | 逐层串行加载（无 MTP） | 56.6ms/tok | 28.3ms/tok | 14.4ms/tok |
@@ -154,6 +156,35 @@ MTP hidden state 喂给每层 decoder gate，零样本预测 routing：
 **为什么 MTP 能省？** 没有 MTP 时，每层必须等前一层算完才知道要搬哪 8 个 expert，无法预取。MTP 一次性预测全部 18 层的 routing，让所有 expert 可以提前开始搬运，计算和搬运流水线化。
 
 **为什么 expert 冗余重要？** MTP 预测的 routing 和 decoder 自身的 routing 只有 IoU~0.02（几乎不重叠）。但因为不同 expert 子集功能等价，**预测错误不影响最终输出**（Logits Cos=0.97）。这允许激进预取而不需要验证。
+
+---
+
+## Speculative Decoding 实测
+
+MTP 自回归 draft 测试（prompt="def fibonacci(n):..."，draft 16 tokens，取 mtp_hidden[-2] 避免回绕）：
+
+```
+pos  source  Draft     Ground truth    Match?
+─────────────────────────────────────────────
+0    LM      )         )               OK
+1    MTP     \n        \n              OK
+2    MTP               \n              OK
+3    MTP     if        if              OK
+4    MTP     n         n               OK
+5    MTP     <=        <=              OK
+6    MTP     \n        \n              OK
+7    MTP     1         0               X
+```
+
+| 指标 | 值 |
+|------|-----|
+| Draft 准确率 | **43.8%** (7/16) |
+| 连续接受率（verification） | **7/16** |
+| 有效加速（2 passes = 1 draft + 1 verify） | **~4.0x** |
+
+**注意**：MTP 的 roll_tensor(shifts=-1) 导致最后一个位置的输入回绕到 tok[0]。取 mtp_hidden[-1]（最后一位置）是错的，应取 mtp_hidden[-2]（倒数第二位置，roll 后这里才是最新的 token）。
+
+**结合预取的总体加速**：speculative decoding（~4x） + 路由预取流水线（~7x）理论上可叠加。
 
 ---
 
