@@ -1,3 +1,16 @@
+"""Metric functions for MTP vs Decoder router consistency analysis.
+
+Groups:
+1-3: Basic router comparison (KL, JS, Cosine, IoU, Spearman, Hit Rate)
+4:   Entropy / confidence
+5:   Expert overlap
+6:   Layer-wise comparison
+7:   LM-MTP logit correlation
+8:   Position trends
+9:   Token accuracy
+10:  Logit alignment (injectivity test)
+11:  Ground truth accuracy
+"""
 from __future__ import annotations
 
 from typing import Any
@@ -7,7 +20,7 @@ import torch.nn.functional as F
 
 
 # ============================================================
-# Basic comparison metrics (existing)
+# Basic comparison metrics
 # ============================================================
 
 def kl_divergence(p_logits: torch.Tensor, q_logits: torch.Tensor) -> torch.Tensor:
@@ -58,15 +71,17 @@ def spearman_rank_corr(p_logits: torch.Tensor, q_logits: torch.Tensor) -> torch.
 
 
 def top_k_hit_rate(
-    p_logits: torch.Tensor,
-    q_logits: torch.Tensor,
-    k: int = 1,
+    p_logits: torch.Tensor, q_logits: torch.Tensor, k: int = 1,
 ) -> torch.Tensor:
     p_topk = p_logits.topk(k, dim=-1).indices
     q_top1 = q_logits.argmax(dim=-1, keepdim=True)
     hits = (p_topk == q_top1).any(dim=-1).float()
     return hits.mean()
 
+
+# ============================================================
+# 1) Per-step router comparison
+# ============================================================
 
 def compute_metrics(
     actual_logits: torch.Tensor,
@@ -86,7 +101,7 @@ def compute_metrics(
 
 
 # ============================================================
-# 1) Router 置信度 / 熵分析
+# 2) Router entropy / confidence
 # ============================================================
 
 def router_entropy(logits: torch.Tensor) -> torch.Tensor:
@@ -118,7 +133,7 @@ def compute_entropy_confidence_metrics(
 
 
 # ============================================================
-# 2) Expert 命中分析
+# 3) Expert overlap analysis
 # ============================================================
 
 def compute_expert_overlap_metrics(
@@ -148,7 +163,7 @@ def compute_expert_overlap_metrics(
 
 
 # ============================================================
-# 3) 逐层 Router 对比
+# 4) Layer-wise MTP vs Decoder router comparison
 # ============================================================
 
 def compute_layerwise_metrics(
@@ -157,14 +172,12 @@ def compute_layerwise_metrics(
     k: int = 8,
 ) -> dict[str, Any]:
     num_layers = layer_routers.shape[0]
-    seq_len = layer_routers.shape[1]
 
     cos_sims = []
     ious = []
     for l in range(num_layers):
-        layer = layer_routers[l]  # [seq_len, num_experts]
+        layer = layer_routers[l]
         cos = F.cosine_similarity(layer.float(), mtp_router.float(), dim=-1).mean().item()
-        # top_k_iou expects [batch, experts] — pass [seq_len, experts] directly
         iou = top_k_iou(layer, mtp_router, k=k).item()
         cos_sims.append(cos)
         ious.append(iou)
@@ -180,7 +193,7 @@ def compute_layerwise_metrics(
 
 
 # ============================================================
-# 4) 输出 logits 对比 (LM Head vs MTP Router 置信度关联)
+# 5) LM head vs MTP router confidence correlation
 # ============================================================
 
 def compute_output_logits_corr_metrics(
@@ -204,7 +217,7 @@ def compute_output_logits_corr_metrics(
 
 
 # ============================================================
-# 5) 位置趋势分析
+# 6) Position trends
 # ============================================================
 
 def compute_position_trends(
@@ -228,19 +241,19 @@ def compute_position_trends(
 
 
 # ============================================================
-# 6) Token 贪心解码准确率
+# 7) Token greedy decoding accuracy (LM vs MTP head)
 # ============================================================
 
 def compute_token_accuracy(
     lm_logits: torch.Tensor,
     mtp_token_logits: torch.Tensor,
 ) -> dict[str, float]:
+    """Compare greedy argmax of LM head and MTP head (same target token)."""
     if mtp_token_logits is None:
         return {"token_accuracy": None, "token_exact_match": None}
 
-    # Greedy decode
-    lm_tokens = lm_logits.argmax(dim=-1)          # [T]
-    mtp_tokens = mtp_token_logits.argmax(dim=-1)  # [T]
+    lm_tokens = lm_logits.argmax(dim=-1)
+    mtp_tokens = mtp_token_logits.argmax(dim=-1)
 
     correct = (lm_tokens == mtp_tokens)
     accuracy = correct.float().mean().item()
@@ -250,32 +263,27 @@ def compute_token_accuracy(
         "token_correct_count": correct.sum().item(),
         "token_total_count": lm_tokens.shape[0],
         "token_exact_match": 1.0 if accuracy == 1.0 else 0.0,
-        "token_generations_equal": accuracy,
     }
 
 
 # ============================================================
-# 7) LM head vs MTP head 完整 logits 分布对比（对齐 target token）
+# 8) LM vs MTP head full logit distribution alignment
+# (= injectivity test: different routing paths → same output)
 # ============================================================
-# 定理：Language Models are Injective (Sapienza 2025)
-# → lm_head(mtp_hidden[t]) 预测 token[t+2]
-# → lm_head(decoder_hidden[t+1]) 也预测 token[t+2]
-# 如果模型的 hidden state 是单射的，则这两个分布应该高度一致
 
 def compute_lm_mtp_logit_alignment(
-    lm_logits: torch.Tensor,     # [T, V], LM head logits predicting tok[t+1]
-    mtp_logits: torch.Tensor,    # [T, V], MTP head logits predicting tok[t+2]
+    lm_logits: torch.Tensor,
+    mtp_logits: torch.Tensor,
 ) -> dict[str, float]:
+    """Compare full logit distributions when aligned by target token.
+
+    lm_logits[:, t+1, :] and mtp_logits[:, t, :] both predict tok[t+2].
+    """
     if mtp_logits is None:
         return {"lm_mtp_logit_alignment": None}
 
-    # Align by target token: LM at t+1 vs MTP at t both predict tok[t+2]
-    # lm_logits has shape [T, V] where T = full_len-1
-    # mtp_logits has shape [T, V] where T = full_len-1
-    # LM at position t predicts tok[t+1], so position 1..T predicts tok[2]..tok[T+1]
-    # MTP at position t predicts tok[t+2], so position 0..T-1 predicts tok[2]..tok[T+1]
-    lm_aligned = lm_logits[1:, :]     # [T-1, V]
-    mtp_aligned = mtp_logits[:-1, :]  # [T-1, V]
+    lm_aligned = lm_logits[1:, :]
+    mtp_aligned = mtp_logits[:-1, :]
 
     cosine = F.cosine_similarity(lm_aligned.float(), mtp_aligned.float(), dim=-1).mean().item()
     kl = kl_divergence(lm_aligned, mtp_aligned).item()
@@ -283,12 +291,10 @@ def compute_lm_mtp_logit_alignment(
     spearman = spearman_rank_corr(lm_aligned, mtp_aligned).item()
     iou_k = top_k_iou(lm_aligned, mtp_aligned, k=8).item()
 
-    # Per-token softmax dot product (prob distribution overlap)
     lm_prob = F.softmax(lm_aligned.float(), dim=-1)
     mtp_prob = F.softmax(mtp_aligned.float(), dim=-1)
     prob_dot = (lm_prob * mtp_prob).sum(dim=-1).mean().item()
 
-    # L2 distance of logits
     l2_dist = (lm_aligned.float() - mtp_aligned.float()).norm(dim=-1).mean().item()
 
     return {
@@ -303,19 +309,18 @@ def compute_lm_mtp_logit_alignment(
 
 
 # ============================================================
-# 8) 对真实 token（Ground Truth）的预测精度
+# 9) Ground truth token accuracy
 # ============================================================
 
 def compute_accuracy_vs_ground_truth(
-    lm_logits: torch.Tensor | None,       # [T, V], LM predicting tok[t+1]
-    mtp_logits: torch.Tensor | None,      # [T, V], MTP predicting tok[t+2]
-    gt_lm: torch.Tensor | None,           # [T], ground truth for LM
-    gt_mtp: torch.Tensor | None,          # [T-1], ground truth for MTP
-    tokenizer=None,
+    lm_logits: torch.Tensor | None,
+    mtp_logits: torch.Tensor | None,
+    gt_lm: torch.Tensor | None,
+    gt_mtp: torch.Tensor | None,
 ) -> dict[str, float]:
+    """Check if LM head / MTP head predictions match actual input tokens."""
     result = {}
 
-    # LM head accuracy vs ground truth (predicting token[t+1])
     if lm_logits is not None and gt_lm is not None:
         lm_pred = lm_logits.argmax(dim=-1)
         lm_correct = (lm_pred == gt_lm)
@@ -323,11 +328,8 @@ def compute_accuracy_vs_ground_truth(
         result["lm_gt_correct"] = lm_correct.sum().item()
         result["lm_gt_total"] = gt_lm.shape[0]
 
-    # MTP head accuracy vs ground truth (predicting token[t+2])
-    # mtp_logits[t] predicts token[t+2], gt_mtp[t] = input_ids[t+2]
-    # Both must be aligned: mtp_logits[:-1, :] vs gt_mtp
     if mtp_logits is not None and gt_mtp is not None:
-        mtp_aligned = mtp_logits[:-1, :]  # [T-1, V]
+        mtp_aligned = mtp_logits[:-1, :]
         mtp_pred = mtp_aligned.argmax(dim=-1)
         mtp_correct = (mtp_pred == gt_mtp)
         result["mtp_gt_accuracy"] = mtp_correct.float().mean().item()
@@ -339,12 +341,13 @@ def compute_accuracy_vs_ground_truth(
 
 
 # ============================================================
-# 聚合 (扩展支持嵌套指标)
+# Aggregation
 # ============================================================
 
 def aggregate_results(
     results: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    """Aggregate numeric metrics across samples (avg/min/max)."""
     agg = {}
     skip_keys = {"prompt", "generated_text", "step_metrics", "entropy_confidence",
                   "expert_overlap", "layerwise", "output_corr", "position_trends",

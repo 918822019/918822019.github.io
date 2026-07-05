@@ -1,3 +1,8 @@
+"""Model loading utilities for the MTP Router Consistency Analysis.
+
+Handles path resolution, model loading with CPU offload,
+and tokenizer setup for BailingMoeV2 models.
+"""
 from __future__ import annotations
 
 import logging
@@ -24,6 +29,14 @@ def load_model_and_tokenizer(
     device: str = "cpu",
     torch_dtype: torch.dtype = torch.bfloat16,
 ):
+    """Load model and tokenizer with CPU offload.
+
+    Uses device_map='cpu' to force full CPU loading (stable for 6GB VRAM).
+    The model has ~12B params, 256 experts per layer, top-8 routing.
+
+    Returns:
+        tuple: (model, tokenizer, model_device)
+    """
     model_path = _resolve_path(model_path)
     logger.info("Loading tokenizer from %s", model_path)
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
