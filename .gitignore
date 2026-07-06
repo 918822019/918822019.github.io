@@ -71,3 +71,4 @@ frontend/data/*_full.ndjson
 
 # Git submodule config (no active submodules)
 .gitmodules
+project/on_device_quant/train/output/

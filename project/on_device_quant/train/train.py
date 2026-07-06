@@ -179,7 +179,7 @@ def train(config):
     # 加载数据和 tokenizer
     print("加载数据...")
     train_ids, val_ids, tokenizer = load_data(config.data)
-    vocab_size = len(tokenizer.vocab)
+    vocab_size = tokenizer.vocab_size
     config.model.vocab_size = vocab_size
     print(f"词表: {vocab_size} | 训练 token: {len(train_ids):,} | 验证 token: {len(val_ids):,}")
 

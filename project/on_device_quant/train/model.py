@@ -38,14 +38,14 @@ class RoPE(nn.Module):
 def apply_rope(x, emb):
     """
     应用旋转位置编码到 tensor
-    将实数对视为复数，通过复数乘法实现旋转
+    用实数运算替代复数乘法（兼容 FP16，避免 ComplexHalf 实验性警告）
     x: [..., D] → [..., D]
     """
     s = x.shape[-1] // 2
-    # 将最后一维两两配对视为复数 [x0,x1,x2,x3] → [(x0,x1), (x2,x3)]
-    xc = torch.view_as_complex(x.reshape(*x.shape[:-1], s, 2).contiguous())
-    ec = torch.view_as_complex(emb.reshape(*emb.shape[:-1], s, 2).contiguous())
-    return torch.view_as_real(xc * ec).reshape(*x.shape[:-1], -1)
+    x1, x2 = x[..., :s], x[..., s:]
+    e = emb[..., :s]  # emb = [θ, θ], 两半相同
+    # 复数乘法 (x1+ix2)(θ+iθ) = θ(x1-x2) + i·θ(x1+x2)
+    return torch.cat([e * (x1 - x2), e * (x1 + x2)], -1)
 
 
 # ── 线性注意力（O(1) KV cache）──
@@ -59,25 +59,27 @@ def linear_attn(q, k, v, decay=0.99, eps=1e-6):
 
     q, k, v: [B, H, T, D]
     decay: 指数衰减因子，越小越关注近期
+    注意：整个计算在 FP32 中进行（FP16 下 relu(x)² 容易溢出）
     """
     B, H, T, D = q.shape
+    dtype = q.dtype
+    q, k, v = q.float(), k.float(), v.float()
     # 特征映射：确保非负（类似 softmax 的正值特性）
     qf = F.relu(q).pow(2) + 0.1
     kf = F.relu(k).pow(2) + 0.1
     vf = F.relu(v).pow(2) + 0.1
-    # 累积状态 S: [B, H, D, D]（外积矩阵的指数移动平均）
-    S = torch.zeros(B, H, D, D, device=q.device, dtype=q.dtype)
-    # 归一化项 z: [B, H, D]
-    z = torch.zeros(B, H, D, device=q.device, dtype=q.dtype)
+    S = torch.zeros(B, H, D, D, device=q.device, dtype=torch.float32)
+    z = torch.zeros(B, H, D, device=q.device, dtype=torch.float32)
     outs = []
     for i in range(T):
-        # 累积：S = decay × S + kᵀv（外积）
-        S = decay * S + kf[:, :, i : i + 1].transpose(-1, -2) @ vf[:, :, i : i + 1]
-        # 归一化累积：z = decay × z + k
-        z = decay * z + kf[:, :, i]
-        # 输出：q × S / (q × z)，除以归一化项
-        out = (qf[:, :, i : i + 1] @ S) / (qf[:, :, i : i + 1] @ z.unsqueeze(-1)).clamp(min=eps)
+        ki = kf[:, :, i : i + 1]
+        vi = vf[:, :, i : i + 1]
+        qi = qf[:, :, i : i + 1]
+        S = decay * S + ki.transpose(-1, -2) @ vi
+        z = decay * z + ki.squeeze(2)
+        out = (qi @ S) / (qi @ z.unsqueeze(-1)).clamp(min=eps)
         outs.append(out)
+    return torch.cat(outs, dim=-2).to(dtype)
     return torch.cat(outs, dim=-2)
 
 
