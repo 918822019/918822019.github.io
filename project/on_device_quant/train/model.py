@@ -189,15 +189,17 @@ class HybridBlock(nn.Module):
 
     def forward(self, x):
         # 三分支并行计算
-        h = self.norm1(x)
-        oc = self.csa(h)   # 跨流注意力输出
-        oh = self.hca(h)   # 混合通道注意力输出
-        os = self.swa(h)   # 滑动窗口注意力输出
-        # softmax 门控融合 + 残差连接
-        g = F.softmax(self.gate, dim=0)
-        x = x + self.drop(g[0] * oc + g[1] * oh + g[2] * os)
-        # FFN + 残差连接
-        x = x + self.drop(self.ffn(self.norm2(x)))
+        # 整个 block 在 FP32 中运行（SWA softmax + FFN GELU 在 FP16 下梯度易溢出）
+        with torch.amp.autocast('cuda', enabled=False):
+            h = self.norm1(x)
+            oc = self.csa(h)   # 跨流注意力输出
+            oh = self.hca(h)   # 混合通道注意力输出
+            os = self.swa(h)   # 滑动窗口注意力输出
+            # softmax 门控融合 + 残差连接
+            g = F.softmax(self.gate, dim=0)
+            x = x + self.drop(g[0] * oc + g[1] * oh + g[2] * os)
+            # FFN + 残差连接
+            x = x + self.drop(self.ffn(self.norm2(x)))
         return x
 
 
