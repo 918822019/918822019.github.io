@@ -80,7 +80,6 @@ def linear_attn(q, k, v, decay=0.99, eps=1e-6):
         out = (qi @ S) / (qi @ z.unsqueeze(-1)).clamp(min=eps)
         outs.append(out)
     return torch.cat(outs, dim=-2).to(dtype)
-    return torch.cat(outs, dim=-2)
 
 
 # ── 三分支注意力模块 ──
@@ -163,23 +162,67 @@ class SWA(nn.Module):
         return self.proj(out)
 
 
-# ── 混合注意力块 ──
+# ── 金字塔压缩/扩展 ──
+
+class SeqCompress(nn.Module):
+    """序列下采样：平均池化，零参数量"""
+
+    def __init__(self, kernel, stride, padding=0):
+        super().__init__()
+        self.kernel = kernel
+        self.stride = stride
+        self.padding = padding
+
+    def forward(self, x):
+        return F.avg_pool1d(
+            x.transpose(1, 2),
+            kernel_size=self.kernel,
+            stride=self.stride,
+            padding=self.padding,
+        ).transpose(1, 2)
+
+
+class SeqExpand(nn.Module):
+    """序列上采样：近邻插值到目标长度"""
+
+    def forward(self, x, target_len):
+        return F.interpolate(
+            x.transpose(1, 2), size=target_len, mode='nearest'
+        ).transpose(1, 2)
+
+
+# ── 混合注意力块（金字塔版）──
 
 class HybridBlock(nn.Module):
     """
-    混合注意力块：CSA + HCA + SWA 三分支并行
-    通过可学习门控 softmax(gate) 加权融合
+    混合注意力块：CSA + HCA + SWA 三分支金字塔
+
+    结构式对齐：
+      CSA — 4:1 压缩（stride=2, 重叠窗口）→ Linear Attention → 上采样
+      HCA — 128:1 压缩（stride=128, 不重叠）→ Linear Attention → 上采样
+      SWA — 最后 128 个 token → Softmax Attention + RoPE → 保持
+
+    三分支输出上采样回原分辨率后，通过可学习门控加权融合。
     """
 
-    def __init__(self, dim, num_heads, head_dim, ffn_mult=4, dropout=0.0):
+    def __init__(self, dim, num_heads, head_dim, ffn_mult=4, dropout=0.0,
+                 swa_window=128, csa_ratio=2, hca_ratio=128):
         super().__init__()
-        self.norm1 = nn.LayerNorm(dim)           # 前归一化
-        self.csa = CSA(dim, head_dim)             # 跨流注意力
-        self.hca = HCA(dim, head_dim)             # 混合通道注意力
-        self.swa = SWA(dim, num_heads, head_dim)  # 滑动窗口注意力
-        self.gate = nn.Parameter(torch.ones(3))   # 可学习门控（初始均等）
+        self.swa_window = swa_window
+        self.norm1 = nn.LayerNorm(dim)
+
+        # 金字塔压缩器（平均池化，零参数量）
+        self.compress_csa = SeqCompress(kernel=4, stride=csa_ratio, padding=1)  # n → n/2, 重叠
+        self.compress_hca = SeqCompress(kernel=128, stride=hca_ratio)            # n → n/128, 不重叠
+        self.expand = SeqExpand()
+
+        # 三分支注意力
+        self.csa = CSA(dim, head_dim)
+        self.hca = HCA(dim, head_dim)
+        self.swa = SWA(dim, num_heads, head_dim)
+
+        self.gate = nn.Parameter(torch.ones(3))
         self.norm2 = nn.LayerNorm(dim)
-        # 前馈网络：Linear → GELU → Linear
         self.ffn = nn.Sequential(
             nn.Linear(dim, dim * ffn_mult),
             nn.GELU(),
@@ -188,17 +231,32 @@ class HybridBlock(nn.Module):
         self.drop = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
 
     def forward(self, x):
-        # 三分支并行计算
         # 整个 block 在 FP32 中运行（SWA softmax + FFN GELU 在 FP16 下梯度易溢出）
         with torch.amp.autocast('cuda', enabled=False):
             h = self.norm1(x)
-            oc = self.csa(h)   # 跨流注意力输出
-            oh = self.hca(h)   # 混合通道注意力输出
-            os = self.swa(h)   # 滑动窗口注意力输出
-            # softmax 门控融合 + 残差连接
+            B, T, D = h.shape
+
+            # ── 金字塔压缩：三分支在不同分辨率上计算 ──
+            # 短序列时跳过压缩（HCA kernel=128，T<128 时 output=0）
+            h_csa = self.compress_csa(h) if T >= 4 else h       # [B, T/r_csa, D] 或 [B, T, D]
+            h_hca = self.compress_hca(h) if T >= 128 else h     # [B, T/r_hca, D] 或 [B, T, D]
+            h_swa = h[:, -min(self.swa_window, T):, :]          # [B, min(128,T), D]
+
+            # ── 注意力计算 ──
+            oc = self.csa(h_csa)
+            oh = self.hca(h_hca)
+            os = self.swa(h_swa)
+
+            # ── 上采样到原分辨率 ──
+            oc = self.expand(oc, T)
+            oh = self.expand(oh, T)
+            os = self.expand(os, T)
+
+            # ── 门控融合 + 残差 ──
             g = F.softmax(self.gate, dim=0)
             x = x + self.drop(g[0] * oc + g[1] * oh + g[2] * os)
-            # FFN + 残差连接
+
+            # ── FFN + 残差 ──
             x = x + self.drop(self.ffn(self.norm2(x)))
         return x
 
@@ -216,12 +274,15 @@ class EdgeTransformer(nn.Module):
     """
 
     def __init__(self, vocab_size=4096, dim=512, num_layers=4, num_heads=8,
-                 head_dim=64, ffn_mult=4, dropout=0.0, max_seq_len=512, weight_tie=True):
+                 head_dim=64, ffn_mult=4, dropout=0.0, max_seq_len=512, weight_tie=True,
+                 swa_window=128, csa_ratio=2, hca_ratio=128):
         super().__init__()
+        self.swa_window = swa_window
         self.tok = nn.Embedding(vocab_size, dim)                        # 词嵌入
         self.pos = nn.Parameter(torch.randn(1, max_seq_len, dim) * 0.02) # 可学习位置编码
         self.layers = nn.ModuleList([
-            HybridBlock(dim, num_heads, head_dim, ffn_mult, dropout)
+            HybridBlock(dim, num_heads, head_dim, ffn_mult, dropout,
+                        swa_window, csa_ratio, hca_ratio)
             for _ in range(num_layers)
         ])
         self.norm = nn.LayerNorm(dim)     # 最终归一化
