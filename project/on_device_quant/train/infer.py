@@ -2,6 +2,9 @@
 EdgeTransformer 文本生成推理脚本
 """
 import argparse
+import json
+from pathlib import Path
+
 import torch
 import torch.nn.functional as F
 from config import RunConfig
@@ -44,9 +47,15 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     tok = BPETokenizer.load("output/bpe_tokenizer.pkl")
     ckpt = torch.load(args.ckpt, map_location="cpu", weights_only=False)
+    cfg_path = Path(args.ckpt).parent / "config.json"
+    if cfg_path.exists():
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        m = cfg["model"]
+    else:
+        m = {"dim": 512, "num_layers": 4, "num_heads": 8, "head_dim": 64}
 
-    model = EdgeTransformer(vocab_size=tok.vocab_size, dim=512, num_layers=4,
-                            num_heads=8, head_dim=64, max_seq_len=512)
+    model = EdgeTransformer(vocab_size=tok.vocab_size, dim=m["dim"], num_layers=m["num_layers"],
+                            num_heads=m["num_heads"], head_dim=m["head_dim"], max_seq_len=512)
     model.load_state_dict(ckpt["model"])
     model.to(device)
     print(f"Loaded step {ckpt.get('step', '?')}, loss {ckpt.get('loss', '?'):.4f}")
