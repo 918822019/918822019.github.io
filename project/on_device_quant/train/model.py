@@ -293,6 +293,58 @@ class HybridBlock(nn.Module):
         return x
 
 
+# ── 视觉编码器 ──
+
+class VisionEncoder(nn.Module):
+    """SigLIP 视觉编码器（冻结）+ MLP 投影到 LLM dim
+
+    预训练 SigLIP ViT 提取图像 patch 特征，MLP 投影到语言模型维度后
+    作为前缀 token 注入序列。视觉编码器冻结，只训练投影层。
+
+    SigLIP-base-patch16-224: 93M params, hidden=768, 196 patches (14×14)
+    """
+
+    def __init__(self, model_name="google/siglip-base-patch16-224", dim=1536, freeze=True):
+        super().__init__()
+        from transformers import SiglipVisionModel
+
+        self.vision = SiglipVisionModel.from_pretrained(model_name)
+        vision_dim = self.vision.config.hidden_size  # 768
+        image_size = self.vision.config.image_size    # 224
+        patch_size = self.vision.config.patch_size     # 16
+        self.num_patches = (image_size // patch_size) ** 2  # 196
+
+        if freeze:
+            for p in self.vision.parameters():
+                p.requires_grad = False
+
+        self.proj = nn.Sequential(
+            nn.Linear(vision_dim, dim),
+            nn.GELU(),
+            nn.Linear(dim, dim),
+        )
+        self.img_pos = nn.Parameter(torch.randn(1, self.num_patches, dim) * 0.02)
+        self.freeze = freeze
+
+    def forward(self, images):
+        """
+        images: [B, 3, 224, 224]（经 SiglipImageProcessor 预处理）
+        → [B, 196, dim]
+        """
+        ctx = torch.no_grad if self.freeze else _identity_ctx
+        with ctx():
+            out = self.vision(pixel_values=images)
+            features = out.last_hidden_state  # [B, 197, 768] (CLS + 196 patches)
+            features = features[:, 1:, :]     # 丢弃 CLS token → [B, 196, 768]
+        return self.proj(features) + self.img_pos  # [B, 196, dim]
+
+
+class _identity_ctx:
+    """空 context manager（freeze=False 时替代 torch.no_grad）"""
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+
+
 # ── 主模型 ──
 
 class EdgeTransformer(nn.Module):
@@ -308,7 +360,8 @@ class EdgeTransformer(nn.Module):
 
     def __init__(self, vocab_size=4096, dim=512, num_layers=4, num_heads=8,
                  head_dim=64, ffn_mult=4, dropout=0.0, max_seq_len=512, weight_tie=True,
-                 swa_window=128, csa_ratio=2, hca_ratio=128, norm_type="rms"):
+                 swa_window=128, csa_ratio=2, hca_ratio=128, norm_type="rms",
+                 vision_model="", vision_freeze=True):
         super().__init__()
         self.swa_window = swa_window
         self.tok = nn.Embedding(vocab_size, dim)                        # 词嵌入
@@ -323,12 +376,26 @@ class EdgeTransformer(nn.Module):
         if weight_tie:
             # 权重共享：embedding 和 LM head 共用同一矩阵，减少 ~vocab×dim 参数
             self.head.weight = self.tok.weight
+
+        # 视觉编码器（可选）：vision_model 为空 → 纯文本模型
+        self.vision = None
+        self.num_image_tokens = 0
+        if vision_model:
+            self.vision = VisionEncoder(vision_model, dim, vision_freeze)
+            self.num_image_tokens = self.vision.num_patches
+
         self._init_weights()
         # 注意：RMSNorm.weight 初始化为 ones（恒等映射），_init_weights 不覆盖它
 
     def _init_weights(self):
-        """初始化权重：Linear 和 Embedding 用 N(0, 0.02)，Norm 保持 ones 初始化"""
+        """初始化权重：Linear 和 Embedding 用 N(0, 0.02)，Norm 保持 ones 初始化
+        跳过冻结的预训练视觉编码器（SigLIP 权重保持不变）。"""
+        skip = set()
+        if self.vision is not None:
+            skip = set(id(m) for m in self.vision.vision.modules())
         for m in self.modules():
+            if id(m) in skip:
+                continue
             if isinstance(m, nn.Linear):
                 nn.init.normal_(m.weight, std=0.02)
                 if m.bias is not None:
@@ -336,12 +403,16 @@ class EdgeTransformer(nn.Module):
             elif isinstance(m, nn.Embedding):
                 nn.init.normal_(m.weight, std=0.02)
 
-    def forward(self, x):
+    def forward(self, x, images=None):
         """
         前向传播
-        x: [B, T] token ids → [B, T, vocab_size] logits
+        x: [B, T] token ids → [B, T(+num_image_tokens), vocab_size] logits
+        images: [B, 3, 224, 224] 或 None（纯文本模式）
         """
         h = self.tok(x) + self.pos[:, : x.size(1)]
+        if images is not None and self.vision is not None:
+            img_features = self.vision(images)  # [B, 196, dim]
+            h = torch.cat([img_features, h], dim=1)  # 图像 token 前缀
         for layer in self.layers:
             h = layer(h)
         return self.head(self.norm(h))

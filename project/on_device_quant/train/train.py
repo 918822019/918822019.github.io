@@ -85,6 +85,11 @@ def parse_args():
     p.add_argument("--max_size_gb", type=float, default=0, help="最大读取数据量 GB（0=不限制）")
     p.add_argument("--tokenizer_sample", type=int, default=10000, help="BPE 训练采样条数")
 
+    # 多模态
+    p.add_argument("--phase", type=str, default="text", choices=["text", "multimodal"], help="训练阶段")
+    p.add_argument("--image_dir", type=str, default="", help="COCO 图片目录（多模态训练用）")
+    p.add_argument("--vision_model", type=str, default="google/siglip-base-patch16-224", help="视觉编码器名")
+
     args = p.parse_args()
     if args.no_amp:
         args.use_amp = False
@@ -100,9 +105,12 @@ def build_config(args):
         head_dim=args.head_dim,
         max_seq_len=args.seq_len,
         norm_type=args.norm_type,
+        vision_model=args.vision_model if args.phase == "multimodal" else "",
+        vision_freeze=True,
     )
     data = DataConfig(
         coco_zip=args.coco_zip,
+        image_dir=args.image_dir,
         tokenizer_path=args.tokenizer_path,
         seq_len=args.seq_len,
         batch_size=args.batch_size,
@@ -113,6 +121,7 @@ def build_config(args):
         max_samples=args.max_samples,
         max_size_gb=args.max_size_gb,
         tokenizer_sample=args.tokenizer_sample,
+        phase=args.phase,
     )
     train = TrainConfig(
         steps=args.steps,
@@ -162,7 +171,7 @@ def find_coco_zip():
 
 
 @torch.no_grad()
-def evaluate(model, val_loader, device, vocab_size, num_batches=20, is_streaming=False):
+def evaluate(model, val_loader, device, vocab_size, num_batches=20, is_streaming=False, is_multimodal=False):
     """
     验证：在验证集上计算平均 loss
 
@@ -170,27 +179,42 @@ def evaluate(model, val_loader, device, vocab_size, num_batches=20, is_streaming
     val_loader: 验证集 DataLoader
     num_batches: 取多少个 batch 计算平均（控制验证时间）
     is_streaming: 流式模式需用持久迭代器取 batch
+    is_multimodal: 多模态模式 batch 为 (pixel_values, x, y) 三元组
     """
     model.eval()
     total_loss, count = 0.0, 0
+    n_img = getattr(model, 'num_image_tokens', 0)
+
     if is_streaming:
         val_iter = iter(val_loader)
         for i in range(num_batches):
             try:
-                x, y = next(val_iter)
+                batch = next(val_iter)
             except StopIteration:
                 break
-            x, y = x.to(device), y.to(device)
-            logits = model(x)
+            if is_multimodal:
+                pv, x, y = batch
+                pv, x, y = pv.to(device), x.to(device), y.to(device)
+                logits = model(x, images=pv)[:, n_img:, :]
+            else:
+                x, y = batch
+                x, y = x.to(device), y.to(device)
+                logits = model(x)
             loss = F.cross_entropy(logits.reshape(-1, vocab_size), y.reshape(-1))
             total_loss += loss.item()
             count += 1
     else:
-        for i, (x, y) in enumerate(val_loader):
+        for i, batch in enumerate(val_loader):
             if i >= num_batches:
                 break
-            x, y = x.to(device), y.to(device)
-            logits = model(x)
+            if is_multimodal:
+                pv, x, y = batch
+                pv, x, y = pv.to(device), x.to(device), y.to(device)
+                logits = model(x, images=pv)[:, n_img:, :]
+            else:
+                x, y = batch
+                x, y = x.to(device), y.to(device)
+                logits = model(x)
             loss = F.cross_entropy(logits.reshape(-1, vocab_size), y.reshape(-1))
             total_loss += loss.item()
             count += 1
@@ -218,8 +242,23 @@ def train(config):
 
     # 加载数据和 tokenizer
     print("加载数据...")
-    from data import load_streaming_data
-    if config.data.data_source == "skypile":
+    is_multimodal = config.data.phase == "multimodal"
+    is_streaming = False
+
+    if is_multimodal:
+        from data import load_multimodal_data
+        if not config.data.coco_zip:
+            config.data.coco_zip = find_coco_zip()
+        if not config.data.coco_zip:
+            print("错误: 未找到 COCO 数据，请使用 --coco_zip <路径> 指定")
+            sys.exit(1)
+        print(f"多模态训练 | COCO: {config.data.coco_zip} | 图片: {config.data.image_dir}")
+        train_loader, val_loader, tokenizer = load_multimodal_data(config.data)
+        vocab_size = tokenizer.vocab_size
+        config.model.vocab_size = vocab_size
+        print(f"词表: {vocab_size} | 训练样本: {len(train_loader.dataset)} | 验证样本: {len(val_loader.dataset)}")
+    elif config.data.data_source == "skypile":
+        from data import load_streaming_data
         print(f"数据源: {config.data.hf_dataset} (streaming)")
         train_loader, val_loader, tokenizer = load_streaming_data(config.data)
         vocab_size = tokenizer.vocab_size
@@ -240,7 +279,6 @@ def train(config):
         print(f"词表: {vocab_size} | 训练 token: {len(train_ids):,} | 验证 token: {len(val_ids):,}")
         train_loader = get_dataloader(train_ids, config.data.seq_len, config.data.batch_size, shuffle=True)
         val_loader = get_dataloader(val_ids, config.data.seq_len, config.data.batch_size, shuffle=False)
-        is_streaming = False
 
     # 构建模型
     print("构建模型...")
@@ -254,8 +292,13 @@ def train(config):
         max_seq_len=config.model.max_seq_len,
         weight_tie=config.model.weight_tie,
         norm_type=config.model.norm_type,
+        vision_model=config.model.vision_model,
+        vision_freeze=config.model.vision_freeze,
     ).to(device)
     print(f"参数量: {count_params(model):,}")
+    if is_multimodal:
+        trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print(f"可训练参数: {trainable:,}（视觉编码器已冻结）")
     print(f"归一化: {config.model.norm_type}")
 
     # torch.compile 加速（编译 GEMM 密集部分，linear_attn 循环回退 eager）
@@ -292,9 +335,12 @@ def train(config):
     total_steps = config.train.steps
 
     # 打印训练配置
+    n_img = getattr(model, 'num_image_tokens', 0)
     print(f"\n{'=' * 60}")
     print(f"训练 {total_steps} 步 | dim={config.model.dim} | 层数={config.model.num_layers} | 头数={config.model.num_heads}")
     print(f"batch={config.data.batch_size} x seq={config.data.seq_len} | 混合精度={'开启' if config.train.use_amp else '关闭'}")
+    if is_multimodal:
+        print(f"视觉编码器: {config.model.vision_model} | 图像 token: {n_img}")
     print(f"{'=' * 60}\n")
 
     # ── 训练主循环 ──
@@ -312,16 +358,23 @@ def train(config):
         # 梯度累积：将大 batch 拆成多个 micro-batch 依次前向反向
         for micro_step in range(config.train.grad_accum):
             if is_streaming:
-                # 流式模式：从持久迭代器取 batch
-                x, y = next(train_iter)
+                batch = next(train_iter)
             else:
-                # COCO 模式：每步重建迭代器（简单但非最优）
-                x, y = next(iter(train_loader))
-            x, y = x.to(device), y.to(device)
+                batch = next(iter(train_loader))
+
+            if is_multimodal:
+                pv, x, y = batch
+                pv, x, y = pv.to(device), x.to(device), y.to(device)
+            else:
+                x, y = batch
+                x, y = x.to(device), y.to(device)
 
             # 混合精度前向传播
             with torch.amp.autocast(device_type=device.type, enabled=config.train.use_amp):
-                logits = model(x)
+                if is_multimodal:
+                    logits = model(x, images=pv)[:, n_img:, :]
+                else:
+                    logits = model(x)
                 loss = F.cross_entropy(logits.reshape(-1, vocab_size), y.reshape(-1)) / config.train.grad_accum
 
             # 反向传播（带 AMP 缩放）
@@ -354,7 +407,7 @@ def train(config):
 
         # ── 定期验证 ──
         if step > 0 and step % config.train.eval_every == 0:
-            val_loss = evaluate(model, val_loader, device, vocab_size, config.train.val_batches, is_streaming)
+            val_loss = evaluate(model, val_loader, device, vocab_size, config.train.val_batches, is_streaming, is_multimodal)
             val_ppl = math.exp(min(val_loss, 20))
             tag = ""
             if val_loss < best_val_loss:

@@ -380,3 +380,135 @@ def load_streaming_data(config):
         )
 
     return train_loader, val_loader, tokenizer
+
+
+# ── 多模态数据加载（COCO 图片 + 描述）──
+
+def load_coco_annotations(zip_path):
+    """
+    加载 COCO captions 的完整 annotation（含 image_id）
+
+    返回: {"train": [{"image_id": int, "caption": str}, ...], "val": [...]}
+    """
+    caps = {"train": [], "val": []}
+    with zipfile.ZipFile(zip_path) as z:
+        for split in ["train", "val"]:
+            with z.open(f"annotations/captions_{split}2017.json") as f:
+                data = json.load(f)
+            caps[split] = [{"image_id": a["image_id"], "caption": a["caption"].lower()}
+                           for a in data["annotations"]]
+    return caps
+
+
+def get_image_processor(model_name="google/siglip-base-patch16-224"):
+    """返回 SigLIP 图像预处理器（resize + normalize）"""
+    from transformers import SiglipImageProcessor
+    return SiglipImageProcessor.from_pretrained(model_name)
+
+
+class COCOMultimodalDataset(Dataset):
+    """
+    COCO 图片-描述对，用于多模态训练
+
+    每条样本返回 (pixel_values, x, y)：
+      pixel_values: [3, 224, 224] 经 SiglipImageProcessor 预处理
+      x: [seq_len] 文本 token ids（BOS + caption，padding 到 seq_len）
+      y: [seq_len] 目标 token ids（caption + EOS，padding 位置 = -100）
+    """
+
+    def __init__(self, annotations, image_dir, split, tokenizer, image_processor, seq_len):
+        self.annotations = annotations
+        self.image_dir = Path(image_dir)
+        self.split = split  # "train" 或 "val" → 拼接 train2017/ 或 val2017/
+        self.tokenizer = tokenizer
+        self.image_processor = image_processor
+        self.seq_len = seq_len
+
+    def __len__(self):
+        return len(self.annotations)
+
+    def __getitem__(self, idx):
+        from PIL import Image
+
+        ann = self.annotations[idx]
+        # COCO 图片路径: {image_dir}/{split}2017/{image_id:012d}.jpg
+        img_path = self.image_dir / f"{self.split}2017" / f"{ann['image_id']:012d}.jpg"
+        image = Image.open(img_path).convert("RGB")
+        pixel_values = self.image_processor(image, return_tensors="pt")["pixel_values"][0]
+
+        # tokenize caption: [BOS] + caption + [EOS]
+        tokens = [2] + self.tokenizer.encode(ann["caption"]) + [3]
+        tokens = tokens[:self.seq_len + 1]  # 截断
+
+        x = tokens[:-1]  # [BOS, cap_0, ..., cap_{n-1}]
+        y = tokens[1:]   # [cap_0, ..., cap_{n-1}, EOS]
+
+        # padding 到 seq_len
+        pad_len = self.seq_len - len(x)
+        if pad_len > 0:
+            x = x + [0] * pad_len
+            y = y + [-100] * pad_len  # padding 位置不计算 loss
+
+        return pixel_values, torch.tensor(x, dtype=torch.long), torch.tensor(y, dtype=torch.long)
+
+
+def load_multimodal_data(config):
+    """
+    多模态数据加载（COCO 图片 + 描述）
+
+    流程：
+      1. 加载已有 BPE tokenizer（或从 COCO captions 训练）
+      2. 加载 COCO annotations（含 image_id）
+      3. 创建 SiglipImageProcessor
+      4. 构建 train/val DataLoader
+
+    返回: (train_loader, val_loader, tokenizer)
+    """
+    coco_zip = _cfg_get(config, "coco_zip", "")
+    image_dir = _cfg_get(config, "image_dir", "")
+    tokenizer_path = _cfg_get(config, "tokenizer_path", "")
+    seq_len = _cfg_get(config, "seq_len", 512)
+    batch_size = _cfg_get(config, "batch_size", 8)
+    num_workers = _cfg_get(config, "num_workers", 0)
+    vision_model = _cfg_get(config, "vision_model", "google/siglip-base-patch16-224")
+
+    if not coco_zip or not os.path.exists(coco_zip):
+        raise FileNotFoundError(f"未找到 COCO annotations: {coco_zip}")
+    if not image_dir:
+        raise ValueError("多模态训练需要 --image_dir 指定 COCO 图片目录")
+
+    # 加载或训练 tokenizer
+    tokenizer = None
+    if tokenizer_path and os.path.exists(tokenizer_path):
+        tokenizer = BPETokenizer.load(tokenizer_path)
+    if tokenizer is None:
+        print("从 COCO captions 训练 BPE tokenizer...")
+        caps = load_coco_captions(coco_zip)
+        sample_caps = caps["train"][:10000] + caps["val"][:1000]
+        all_text = " ".join(sample_caps)
+        vocab_size = _cfg_get(config, "vocab_size", 65536)
+        tokenizer = BPETokenizer(vocab_size)
+        tokenizer.train(all_text, verbose=True)
+        if tokenizer_path:
+            tokenizer.save(tokenizer_path)
+
+    # 加载 annotations（含 image_id）
+    print("加载 COCO annotations...")
+    caps = load_coco_annotations(coco_zip)
+    n_train = int(0.95 * len(caps["train"]))
+    train_anns = caps["train"][:n_train]
+    val_anns = caps["train"][n_train:]  # 从 train 切 5% 做验证（val 图片目录可能不同）
+
+    # 创建图像预处理器
+    image_processor = get_image_processor(vision_model)
+
+    train_ds = COCOMultimodalDataset(train_anns, image_dir, "train", tokenizer, image_processor, seq_len)
+    val_ds = COCOMultimodalDataset(val_anns, image_dir, "train", tokenizer, image_processor, seq_len)
+
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
+                              num_workers=num_workers, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
+                           num_workers=num_workers, pin_memory=True, drop_last=False)
+
+    print(f"图片目录: {image_dir} | 训练样本: {len(train_anns)} | 验证样本: {len(val_anns)}")
+    return train_loader, val_loader, tokenizer

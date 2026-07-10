@@ -22,6 +22,8 @@ class ModelConfig:
     max_seq_len: int = 1024      # 最大序列长度（位置编码上限）
     weight_tie: bool = True      # 是否共享 embedding 和 LM head 权重
     norm_type: str = "rms"       # 归一化层类型：rms / layernorm
+    vision_model: str = ""       # 视觉编码器名（空=纯文本，如 "google/siglip-base-patch16-224"）
+    vision_freeze: bool = True    # 是否冻结视觉编码器参数
 
     @property
     def swa_dim(self):
@@ -34,6 +36,7 @@ class DataConfig:
     """数据加载配置"""
     data_dir: str = ""           # 数据根目录
     coco_zip: str = ""           # COCO annotations zip 路径
+    image_dir: str = ""          # COCO 图片目录路径（多模态训练用）
     tokenizer_path: str = ""     # BPE tokenizer 保存路径
     seq_len: int = 512           # 训练序列长度
     batch_size: int = 8          # 批大小
