@@ -1,4 +1,5 @@
 torch>=2.1.0
 tokenizers>=0.15.0
+datasets>=2.14.0
 sentencepiece
 matplotlib

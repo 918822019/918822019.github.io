@@ -17,9 +17,13 @@ EdgeTransformer 训练流水线
   - Checkpoint 自动保存（best/last/定期）
   - JSON 日志记录
 """
-import argparse
 import os
 import sys
+
+# 默认使用 HuggingFace 镜像，加速国内访问（用户可 export HF_ENDPOINT 覆盖）
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+
+import argparse
 import time
 import math
 from pathlib import Path
@@ -73,6 +77,13 @@ def parse_args():
     # 数据
     p.add_argument("--coco_zip", type=str, default="", help="COCO zip 路径")
     p.add_argument("--tokenizer_path", type=str, default="bpe_tokenizer.pkl", help="BPE tokenizer 路径")
+    p.add_argument("--data_source", type=str, default="coco", choices=["coco", "skypile"], help="数据源类型")
+    p.add_argument("--hf_dataset", type=str, default="Skywork/SkyPile-150B", help="HuggingFace dataset name")
+    p.add_argument("--hf_train_split", type=str, default="train", help="HF train split")
+    p.add_argument("--hf_val_split", type=str, default="", help="HF val split（空则从 train 取样本）")
+    p.add_argument("--max_samples", type=int, default=0, help="最大样本数（0=无限）")
+    p.add_argument("--max_size_gb", type=float, default=0, help="最大读取数据量 GB（0=不限制）")
+    p.add_argument("--tokenizer_sample", type=int, default=10000, help="BPE 训练采样条数")
 
     args = p.parse_args()
     if args.no_amp:
@@ -95,6 +106,13 @@ def build_config(args):
         tokenizer_path=args.tokenizer_path,
         seq_len=args.seq_len,
         batch_size=args.batch_size,
+        data_source=args.data_source,
+        hf_dataset=args.hf_dataset,
+        hf_train_split=args.hf_train_split,
+        hf_val_split=args.hf_val_split,
+        max_samples=args.max_samples,
+        max_size_gb=args.max_size_gb,
+        tokenizer_sample=args.tokenizer_sample,
     )
     train = TrainConfig(
         steps=args.steps,
@@ -144,24 +162,38 @@ def find_coco_zip():
 
 
 @torch.no_grad()
-def evaluate(model, val_loader, device, vocab_size, num_batches=20):
+def evaluate(model, val_loader, device, vocab_size, num_batches=20, is_streaming=False):
     """
     验证：在验证集上计算平均 loss
 
     model: 待评估模型
     val_loader: 验证集 DataLoader
     num_batches: 取多少个 batch 计算平均（控制验证时间）
+    is_streaming: 流式模式需用持久迭代器取 batch
     """
     model.eval()
     total_loss, count = 0.0, 0
-    for i, (x, y) in enumerate(val_loader):
-        if i >= num_batches:
-            break
-        x, y = x.to(device), y.to(device)
-        logits = model(x)
-        loss = F.cross_entropy(logits.reshape(-1, vocab_size), y.reshape(-1))
-        total_loss += loss.item()
-        count += 1
+    if is_streaming:
+        val_iter = iter(val_loader)
+        for i in range(num_batches):
+            try:
+                x, y = next(val_iter)
+            except StopIteration:
+                break
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            loss = F.cross_entropy(logits.reshape(-1, vocab_size), y.reshape(-1))
+            total_loss += loss.item()
+            count += 1
+    else:
+        for i, (x, y) in enumerate(val_loader):
+            if i >= num_batches:
+                break
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            loss = F.cross_entropy(logits.reshape(-1, vocab_size), y.reshape(-1))
+            total_loss += loss.item()
+            count += 1
     return total_loss / max(count, 1)
 
 
@@ -184,24 +216,31 @@ def train(config):
         print(f"GPU: {torch.cuda.get_device_name(0)}")
         print(f"显存: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
 
-    # 自动查找 COCO 数据
-    if not config.data.coco_zip:
-        config.data.coco_zip = find_coco_zip()
-    if not config.data.coco_zip:
-        print("错误: 未找到 COCO 数据，请使用 --coco_zip <路径> 指定")
-        sys.exit(1)
-    print(f"数据: {config.data.coco_zip}")
-
     # 加载数据和 tokenizer
     print("加载数据...")
-    train_ids, val_ids, tokenizer = load_data(config.data)
-    vocab_size = tokenizer.vocab_size
-    config.model.vocab_size = vocab_size
-    print(f"词表: {vocab_size} | 训练 token: {len(train_ids):,} | 验证 token: {len(val_ids):,}")
-
-    # 构建 DataLoader
-    train_loader = get_dataloader(train_ids, config.data.seq_len, config.data.batch_size, shuffle=True)
-    val_loader = get_dataloader(val_ids, config.data.seq_len, config.data.batch_size, shuffle=False)
+    from data import load_streaming_data
+    if config.data.data_source == "skypile":
+        print(f"数据源: {config.data.hf_dataset} (streaming)")
+        train_loader, val_loader, tokenizer = load_streaming_data(config.data)
+        vocab_size = tokenizer.vocab_size
+        config.model.vocab_size = vocab_size
+        print(f"词表: {vocab_size} | 流式模式（不预加载全部数据）")
+        is_streaming = True
+    else:
+        # COCO 路径：全量载入内存
+        if not config.data.coco_zip:
+            config.data.coco_zip = find_coco_zip()
+        if not config.data.coco_zip:
+            print("错误: 未找到 COCO 数据，请使用 --coco_zip <路径> 指定")
+            sys.exit(1)
+        print(f"数据: {config.data.coco_zip}")
+        train_ids, val_ids, tokenizer = load_data(config.data)
+        vocab_size = tokenizer.vocab_size
+        config.model.vocab_size = vocab_size
+        print(f"词表: {vocab_size} | 训练 token: {len(train_ids):,} | 验证 token: {len(val_ids):,}")
+        train_loader = get_dataloader(train_ids, config.data.seq_len, config.data.batch_size, shuffle=True)
+        val_loader = get_dataloader(val_ids, config.data.seq_len, config.data.batch_size, shuffle=False)
+        is_streaming = False
 
     # 构建模型
     print("构建模型...")
@@ -259,6 +298,8 @@ def train(config):
     print(f"{'=' * 60}\n")
 
     # ── 训练主循环 ──
+    # 流式模式用持久迭代器（创建一次，逐步取 batch，不重建）
+    train_iter = iter(train_loader) if is_streaming else None
     for step in range(start_step, total_steps):
         # 更新学习率（余弦退火 + 预热）
         lr = get_cosine_lr(step, config.train.warmup_steps, total_steps, config.train.lr)
@@ -270,9 +311,12 @@ def train(config):
 
         # 梯度累积：将大 batch 拆成多个 micro-batch 依次前向反向
         for micro_step in range(config.train.grad_accum):
-            # next(iter(loader)) 每步重建迭代器——简单但非最优，
-            # 不用 for 循环是因为需要 step 级控制（lr 调度、验证、checkpoint）
-            x, y = next(iter(train_loader))
+            if is_streaming:
+                # 流式模式：从持久迭代器取 batch
+                x, y = next(train_iter)
+            else:
+                # COCO 模式：每步重建迭代器（简单但非最优）
+                x, y = next(iter(train_loader))
             x, y = x.to(device), y.to(device)
 
             # 混合精度前向传播
@@ -310,7 +354,7 @@ def train(config):
 
         # ── 定期验证 ──
         if step > 0 and step % config.train.eval_every == 0:
-            val_loss = evaluate(model, val_loader, device, vocab_size, config.train.val_batches)
+            val_loss = evaluate(model, val_loader, device, vocab_size, config.train.val_batches, is_streaming)
             val_ppl = math.exp(min(val_loss, 20))
             tag = ""
             if val_loss < best_val_loss:

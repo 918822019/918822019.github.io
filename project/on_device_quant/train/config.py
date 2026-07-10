@@ -41,6 +41,14 @@ class DataConfig:
     phase: str = "text"          # 训练阶段：text / multimodal
     max_captions: int = 0        # 最大 caption 数量（0=全部）
     min_caps_per_image: int = 2  # 多模态序列最少 caption 数
+    data_source: str = "coco"       # 数据源：coco / skypile
+    hf_dataset: str = ""            # HuggingFace dataset name（如 "Skywork/SkyPile-150B"）
+    hf_train_split: str = "train"   # HF train split 名
+    hf_val_split: str = ""          # HF val split 名（空则从 train 取少量样本）
+    max_samples: int = 0            # 最大样本数（0=无限流式）
+    max_size_gb: float = 0          # 最大读取数据量（GB，0=不限制，按原始文本字节数累计）
+    tokenizer_sample: int = 10000   # BPE 训练采样条数
+    text_field: str = "text"        # 数据集文本字段名
 
 
 @dataclass
