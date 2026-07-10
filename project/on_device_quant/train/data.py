@@ -1,11 +1,23 @@
 """
 数据加载模块
 
-支持：
-  - COCO Captions 数据集加载（小规模，全量载入内存）
-  - HuggingFace 流式数据集加载（SkyPile/FineWeb 等，不下载完整数据）
-  - BPE tokenizer 训练/加载/编解码
-  - PyTorch DataLoader / IterableDataset 封装
+支持三种数据源，通过 config.data_source 和 config.phase 选择：
+
+1. COCO Captions 文本模式（data_source="coco", phase="text"）
+   - 全量加载 COCO captions 到内存，按 seq_len 切片
+   - 适合小规模调试和基线训练
+
+2. HuggingFace 流式文本（data_source="skypile", phase="text"）
+   - SkyPile/FineWeb 等大规模文本数据集，streaming=True 在线读取
+   - 不下载完整数据，内存恒定（仅 token buffer）
+   - 支持 max_samples / max_size_gb 双重数据量控制
+
+3. COCO 多模态（data_source="coco", phase="multimodal"）
+   - 图片-描述对：SigLIP 编码图像 + BPE 编码文本
+   - 返回 (pixel_values, x, y) 三元组
+   - 损失只在 text 位置计算（padding 和 image 位置 target=-100）
+
+BPE tokenizer 基于 HuggingFace tokenizers（Rust 实现），训练/编码 100x 加速。
 """
 import json
 import os
@@ -383,6 +395,18 @@ def load_streaming_data(config):
 
 
 # ── 多模态数据加载（COCO 图片 + 描述）──
+#
+# 多模态训练数据流：
+#   COCO 图片 → SiglipImageProcessor (resize 224 + normalize)
+#            → pixel_values [3, 224, 224]
+#   COCO caption → BPE encode → [BOS] + tokens + [EOS]
+#                → x (input) / y (target)，padding 到 seq_len
+#
+# 训练时 batch = (pixel_values, x, y)
+#   model(x, images=pixel_values) → logits [B, 196+T, vocab]
+#   取 logits[:, 196:, :]（只算 text 部分）与 y 计算 loss
+#   y 中 padding 位置 = -100，cross_entropy 自动忽略
+
 
 def load_coco_annotations(zip_path):
     """
@@ -410,10 +434,18 @@ class COCOMultimodalDataset(Dataset):
     """
     COCO 图片-描述对，用于多模态训练
 
-    每条样本返回 (pixel_values, x, y)：
-      pixel_values: [3, 224, 224] 经 SiglipImageProcessor 预处理
-      x: [seq_len] 文本 token ids（BOS + caption，padding 到 seq_len）
-      y: [seq_len] 目标 token ids（caption + EOS，padding 位置 = -100）
+    每条样本对应一张 COCO 图片及其 caption：
+      - 图片经 SiglipImageProcessor 预处理（resize 224×224 + normalize）
+      - caption 经 BPE 编码，加 [BOS]/[EOS] 边界标记
+      - x/y 按语言模型目标对齐：x = [BOS, cap_0, ...], y = [cap_0, ..., EOS]
+      - 不够 seq_len 的部分 pad 0（x）/ -100（y，不计算 loss）
+
+    返回三元组 (pixel_values, x, y)：
+      pixel_values: [3, 224, 224] float tensor
+      x: [seq_len] long tensor，输入 token ids
+      y: [seq_len] long tensor，目标 token ids（padding 位置 = -100）
+
+    注意：COCO 每张图片有 5 条 caption，这里每条 caption 是一个独立样本。
     """
 
     def __init__(self, annotations, image_dir, split, tokenizer, image_processor, seq_len):

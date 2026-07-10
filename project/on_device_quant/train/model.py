@@ -7,6 +7,11 @@ EdgeTransformer 模型定义
   - SWA: Sliding Window Attention，标准 softmax 因果注意力 + RoPE，保局部精度
 
 三个分支通过可学习门控（softmax gate）加权融合。
+
+多模态扩展（LLaVA 式前缀注入）：
+  - VisionEncoder: 冻结 SigLIP ViT → MLP 投影 → 图像 token 前缀
+  - EdgeTransformer.forward(x, images) 支持可选图像输入
+  - 纯文本模式（images=None）与旧 checkpoint 完全兼容
 """
 import torch
 import torch.nn as nn
@@ -298,10 +303,25 @@ class HybridBlock(nn.Module):
 class VisionEncoder(nn.Module):
     """SigLIP 视觉编码器（冻结）+ MLP 投影到 LLM dim
 
-    预训练 SigLIP ViT 提取图像 patch 特征，MLP 投影到语言模型维度后
-    作为前缀 token 注入序列。视觉编码器冻结，只训练投影层。
+    采用 LLaVA 式架构：预训练 SigLIP ViT 提取图像 patch 特征，
+    经两层 MLP 投影到语言模型维度后，作为前缀 token 拼接到文本嵌入前。
 
-    SigLIP-base-patch16-224: 93M params, hidden=768, 196 patches (14×14)
+    为什么选 SigLIP 而非 CLIP：
+      - SigLIP 使用 sigmoid loss（非 contrastive softmax），训练更高效
+      - 在 ImageNet zero-shot 和检索任务上同级优于 CLIP
+      - base-patch16-224 规格适中（93M 参数），不占过多显存
+
+    冻结策略：
+      - SigLIP ViT 全部参数 requires_grad=False，训练时不更新
+      - 只训练 MLP 投影层 + img_pos 位置编码
+      - 这样保留预训练视觉知识，只学"视觉→语言"的对齐
+
+    SigLIP-base-patch16-224 规格：
+      - 参数量：93M（冻结，不参与训练）
+      - hidden_size：768
+      - image_size：224×224
+      - patch_size：16×16 → 14×14 = 196 个 patch token
+      - 输出：[B, 196, 768]（丢弃 CLS token）→ 投影 → [B, 196, dim]
     """
 
     def __init__(self, model_name="google/siglip-base-patch16-224", dim=1536, freeze=True):
@@ -352,7 +372,17 @@ class EdgeTransformer(nn.Module):
     EdgeTransformer：端侧混合注意力语言模型
 
     结构：
-      Embedding + 位置编码 → [HybridBlock × N] → Norm → Linear LM Head
+      [VisionEncoder (可选)] → Embedding + 位置编码 → [HybridBlock × N] → Norm → Linear LM Head
+
+    纯文本模式（vision_model=""）：
+      token_ids → Embedding + pos → HybridBlock × N → LM Head
+      与旧 checkpoint 完全兼容
+
+    多模态模式（vision_model="google/siglip-base-patch16-224"）：
+      images → SigLIP (frozen) → MLP → img_tokens [B, 196, dim]
+      token_ids → Embedding + pos → text_tokens [B, T, dim]
+      [img_tokens, text_tokens] → HybridBlock × N → LM Head
+      损失只在 text 位置计算（image 位置 target=-100）
 
     每个 HybridBlock 内含 CSA + HCA + SWA 三分支并行注意力。
     norm_type 控制归一化层（默认 RMSNorm，可选 LayerNorm 兼容旧 checkpoint）。

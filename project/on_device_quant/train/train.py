@@ -2,10 +2,22 @@
 EdgeTransformer 训练流水线
 
 使用方法：
-    python train.py                          # 默认配置，COCO 数据
-    python train.py --steps 20000 --lr 5e-4  # 覆盖超参数
-    python train.py --resume checkpoints/edge_transformer/last.pt  # 恢复训练
-    python train.py --dim 768 --num_layers 6 --compile  # 大模型 + torch.compile
+    # 纯文本训练（COCO captions，默认）
+    python train.py
+
+    # 大规模文本预训练（SkyPile 流式，50GB）
+    python train.py --data_source skypile --hf_dataset Skywork/SkyPile-150B \\
+        --max_size_gb 50 --steps 50000 --batch_size 4 --grad_accum 4
+
+    # 多模态训练（COCO 图片+描述）
+    python train.py --phase multimodal --image_dir /path/to/coco/images \\
+        --coco_zip /path/to/annotations.zip
+
+    # 恢复训练
+    python train.py --resume checkpoints/edge_transformer/last.pt
+
+    # 自定义模型配置 + torch.compile
+    python train.py --dim 1536 --num_layers 20 --compile
 
 特性：
   - 混合注意力架构（CSA + HCA + SWA 三分支金字塔）
@@ -14,8 +26,15 @@ EdgeTransformer 训练流水线
   - torch.compile 加速（编译 GEMM 密集部分，--compile 开启）
   - 梯度累积（等效放大 batch size）
   - 余弦退火学习率调度（带线性预热）
+  - 三种数据源：COCO 文本 / SkyPile 流式 / COCO 多模态
+  - 多模态：冻结 SigLIP 视觉编码器 + 可训练 MLP 投影层
   - Checkpoint 自动保存（best/last/定期）
   - JSON 日志记录
+
+训练模式选择：
+  --data_source coco  --phase text        → COCO captions 文本训练（默认）
+  --data_source skypile --phase text       → SkyPile 流式文本预训练
+  --data_source coco  --phase multimodal   → COCO 图片-描述多模态训练
 """
 import os
 import sys

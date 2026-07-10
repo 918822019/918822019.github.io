@@ -1,5 +1,12 @@
 """
 EdgeTransformer 文本/多模态生成推理脚本
+
+支持两种推理模式：
+  1. 纯文本生成：python infer.py --prompt "a cat sitting on"
+  2. 图文条件生成：python infer.py --image /path/to/photo.jpg --prompt "a photo of"
+
+图文模式需要 checkpoint 训练时使用了 --phase multimodal + --vision_model。
+推理时自动从 config.json 检测是否含视觉编码器。
 """
 import argparse
 import json
@@ -64,18 +71,23 @@ def generate_multimodal(model, tokenizer, image, prompt, image_processor,
     图文条件文本生成（LLaVA 式）
 
     图像经 SigLIP 编码后作为前缀 token，文本 prompt 跟在后面，
-    自回归生成描述文本。
+    自回归生成描述文本。因果注意力保证 text token 可以看到所有 image token，
+    而 image token 之间也是因果的（只看到前面的 patch）。
+
+    每步只取最后一个位置的 logits（image 前缀不参与采样）。
 
     Args:
-        model: 带视觉编码器的 EdgeTransformer
+        model: 带视觉编码器的 EdgeTransformer（vision_model 非空）
         tokenizer: BPE 分词器
-        image: PIL Image
+        image: PIL Image（任意尺寸，SiglipImageProcessor 会 resize）
         prompt: 文本提示（如 "a photo of"）
-        image_processor: SiglipImageProcessor
+        image_processor: SiglipImageProcessor 实例
         max_len: 最大生成 token 数
-        temp: 温度参数
-        top_k: top-k 截断
+        temp: 温度参数，控制采样随机性
+        top_k: top-k 截断，0 表示不截断
         device: 推理设备
+    Returns:
+        生成的完整文本（prompt + 生成部分）
     """
     model.eval()
     # 编码图像
