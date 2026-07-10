@@ -14,6 +14,33 @@ import torch.nn.functional as F
 import math
 
 
+# ── 归一化层 ──
+
+class RMSNorm(nn.Module):
+    """RMSNorm：只做 RMS 归一化，省去 LayerNorm 的 mean 减法和 bias 参数
+
+    相比 LayerNorm 减少 ~20% 计算：去掉 mean(centering) 和 bias(shift)，
+    只保留 scale。权重初始化为 ones（恒等映射），训练时从全 1 开始学习缩放。
+    """
+
+    def __init__(self, dim, eps=1e-6):
+        super().__init__()
+        self.weight = nn.Parameter(torch.ones(dim))
+        self.eps = eps
+
+    def forward(self, x):
+        # x.pow(2) 在 FP16 下可能溢出（>65504），所以强制在 FP32 中计算再转回
+        rms = x.float().pow(2).mean(-1, keepdim=True).add(self.eps).rsqrt()
+        return (x.float() * rms).to(x.dtype) * self.weight
+
+
+def get_norm(dim, norm_type="rms", eps=1e-6):
+    """归一化层工厂：norm_type='rms' → RMSNorm，'layernorm' → nn.LayerNorm"""
+    if norm_type == "rms":
+        return RMSNorm(dim, eps)
+    return nn.LayerNorm(dim, eps=eps)
+
+
 # ── 旋转位置编码（RoPE）──
 
 class RoPE(nn.Module):
@@ -64,19 +91,24 @@ def linear_attn(q, k, v, decay=0.99, eps=1e-6):
     B, H, T, D = q.shape
     dtype = q.dtype
     q, k, v = q.float(), k.float(), v.float()
-    # 特征映射：确保非负（类似 softmax 的正值特性）
+    # 特征映射：relu(x)² 确保非负（类似 softmax 的正值特性），+0.1 防止全零
     qf = F.relu(q).pow(2) + 0.1
     kf = F.relu(k).pow(2) + 0.1
     vf = F.relu(v).pow(2) + 0.1
+    # 累积状态矩阵 S: [B, H, D, D]，常数内存 O(D²)，不随序列长度增长
+    # 归一化向量 z: [B, H, D]，跟踪 key 的累积和用于除法归一化
     S = torch.zeros(B, H, D, D, device=q.device, dtype=torch.float32)
     z = torch.zeros(B, H, D, device=q.device, dtype=torch.float32)
     outs = []
+    # 逐 token 循环：S 是递归状态，step i 依赖 step i-1 的 S，无法并行
     for i in range(T):
-        ki = kf[:, :, i : i + 1]
+        ki = kf[:, :, i : i + 1]  # [B, H, 1, D]
         vi = vf[:, :, i : i + 1]
         qi = qf[:, :, i : i + 1]
+        # 衰减旧记忆 + 写入新信息：S = decay·S + k^T @ v（外积更新）
         S = decay * S + ki.transpose(-1, -2) @ vi
         z = decay * z + ki.squeeze(2)
+        # 查询累积状态：out = q @ S / (q @ z)，分母防止除零
         out = (qi @ S) / (qi @ z.unsqueeze(-1)).clamp(min=eps)
         outs.append(out)
     return torch.cat(outs, dim=-2).to(dtype)
@@ -149,16 +181,16 @@ class SWA(nn.Module):
 
     def forward(self, x):
         B, T, D = x.shape
-        # 合并投影 Q/K/V → 拆分为多头
+        # 合并投影 Q/K/V（一次 GEMM）→ 拆分为 [3, B, num_heads, T, head_dim]
         qkv = self.qkv(x).reshape(B, T, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]
-        # 应用旋转位置编码
+        q, k, v = qkv[0], qkv[1], qkv[2]  # 各 [B, num_heads, T, head_dim]
+        # 应用旋转位置编码（对 q 和 k 使用相同的旋转角度）
         emb = self.rope(k)
         q = apply_rope(q, emb)
         k = apply_rope(k, emb)
-        # 因果注意力（PyTorch 原生实现，自动使用 FlashAttention/内存高效实现）
-        out = F.scaled_dot_product_attention(q, k, v, is_causal=True)
-        out = out.transpose(1, 2).reshape(B, T, -1)
+        # 因果注意力：PyTorch 原生 SDPA，自动选 FlashAttention / memory-efficient 实现
+        out = F.scaled_dot_product_attention(q, k, v, is_causal=True)  # [B, H, T, head_dim]
+        out = out.transpose(1, 2).reshape(B, T, -1)  # 合并多头 → [B, T, num_heads*head_dim]
         return self.proj(out)
 
 
@@ -206,10 +238,10 @@ class HybridBlock(nn.Module):
     """
 
     def __init__(self, dim, num_heads, head_dim, ffn_mult=4, dropout=0.0,
-                 swa_window=128, csa_ratio=2, hca_ratio=128):
+                 swa_window=128, csa_ratio=2, hca_ratio=128, norm_type="rms"):
         super().__init__()
         self.swa_window = swa_window
-        self.norm1 = nn.LayerNorm(dim)
+        self.norm1 = get_norm(dim, norm_type)
 
         # 金字塔压缩器（平均池化，零参数量）
         self.compress_csa = SeqCompress(kernel=4, stride=csa_ratio, padding=1)  # n → n/2, 重叠
@@ -222,7 +254,7 @@ class HybridBlock(nn.Module):
         self.swa = SWA(dim, num_heads, head_dim)
 
         self.gate = nn.Parameter(torch.ones(3))
-        self.norm2 = nn.LayerNorm(dim)
+        self.norm2 = get_norm(dim, norm_type)
         self.ffn = nn.Sequential(
             nn.Linear(dim, dim * ffn_mult),
             nn.GELU(),
@@ -268,31 +300,34 @@ class EdgeTransformer(nn.Module):
     EdgeTransformer：端侧混合注意力语言模型
 
     结构：
-      Embedding → [HybridBlock × N] → LayerNorm → Linear LM Head
+      Embedding + 位置编码 → [HybridBlock × N] → Norm → Linear LM Head
 
-    每个 HybridBlock 内含 CSA + HCA + SWA 三分支并行注意力
+    每个 HybridBlock 内含 CSA + HCA + SWA 三分支并行注意力。
+    norm_type 控制归一化层（默认 RMSNorm，可选 LayerNorm 兼容旧 checkpoint）。
     """
 
     def __init__(self, vocab_size=4096, dim=512, num_layers=4, num_heads=8,
                  head_dim=64, ffn_mult=4, dropout=0.0, max_seq_len=512, weight_tie=True,
-                 swa_window=128, csa_ratio=2, hca_ratio=128):
+                 swa_window=128, csa_ratio=2, hca_ratio=128, norm_type="rms"):
         super().__init__()
         self.swa_window = swa_window
         self.tok = nn.Embedding(vocab_size, dim)                        # 词嵌入
         self.pos = nn.Parameter(torch.randn(1, max_seq_len, dim) * 0.02) # 可学习位置编码
         self.layers = nn.ModuleList([
             HybridBlock(dim, num_heads, head_dim, ffn_mult, dropout,
-                        swa_window, csa_ratio, hca_ratio)
+                        swa_window, csa_ratio, hca_ratio, norm_type)
             for _ in range(num_layers)
         ])
-        self.norm = nn.LayerNorm(dim)     # 最终归一化
+        self.norm = get_norm(dim, norm_type)     # 最终归一化
         self.head = nn.Linear(dim, vocab_size, bias=False)  # LM 输出头
         if weight_tie:
-            self.head.weight = self.tok.weight  # 权重共享：embedding 和 LM head 共用
+            # 权重共享：embedding 和 LM head 共用同一矩阵，减少 ~vocab×dim 参数
+            self.head.weight = self.tok.weight
         self._init_weights()
+        # 注意：RMSNorm.weight 初始化为 ones（恒等映射），_init_weights 不覆盖它
 
     def _init_weights(self):
-        """初始化权重：Linear 和 Embedding 用 N(0, 0.02)"""
+        """初始化权重：Linear 和 Embedding 用 N(0, 0.02)，Norm 保持 ones 初始化"""
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.normal_(m.weight, std=0.02)

@@ -39,6 +39,12 @@ class BPETokenizer:
         self._trained = False
 
     def train(self, text, verbose=False):
+        """
+        从语料训练 BPE 词表
+
+        special_tokens 占据 id 0-3（<pad>, <bos>, <eos>, <unk>），
+        BPE 合并的子词从 id 4 开始。
+        """
         trainer = BpeTrainer(
             vocab_size=self.vocab_size,
             special_tokens=["<pad>", "<bos>", "<eos>", "<unk>"],
@@ -49,10 +55,13 @@ class BPETokenizer:
         self._trained = True
 
     def encode(self, text):
-        ids = self._tok.encode(text).ids
-        # 偏移：BPE id 从 4 开始（0=pad,1=bos,2=eos,3=unk），映射到我们的 BOS=2,EOS=3 方案
-        # 我们直接返回 HF tokenizer 的 id，下游用 id+offset 或者调整特殊 token
-        return ids
+        """
+        文本 → token id 列表
+
+        HF tokenizer 的 BPE id 从 4 开始（0-3 是特殊 token），
+        下游在每条 caption 前后手动加 [BOS]=2, [EOS]=3 作为序列边界。
+        """
+        return self._tok.encode(text).ids
 
     def decode(self, ids):
         return self._tok.decode(ids)
@@ -63,6 +72,7 @@ class BPETokenizer:
 
     @classmethod
     def load(cls, path):
+        """从 JSON 文件加载已训练的 tokenizer，跳过 __init__ 避免重复构建"""
         tok = cls.__new__(cls)
         tok._tok = HFTokenizer.from_file(str(path))
         tok.vocab_size = tok._tok.get_vocab_size()
@@ -88,8 +98,10 @@ class SequenceDataset(Dataset):
         return max(0, self.n // self.seq_len)
 
     def __getitem__(self, idx):
+        # 非重叠切片：每条样本占 seq_len 个 token，步长 = seq_len，无重复
         i = idx * self.seq_len
         x = self.data[i : i + self.seq_len]
+        # y 是 x 右移一位：预测下一个 token（语言模型目标）
         y = self.data[i + 1 : i + self.seq_len + 1]
         return x, y
 
@@ -141,7 +153,7 @@ def load_data(config):
         caps = load_coco_captions(coco_zip)
         # 如果没有预训练的 tokenizer，从语料中训练
         if tokenizer is None:
-            # 只用前 N 条 caption 训练 BPE（全量 59 万条太慢）
+            # 只用前 N 条 caption 训练 BPE（全量 59 万条太慢），1 万条已足够覆盖常用子词
             sample_size = _cfg_get(config, "tokenizer_sample", 10000)
             sample_caps = caps["train"][:sample_size] + caps["val"][:sample_size // 10]
             all_text = " ".join(sample_caps)
@@ -150,13 +162,14 @@ def load_data(config):
             if tokenizer_path:
                 tokenizer.save(tokenizer_path)
 
-        # 编码所有 caption，每条加 [BOS]=2 和 [EOS]=3
+        # 编码所有 caption：每条前后加 [BOS]=2 [EOS]=3 作为序列边界标记
         all_tokens = []
         for cap in caps["train"]:
             all_tokens.extend([2] + tokenizer.encode(cap) + [3])
         data = torch.tensor(all_tokens, dtype=torch.long)
 
-        # 95% 训练 / 5% 验证
+        # 按时间顺序 95/5 划分：前 95% 训练，后 5% 验证
+        # COCO captions 无时间序列性，但这样保证验证集是模型没见过的图片描述
         n = int(0.95 * len(data))
         train_data, val_data = data[:n], data[n:]
         return train_data, val_data, tokenizer

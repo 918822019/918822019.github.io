@@ -5,12 +5,15 @@ EdgeTransformer 训练流水线
     python train.py                          # 默认配置，COCO 数据
     python train.py --steps 20000 --lr 5e-4  # 覆盖超参数
     python train.py --resume checkpoints/edge_transformer/last.pt  # 恢复训练
+    python train.py --dim 768 --num_layers 6 --compile  # 大模型 + torch.compile
 
 特性：
-  - 混合注意力架构（CSA + HCA + SWA）
-  - AMP 混合精度训练（FP16 + FP32）
+  - 混合注意力架构（CSA + HCA + SWA 三分支金字塔）
+  - RMSNorm 归一化（可选 LayerNorm 兼容旧 checkpoint）
+  - AMP 混合精度训练（FP16 + FP32，HybridBlock 内强制 FP32）
+  - torch.compile 加速（编译 GEMM 密集部分，--compile 开启）
   - 梯度累积（等效放大 batch size）
-  - 余弦退火学习率调度
+  - 余弦退火学习率调度（带线性预热）
   - Checkpoint 自动保存（best/last/定期）
   - JSON 日志记录
 """
@@ -58,6 +61,9 @@ def parse_args():
     p.add_argument("--grad_accum", type=int, default=1, help="梯度累积步数")
     p.add_argument("--use_amp", action="store_true", default=True, help="使用混合精度")
     p.add_argument("--no_amp", action="store_true", help="禁用混合精度")
+    p.add_argument("--norm_type", type=str, default="rms", choices=["rms", "layernorm"], help="归一化层类型")
+    p.add_argument("--compile", action="store_true", help="启用 torch.compile")
+    p.add_argument("--compile_mode", type=str, default="default", help="编译模式")
 
     # 日志与保存
     p.add_argument("--log_every", type=int, default=50, help="每 N 步打印日志")
@@ -82,6 +88,7 @@ def build_config(args):
         num_heads=args.num_heads,
         head_dim=args.head_dim,
         max_seq_len=args.seq_len,
+        norm_type=args.norm_type,
     )
     data = DataConfig(
         coco_zip=args.coco_zip,
@@ -101,6 +108,8 @@ def build_config(args):
         ckpt_every=args.ckpt_every,
         use_amp=args.use_amp,
         seed=args.seed,
+        compile=args.compile,
+        compile_mode=args.compile_mode,
     )
     return RunConfig(
         model=model,
@@ -114,9 +123,16 @@ def build_config(args):
 
 
 def find_coco_zip():
-    """自动查找 COCO 数据集 zip 文件"""
+    """
+    自动查找 COCO 数据集 zip 文件
+
+    按优先级依次尝试多个候选路径（绝对路径 → 相对路径），
+    找到第一个存在的即返回，未找到返回空字符串。
+    """
     candidates = [
+        # 绝对路径：macOS 桌面项目目录
         os.path.expanduser("~/Desktop/918822019.github.io/data/coco/PAI/COCO2017/annotations_trainval2017.zip"),
+        # 相对路径：从不同工作目录运行时的回退
         "data/coco/PAI/COCO2017/annotations_trainval2017.zip",
         "../data/coco/PAI/COCO2017/annotations_trainval2017.zip",
         "../../data/coco/PAI/COCO2017/annotations_trainval2017.zip",
@@ -198,8 +214,15 @@ def train(config):
         ffn_mult=config.model.ffn_mult,
         max_seq_len=config.model.max_seq_len,
         weight_tie=config.model.weight_tie,
+        norm_type=config.model.norm_type,
     ).to(device)
     print(f"参数量: {count_params(model):,}")
+    print(f"归一化: {config.model.norm_type}")
+
+    # torch.compile 加速（编译 GEMM 密集部分，linear_attn 循环回退 eager）
+    if config.train.compile and device.type == "cuda":
+        print(f"torch.compile ({config.train.compile_mode})...")
+        model = torch.compile(model, mode=config.train.compile_mode)
 
     # 优化器：AdamW with weight decay
     optimizer = torch.optim.AdamW(
@@ -247,6 +270,8 @@ def train(config):
 
         # 梯度累积：将大 batch 拆成多个 micro-batch 依次前向反向
         for micro_step in range(config.train.grad_accum):
+            # next(iter(loader)) 每步重建迭代器——简单但非最优，
+            # 不用 for 循环是因为需要 step 级控制（lr 调度、验证、checkpoint）
             x, y = next(iter(train_loader))
             x, y = x.to(device), y.to(device)
 

@@ -21,6 +21,7 @@ class ModelConfig:
     dropout: float = 0.0         # Dropout 比率（0 表示不使用）
     max_seq_len: int = 512       # 最大序列长度（位置编码上限）
     weight_tie: bool = True      # 是否共享 embedding 和 LM head 权重
+    norm_type: str = "rms"       # 归一化层类型：rms / layernorm
 
     @property
     def swa_dim(self):
@@ -57,6 +58,8 @@ class TrainConfig:
     val_batches: int = 20        # 验证时取多少个 batch
     use_amp: bool = True         # 是否使用混合精度训练（FP16）
     seed: int = 42               # 随机种子
+    compile: bool = False        # 是否使用 torch.compile 编译模型
+    compile_mode: str = "default"  # 编译模式：default / reduce-overhead / max-autotune
 
 
 @dataclass

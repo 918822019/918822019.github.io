@@ -2,7 +2,7 @@
 .DS_Store
 .vscode/
 .idea/
-
+.qoder/
 # Python cache
 __pycache__/
 *.pyc

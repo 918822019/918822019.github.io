@@ -20,8 +20,9 @@ def get_cosine_lr(step, warmup, total, base_lr, min_lr=1e-5):
     """
     余弦退火学习率调度（带线性预热）
 
-    step 0 → warmup:  线性增长 0 → base_lr
-    step warmup → total:  余弦衰减 base_lr → min_lr
+    step 0 → warmup:  线性增长 0 → base_lr（预热阶段，避免初期 lr 过大训练崩溃）
+    step warmup → total:  余弦衰减 base_lr → min_lr（退火阶段，末期微调）
+    min_lr 不设为 0：保留微小学习率，防止末期完全停止学习
     """
     if step < warmup:
         # 线性预热阶段
@@ -81,6 +82,7 @@ def load_checkpoint(path, model, optimizer=None, scaler=None):
     加载训练 checkpoint
 
     返回: (start_step, last_loss)
+    weights_only=False：optimizer state 含非张量对象，需要完整反序列化
     """
     ckpt = torch.load(path, map_location="cpu", weights_only=False)
     model.load_state_dict(ckpt["model"])
