@@ -11,15 +11,15 @@ import json
 
 @dataclass
 class ModelConfig:
-    """模型结构配置"""
-    vocab_size: int = 4096       # BPE 词表大小
-    dim: int = 512               # 隐藏层维度
-    num_layers: int = 4          # 混合注意力层数
-    num_heads: int = 8           # SWA 多头注意力头数
+    """模型结构配置（默认 ~0.6B）"""
+    vocab_size: int = 8192       # BPE 词表大小
+    dim: int = 1536              # 隐藏层维度
+    num_layers: int = 20         # 混合注意力层数
+    num_heads: int = 24          # SWA 多头注意力头数
     head_dim: int = 64           # 每个注意力头的维度
     ffn_mult: int = 4            # FFN 扩展倍数
     dropout: float = 0.0         # Dropout 比率（0 表示不使用）
-    max_seq_len: int = 512       # 最大序列长度（位置编码上限）
+    max_seq_len: int = 1024      # 最大序列长度（位置编码上限）
     weight_tie: bool = True      # 是否共享 embedding 和 LM head 权重
     norm_type: str = "rms"       # 归一化层类型：rms / layernorm
 

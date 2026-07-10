@@ -78,7 +78,7 @@ def main():
         m = cfg["model"]
     else:
         # 旧 checkpoint 没有 config.json，用默认参数回退
-        m = {"dim": 512, "num_layers": 4, "num_heads": 8, "head_dim": 64}
+        m = {"dim": 1536, "num_layers": 20, "num_heads": 24, "head_dim": 64}
 
     # norm_type 从 config 读取，旧 checkpoint 默认用 rms
     norm_type = m.get("norm_type", "rms")

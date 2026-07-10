@@ -48,12 +48,12 @@ def parse_args():
     p.add_argument("--resume", type=str, default="", help="恢复训练的 checkpoint 路径")
     p.add_argument("--seed", type=int, default=42, help="随机种子")
 
-    # 模型配置
-    p.add_argument("--dim", type=int, default=512, help="隐藏层维度")
-    p.add_argument("--num_layers", type=int, default=4, help="Transformer 层数")
-    p.add_argument("--num_heads", type=int, default=8, help="SWA 多头注意力头数")
+    # 模型配置（默认 ~0.6B）
+    p.add_argument("--dim", type=int, default=1536, help="隐藏层维度")
+    p.add_argument("--num_layers", type=int, default=20, help="Transformer 层数")
+    p.add_argument("--num_heads", type=int, default=24, help="SWA 多头注意力头数")
     p.add_argument("--head_dim", type=int, default=64, help="每个头的维度")
-    p.add_argument("--seq_len", type=int, default=512, help="序列长度")
+    p.add_argument("--seq_len", type=int, default=1024, help="序列长度")
     p.add_argument("--batch_size", type=int, default=8, help="批大小")
 
     # 训练配置
