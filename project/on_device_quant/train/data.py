@@ -31,7 +31,7 @@ class BPETokenizer:
     基于 HuggingFace tokenizers（Rust 实现），训练/编码速度提升 100x+
     """
 
-    def __init__(self, vocab_size=4096):
+    def __init__(self, vocab_size=65536):
         self.vocab_size = vocab_size
         self._tok = HFTokenizer(BPE(unk_token="<unk>"))
         self._tok.pre_tokenizer = ByteLevelPT(add_prefix_space=False)
@@ -157,7 +157,7 @@ def load_data(config):
             sample_size = _cfg_get(config, "tokenizer_sample", 10000)
             sample_caps = caps["train"][:sample_size] + caps["val"][:sample_size // 10]
             all_text = " ".join(sample_caps)
-            tokenizer = BPETokenizer(_cfg_get(config, "vocab_size", 4096))
+            tokenizer = BPETokenizer(_cfg_get(config, "vocab_size", 65536))
             tokenizer.train(all_text, verbose=True)
             if tokenizer_path:
                 tokenizer.save(tokenizer_path)
@@ -339,7 +339,7 @@ def load_streaming_data(config):
     hf_val_split = _cfg_get(config, "hf_val_split", "")
     seq_len = _cfg_get(config, "seq_len", 512)
     batch_size = _cfg_get(config, "batch_size", 8)
-    vocab_size = _cfg_get(config, "vocab_size", 8192)
+    vocab_size = _cfg_get(config, "vocab_size", 65536)
     max_samples = _cfg_get(config, "max_samples", 0)
     max_size_gb = _cfg_get(config, "max_size_gb", 0)
     text_field = _cfg_get(config, "text_field", "text")

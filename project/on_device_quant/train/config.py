@@ -12,7 +12,7 @@ import json
 @dataclass
 class ModelConfig:
     """模型结构配置（默认 ~0.6B）"""
-    vocab_size: int = 8192       # BPE 词表大小
+    vocab_size: int = 65536      # BPE 词表大小（覆盖中英双字节级 BPE）
     dim: int = 1536              # 隐藏层维度
     num_layers: int = 20         # 混合注意力层数
     num_heads: int = 24          # SWA 多头注意力头数
