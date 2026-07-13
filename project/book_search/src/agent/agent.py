@@ -1,5 +1,6 @@
 """Agent 基类模块，整合 LLM、Embedding 和 Reranker 基础操作"""
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional, Tuple
 
 from src.llm.client import EmbeddingClient, LLMClient, RerankerClient
@@ -71,21 +72,24 @@ class Agent:
         query: str,
         modes: Optional[List[str]] = None,
         context: Optional[str] = None,
+        max_workers: int = 3,
     ) -> List[str]:
-        """并行语义上的多策略改写，失败时回退到原始查询"""
+        """并行多策略改写，失败时回退到原始查询"""
         rewrite_modes = modes or self.DEFAULT_PARALLEL_REWRITE_MODES
         rewritten_queries: List[str] = []
 
-        for mode in rewrite_modes:
-            try:
-                rewritten = self.rewrite_query(
-                    query, mode=mode, context=context
-                ).strip()
-            except Exception:
-                continue
-
-            if rewritten and rewritten not in rewritten_queries:
-                rewritten_queries.append(rewritten)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_mode = {
+                executor.submit(self.rewrite_query, query, mode=mode, context=context): mode
+                for mode in rewrite_modes
+            }
+            for future in as_completed(future_to_mode):
+                try:
+                    rewritten = future.result().strip()
+                except Exception:
+                    continue
+                if rewritten and rewritten not in rewritten_queries:
+                    rewritten_queries.append(rewritten)
 
         if not rewritten_queries:
             return [query]

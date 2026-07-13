@@ -90,6 +90,21 @@ response = llm.generate_with_context(
 )
 ```
 
+### 重试机制
+
+所有客户端共享统一的 `_request_with_retry` 重试函数，在网络抖动或服务端错误时自动恢复：
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `max_retries` | `3`（从 `MAX_RETRIES` 环境变量读取） | 最大重试次数 |
+| `base_delay` | `1.0` 秒 | 初始退避延迟 |
+| 重试策略 | 指数退避 | 延迟 = 1s → 2s → 4s |
+
+- **5xx 错误**：自动重试（服务器临时故障）
+- **429 错误**：自动重试（限流）
+- **4xx 错误**（非 429）：不重试（客户端错误）
+- 网络超时/连接异常：立即失败，不重试
+
 ### 调用流程
 
 ```mermaid
@@ -101,8 +116,14 @@ sequenceDiagram
     Caller->>LLM: generate(prompt)
     LLM->>LLM: 构建 messages 列表
     LLM->>LLM: 构建 payload (model, messages, temperature)
-    LLM->>API: POST /chat/completions
-    API-->>LLM: 返回 JSON 响应
+    loop 重试 (最多 3 次)
+        LLM->>API: POST /chat/completions
+        alt 成功
+            API-->>LLM: 返回 JSON 响应
+        else 5xx / 429
+            LLM->>LLM: 指数退避等待
+        end
+    end
     LLM->>LLM: 解析 choices[0].message.content
     LLM-->>Caller: 返回生成文本
 ```
@@ -201,7 +222,7 @@ results = embedder.search_similar(query_vec, candidate_vecs, top_k=3)
 
 ```python
 class RerankerClient:
-    """Reranker 客户端类，用于文档重排序"""
+    """Reranker 客户端类，统一管理重排序模型调用"""
 ```
 
 ### 初始化
@@ -216,15 +237,15 @@ RerankerClient(
 
 ### 核心方法
 
-#### `rerank(query, documents, top_k=5)`
+#### `rerank(query, documents, top_k=None)`
 
-对文档进行重排序。
+对文档列表按与 query 的相关性重排序。
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `query` | `str` | 查询文本 |
 | `documents` | `List[str]` | 待排序的文档列表 |
-| `top_k` | `int` | 返回前 k 个结果 |
+| `top_k` | `Optional[int]` | 返回前 k 个结果（默认全部） |
 | **返回** | `List[Tuple[int, float]]` | `(原始索引, 相关性分数)` 列表 |
 
 ```python
@@ -235,6 +256,38 @@ documents = ["文档A", "文档B", "文档C"]
 results = reranker.rerank("玄幻小说", documents, top_k=2)
 # 返回: [(1, 0.95), (0, 0.87)] — 按相关性降序
 ```
+
+### 调用流程
+
+```mermaid
+sequenceDiagram
+    participant Caller as 调用方
+    participant Reranker as RerankerClient
+    participant API as Rerank API
+
+    Caller->>Reranker: rerank(query, documents)
+    alt 已配置 API
+        Reranker->>API: POST /rerank
+        alt 成功
+            API-->>Reranker: 返回 results
+        else 失败
+            Reranker->>Reranker: 降级为 fallback 排序
+        end
+    else 未配置 API
+        Reranker->>Reranker: 降级为 fallback 排序
+    end
+    Reranker-->>Caller: 返回排序结果
+```
+
+### 降级策略
+
+当 `RERANKER_BASE_URL` 或 `RERANKER_API_KEY` 未配置时，自动降级为按原始顺序返回：
+
+```python
+score(idx) = 1.0 - idx / len(documents)
+```
+
+这使得即使没有独立的 Reranker 服务，系统仍然可以正常工作，只是排序精度会下降。
 
 ---
 
@@ -254,6 +307,7 @@ results = reranker.rerank("玄幻小说", documents, top_k=2)
 | `RERANKER_BASE_URL` | Reranker API 地址 | `https://api.openai.com/v1` |
 | `RERANKER_MODEL_NAME` | Reranker 模型名称 | - |
 | `REQUEST_TIMEOUT` | 请求超时（秒） | `60` |
+| `MAX_RETRIES` | 请求最大重试次数（指数退避） | `3` |
 
 详细说明请参考 [环境变量配置](../configuration/environment.md)。
 

@@ -140,11 +140,11 @@ python main.py
 | 命令 | 说明 |
 |------|------|
 | `python main.py` | 启动搜索引擎（交互式问答） |
-| `python -m src.tools.cli polish` | 执行文本润色 |
-| `python -m src.tools.cli embed` | 执行向量化入库 |
-| `python -m src.tools.cli search --query "玄幻"` | 基于 embedding 搜索 |
-| `python -m src.tools.stats` | 全线统计（数据库/润色/向量化/打标/分片） |
-| `python -m src.tools.cli stats` | 查看数据库基础统计 |
+| `python -m src.tools.cli polish --limit 100 --sleep 0.1` | 执行文本润色（`--model` 指定模型，`--overwrite` 覆盖已有） |
+| `python -m src.tools.cli embed --limit 100 --sleep 0.1` | 执行向量化入库 |
+| `python -m src.tools.cli search --query "玄幻" --top-k 10` | 基于 embedding 搜索 |
+| `python -m src.tools.cli stats` | 查看数据库基础统计（书籍/章节/润色/向量化） |
+| `python -m src.tools.stats` | 全线统计（数据库/润色/向量化/打标/分片/Faiss） |
 | `python -m src.tools.look_db` | 快速查看数据库表结构 |
 | `python -m src.crawler.engine crawl-books --start 1 --end 1000` | 爬取书籍目录 |
 | `python -m src.crawler.engine crawl-content --start 1 --end 1000` | 爬取章节正文 |

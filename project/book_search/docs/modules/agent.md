@@ -6,6 +6,7 @@
 
 ```
 src/agent/
+├── __init__.py       # 模块导出
 ├── agent.py          # Agent 基类：基础操作 + 查询改写
 └── search_agent.py   # SearchAgent(Agent)：检索策略 + 多路融合
 ```
@@ -100,13 +101,33 @@ rewritten = agent.rewrite_query("玄幻小说", mode="expansion")
 rewritten = agent.rewrite_query("废柴逆袭", mode="hyde")
 ```
 
-#### `rewrite_parallel(query, modes=None, context=None)`
+#### `rewrite_parallel(query, modes=None, context=None, max_workers=3)`
 
-并行执行多策略改写，失败时回退到原始查询。
+并行执行多策略改写，使用 `ThreadPoolExecutor` 同时调用 LLM，失败时回退到原始查询。
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `query` | `str` | - | 原始查询 |
+| `modes` | `Optional[List[str]]` | `["expansion", "clarification", "hyde"]` | 重写模式列表 |
+| `context` | `Optional[str]` | `None` | 对话历史 |
+| `max_workers` | `int` | `3` | 并行线程数 |
+| **返回** | `List[str]` | - | 去重后的重写结果 |
 
 ```python
-queries = agent.rewrite_parallel("好看的玄幻小说")
+queries = agent.rewrite_parallel("好看的玄幻小说", max_workers=4)
 # 返回: ["好看的玄幻小说", "玄幻小说 奇幻修真", "一本讲述...的假设文档"]
+```
+
+```mermaid
+graph TD
+    A[原始查询] --> B[ThreadPoolExecutor]
+    B --> C[expansion]
+    B --> D[clarification]
+    B --> E[hyde]
+    C --> F[去重合并]
+    D --> F
+    E --> F
+    F --> G[结果列表]
 ```
 
 ---

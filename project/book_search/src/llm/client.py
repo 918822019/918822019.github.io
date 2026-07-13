@@ -1,12 +1,45 @@
 """LLM / Embedding / Reranker 客户端整合模块。"""
 
 import json
+import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib import error, request
 
 import numpy as np
 
 from src.config import config
+
+
+def _request_with_retry(
+    req: request.Request,
+    timeout: int,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+) -> str:
+    """发送 HTTP 请求，带指数退避重试"""
+    last_exc: Exception | None = None
+    for attempt in range(max_retries + 1):
+        try:
+            with request.urlopen(req, timeout=timeout) as resp:
+                return resp.read().decode("utf-8")
+        except error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="ignore")
+            last_exc = RuntimeError(
+                f"HTTP {exc.code}, detail={detail}"
+            )
+            if exc.code < 500 and exc.code != 429:
+                break
+        except error.URLError as exc:
+            last_exc = RuntimeError(f"{exc.reason}")
+            break
+        except Exception as exc:
+            last_exc = RuntimeError(str(exc))
+
+        if attempt < max_retries:
+            delay = base_delay * (2 ** attempt)
+            time.sleep(delay)
+
+    raise RuntimeError(f"请求失败 (重试 {max_retries} 次): {last_exc}") from last_exc
 
 
 class LLMClient:
@@ -61,16 +94,8 @@ class LLMClient:
             method="POST",
         )
         timeout = kwargs.get("timeout", config.REQUEST_TIMEOUT)
-        try:
-            with request.urlopen(req, timeout=timeout) as resp:
-                resp_data = resp.read().decode("utf-8")
-        except error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="ignore")
-            raise RuntimeError(
-                f"LLM 调用失败: HTTP {exc.code}, detail={detail}"
-            ) from exc
-        except error.URLError as exc:
-            raise RuntimeError(f"LLM 调用失败: {exc.reason}") from exc
+        max_retries = kwargs.pop("max_retries", config.MAX_RETRIES)
+        resp_data = _request_with_retry(req, timeout, max_retries=max_retries)
 
         try:
             data = json.loads(resp_data)
@@ -169,16 +194,8 @@ class EmbeddingClient:
             method="POST",
         )
         timeout = kwargs.get("timeout", config.REQUEST_TIMEOUT)
-        try:
-            with request.urlopen(req, timeout=timeout) as resp:
-                resp_data = resp.read().decode("utf-8")
-        except error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="ignore")
-            raise RuntimeError(
-                f"Embedding 调用失败: HTTP {exc.code}, detail={detail}"
-            ) from exc
-        except error.URLError as exc:
-            raise RuntimeError(f"Embedding 调用失败: {exc.reason}") from exc
+        max_retries = kwargs.pop("max_retries", config.MAX_RETRIES)
+        resp_data = _request_with_retry(req, timeout, max_retries=max_retries)
 
         try:
             data = json.loads(resp_data)
@@ -242,17 +259,70 @@ class RerankerClient:
         self._initialize_client()
 
     def _initialize_client(self):
-        """初始化 Reranker 客户端（当前为桩实现）。"""
-        pass
+        """初始化 Reranker 客户端配置。"""
+        self.client = {
+            "base_url": self.base_url.rstrip("/") if self.base_url else "",
+            "model": self.model_name,
+        }
+
+    def _post_rerank(
+        self,
+        query: str,
+        documents: List[str],
+        top_n: int,
+        **kwargs: Any,
+    ) -> List[Tuple[int, float]]:
+        """发送 rerank 请求，返回 (索引, 分数) 列表。"""
+        if not self.base_url:
+            return self._fallback_rerank(documents, top_n)
+        if not self.api_key:
+            return self._fallback_rerank(documents, top_n)
+
+        payload = {
+            "model": self.model_name,
+            "query": query,
+            "documents": documents,
+            "top_n": top_n,
+        }
+        payload.update(kwargs)
+
+        body = json.dumps(payload).encode("utf-8")
+        api_url = f"{self.base_url.rstrip('/')}/rerank"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        req = request.Request(api_url, data=body, headers=headers, method="POST")
+        timeout = kwargs.get("timeout", config.REQUEST_TIMEOUT)
+        max_retries = kwargs.pop("max_retries", config.MAX_RETRIES)
+        resp_data = _request_with_retry(req, timeout, max_retries=max_retries)
+
+        try:
+            data = json.loads(resp_data)
+            results = data.get("results", [])
+            return [(r["index"], r["relevance_score"]) for r in results]
+        except Exception:
+            return self._fallback_rerank(documents, top_n)
+
+    def _fallback_rerank(
+        self, documents: List[str], top_n: int
+    ) -> List[Tuple[int, float]]:
+        """无可用 reranker API 时的降级策略：按原顺序返回。"""
+        scores = [
+            (idx, 1.0 - idx / max(len(documents), 1))
+            for idx in range(len(documents))
+        ]
+        scores.sort(key=lambda x: x[1], reverse=True)
+        return scores[:top_n]
 
     def rerank(
         self, query: str, documents: List[str], top_k: Optional[int] = None
     ) -> List[Tuple[int, float]]:
         """对文档列表按与 query 的相关性重排序。"""
-        scores = [(idx, 0.5) for idx in range(len(documents))]
-        scores.sort(key=lambda x: x[1], reverse=True)
-        if top_k is not None:
-            scores = scores[:top_k]
-        return scores
+        if not documents:
+            return []
+        top_n = min(top_k or len(documents), len(documents))
+        return self._post_rerank(query, documents, top_n=top_n)
 
 

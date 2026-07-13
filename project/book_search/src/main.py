@@ -4,7 +4,9 @@ Agent 服务完整业务流程
 """
 import sqlite3
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List
+
+import numpy as np
 
 from src.agent import Agent
 from src.config import config
@@ -17,6 +19,7 @@ from src.process.polish import (
     load_or_create_faiss_index,
     resolve_existing_db_path,
 )
+from src.process.polish._faiss import _require_faiss
 
 
 class BookSearchEngine:
@@ -146,59 +149,63 @@ class BookSearchEngine:
         if not self.faiss_index:
             self.load_faiss_index()
             
-        # 1. 将查询转换为向量
-        query_embedding = self.agent.embed_text(query)
+        # 1. 将查询转换为向量并归一化
+        query_embedding = np.asarray(self.agent.embed_text(query), dtype=np.float32).reshape(1, -1)
+        faiss = _require_faiss()
+        faiss.normalize_L2(query_embedding)
         
         # 2. 在 Faiss 中搜索相似向量
-        import numpy as np
-        faiss = __import__('faiss')
+        ntotal = self.faiss_index.ntotal
+        search_k = min(top_k * 2, ntotal) if ntotal > 0 else 0
+        if search_k == 0:
+            return []
+        scores, indices = self.faiss_index.search(query_embedding, search_k)
         
-        query_vec = np.asarray([query_embedding], dtype=np.float32)
-        faiss.normalize_L2(query_vec)
+        # 3. 批量从数据库获取书籍元数据
+        candidate_ids = [int(bid) for bid in indices[0].tolist() if int(bid) >= 0]
+        if not candidate_ids:
+            return []
         
-        scores, indices = self.faiss_index.search(query_vec, min(top_k * 2, self.faiss_index.ntotal))
+        placeholders = ",".join("?" for _ in candidate_ids)
+        rows = self.conn.execute(
+            f"""
+            SELECT p.book_id, p.source_title, p.source_intro,
+                   p.polished_title, p.polished_intro,
+                   e.text_content
+            FROM {POLISH_TABLE} p
+            LEFT JOIN {EMBED_TABLE} e ON p.book_id = e.book_id
+            WHERE p.book_id IN ({placeholders})
+            """,
+            candidate_ids
+        ).fetchall()
         
-        # 3. 从数据库获取书籍元数据
+        metadata_map = {int(r["book_id"]): r for r in rows}
+        
         results = []
-        for score, book_id in zip(scores[0].tolist(), indices[0].tolist()):
-            if book_id == -1:  # Faiss 返回 -1 表示无效 ID
+        for i, book_id in enumerate(candidate_ids):
+            row = metadata_map.get(book_id)
+            if row is None:
                 continue
-                
-            row = self.conn.execute(
-                f"""
-                SELECT p.book_id, p.original_title, p.original_intro,
-                       p.polished_title, p.polished_intro,
-                       e.text_content, e.embedding_dim
-                FROM {POLISH_TABLE} p
-                LEFT JOIN {EMBED_TABLE} e ON p.book_id = e.book_id
-                WHERE p.book_id = ?
-                """,
-                (int(book_id),)
-            ).fetchone()
-            
-            if row:
-                results.append({
-                    "book_id": int(book_id),
-                    "score": float(score),
-                    "original_title": row["original_title"],
-                    "original_intro": row["original_intro"],
-                    "polished_title": row["polished_title"],
-                    "polished_intro": row["polished_intro"],
-                    "text_content": row["text_content"]
-                })
+            results.append({
+                "book_id": book_id,
+                "score": float(scores[0][i]),
+                "original_title": row["source_title"],
+                "original_intro": row["source_intro"],
+                "polished_title": row["polished_title"],
+                "polished_intro": row["polished_intro"],
+                "text_content": row["text_content"]
+            })
         
         # 4. 使用 Reranker 精排
         if results:
             documents = [r["text_content"] for r in results]
             reranked = self.agent.rerank_documents(query, documents, top_k=top_k)
             
-            # 按重排序结果重新组织
             final_results = []
-            for rank_idx, original_idx in enumerate(reranked):
-                idx = original_idx[0]
-                if idx < len(results):
-                    result = results[idx].copy()
-                    result["rerank_score"] = original_idx[1]
+            for rank_idx, (orig_idx, rerank_score) in enumerate(reranked):
+                if orig_idx < len(results):
+                    result = results[orig_idx].copy()
+                    result["rerank_score"] = rerank_score
                     result["final_rank"] = rank_idx + 1
                     final_results.append(result)
             

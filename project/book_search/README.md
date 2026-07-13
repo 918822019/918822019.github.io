@@ -11,12 +11,32 @@
 - data/books.db SQLite 抓取数据库
 - data/books_tagged.json LLM 打标结果
 - src/crawler/engine.py 抓取脚本 (python -m src.crawler.engine)
+- src/agent/ 智能代理（Agent + SearchAgent + __init__.py）
+- src/llm/client.py LLM/Embedding/Reranker 客户端（含指数退避重试）
 - src/process/pipeline.py 预处理编排入口
-- src/process/polish/ 文本润色与向量化（含 Faiss 检索）
+- src/process/polish/ 文本润色与向量化（含 Faiss 检索 + ID 缓存）
 - src/process/taggers/ LLM 批量打标签
-- src/tools/ 实用工具（上传/下载/数据查看）
+- src/tools/cli.py 统一 CLI（polish/embed/search/stats）
+- src/tools/ 其他实用工具（上传/下载/数据查看）
 - scripts/ 辅助脚本
 - tests/ 单元测试
+
+## 核心优化
+
+### 指数退避重试
+所有 LLM/Embedding/Reranker API 调用自带指数退避重试（1s → 2s → 4s），对 5xx/429 错误自动恢复，无需手动处理。
+
+### 并行查询改写
+`Agent.rewrite_parallel` 使用 `ThreadPoolExecutor` 并发调用多种改写策略（expansion/clarification/hyde），显著降低多策略场景延迟。
+
+### 真实 Reranker 支持
+`RerankerClient` 从桩实现升级为真实 API 调用（标准 `/rerank` 端点），未配置 API 时自动降级为 fallback 排序。
+
+### Faiss ID 缓存
+`_get_index_ids` 增加模块级缓存，避免每次 O(n) 扫描整个 Faiss id_map，批量写入时性能提升显著。
+
+### 批量元数据查询
+`BookSearchEngine.search_books_by_query` 使用 `WHERE book_id IN (...)` 一次批量查询代替逐条查库。
 
 ## 快速开始
 

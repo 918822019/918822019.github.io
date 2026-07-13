@@ -14,6 +14,7 @@ from src.utils import now_iso
 from src.process.polish._db import EMBED_TABLE, POLISH_TABLE, ensure_embedding_table, ensure_polish_table
 from src.process.polish._faiss import (
     _get_index_ids,
+    _invalidate_id_cache,
     _require_faiss,
     _upsert_vector,
     get_faiss_index_path,
@@ -70,8 +71,22 @@ def run_polish_embedding(
         changed = 0
         skipped = 0
         failed = 0
-        index: Any = None
         index_dirty = False
+
+        # 预加载 Faiss 索引（如果存在），避免每轮重复加载
+        index = load_or_create_faiss_index(index_path, dim=0) if index_path.exists() else None
+        if index is not None:
+            embedded_ids = _get_index_ids(index)
+        else:
+            embedded_ids = set()
+
+        if not overwrite:
+            # 从 DB 中读取已存在的 book_id，避免重复查库
+            existing_rows = conn.execute(
+                f"SELECT book_id FROM {EMBED_TABLE}"
+            ).fetchall()
+            db_embedded_ids = {int(r["book_id"]) for r in existing_rows}
+            embedded_ids.update(db_embedded_ids)
 
         for idx, row in enumerate(rows, start=1):
             if limit > 0 and processed >= limit:
@@ -82,13 +97,7 @@ def run_polish_embedding(
             polished_intro = str(row["polished_intro"] or "").strip()
             text_content = build_embedding_text(polished_title, polished_intro)
 
-            exists = conn.execute(
-                f"SELECT 1 FROM {EMBED_TABLE} WHERE book_id = ?",
-                (book_id,),
-            ).fetchone()
-            if index is not None and book_id in _get_index_ids(index):
-                exists = True
-            if exists and not overwrite:
+            if not overwrite and book_id in embedded_ids:
                 skipped += 1
                 continue
 
@@ -102,6 +111,7 @@ def run_polish_embedding(
                     embedding=embedding,
                     overwrite=overwrite,
                 )
+                _invalidate_id_cache(index)
 
                 conn.execute(
                     f"""

@@ -14,6 +14,7 @@ FAISS_INDEX_SUFFIX = config.data.faiss_index_suffix
 DATA_DIR_NAME = config.data.dir
 
 _faiss_module: Any = None
+_id_cache: dict[int, set[int]] = {}  # id(index) -> set of book_ids
 
 
 def _require_faiss() -> Any:
@@ -78,13 +79,27 @@ def load_or_create_faiss_index(index_path: Path, dim: int | None = None) -> Any:
     return _create_index(dim)
 
 
+def _invalidate_id_cache(index: Any) -> None:
+    """清除指定索引的 ID 缓存"""
+    _id_cache.pop(id(index), None)
+
+
 def _get_index_ids(index: Any) -> set[int]:
-    """获取 Faiss 索引中所有已存在的 ID"""
+    """获取 Faiss 索引中所有已存在的 ID（带缓存）"""
+    index_id = id(index)
+    cached = _id_cache.get(index_id)
+    if cached is not None:
+        return cached
+
     f = _require_faiss()
     if index.ntotal == 0:
-        return set()
-    id_array = f.vector_to_array(index.id_map)
-    return {int(x) for x in id_array.tolist()}
+        ids: set[int] = set()
+    else:
+        id_array = f.vector_to_array(index.id_map)
+        ids = {int(x) for x in id_array.tolist()}
+
+    _id_cache[index_id] = ids
+    return ids
 
 
 def _upsert_vector(
@@ -100,6 +115,7 @@ def _upsert_vector(
         if not overwrite:
             return
         index.remove_ids(np.asarray([book_id], dtype=np.int64))
+        _invalidate_id_cache(index)
     vec = np.asarray(embedding, dtype=np.float32).reshape(1, -1)
     f.normalize_L2(vec)
     index.add_with_ids(vec, np.asarray([book_id], dtype=np.int64))
