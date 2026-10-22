@@ -1,22 +1,8 @@
 # frontend
 
-这是从仓库根目录提取出的前端静态站点副本，放在 `frontend/` 目录下。目的是把前端资源整理为可独立查看的子目录，保留原始文件不变。
+博客界面统一由仓库根目录的 `index.html` 和 `assets/` 提供，包含首页、文章阅读器、搜索与主题切换。`frontend/index.html` 保留为兼容入口，会保留查询参数和章节锚点跳转到博客首页。
 
-使用方法：
-
-- 直接在文件管理器中打开 `frontend/index.html`（部分功能可能受同源策略影响）。
-- 推荐在本地启动一个静态服务器：
-
-```bash
-# 在仓库根目录运行（推荐）
-python -m http.server 8000
-# 然后打开 http://localhost:8000/frontend/
-```
-
-说明：
-
-- `frontend/` 中的页面会从上级目录的 `docs/` 中读取文档索引（`../docs/index.json`），因此建议以仓库根目录为工作目录启动静态服务器。
-- 我已保留仓库根目录的 `index.html` 与 `assets/`，本次操作只是复制并调整了一个自包含的 `frontend/` 视图。如需把根目录也改为只保留 `frontend/`，我可以继续移动并更新引用。
+在仓库根目录运行 `python -m http.server 8000`，访问 `http://localhost:8000/` 即可预览。数据观察器仍为独立页面。
 
 ## 数据观察器 (Data Inspector)
 

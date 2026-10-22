@@ -1,579 +1,530 @@
-(function () {
-    const treeContainer = document.getElementById('doc-tree');
-    const searchInput = document.getElementById('doc-search');
-    const featuredContainer = document.getElementById('featured-posts');
-    const allPostsContainer = document.getElementById('all-posts');
-    const tagFilter = document.getElementById('tag-filter');
-    const feedCount = document.getElementById('feed-count');
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('sidebar-toggle');
-    const overlay = document.getElementById('sidebar-overlay');
-    const themeToggle = document.getElementById('theme-toggle');
-    const randomPostBtn = document.getElementById('random-post');
-    const copyCmdBtn = document.getElementById('copy-cmd');
-    const copyTip = document.getElementById('copy-tip');
-    const toTopBtn = document.getElementById('to-top');
-    const publishCmd = document.getElementById('publish-cmd');
-    const readerPanel = document.getElementById('reader-panel');
-    const readerTitle = document.getElementById('reader-title');
-    const readerPath = document.getElementById('reader-path');
-    const readerContent = document.getElementById('reader-content');
-    const readerBack = document.getElementById('reader-back');
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const categoryNames = {
+    infra: "推理与系统",
+    模型相关的论文: "模型与论文",
+    架构设计: "架构设计",
+    数学: "数学基础",
+    AI搜索: "AI 搜索",
+    RAG: "RAG 与检索",
+    其他: "其他笔记",
+  };
+  const categorySymbols = {
+    infra: "⌘",
+    模型相关的论文: "◇",
+    架构设计: "▦",
+    数学: "∑",
+    AI搜索: "↗",
+    RAG: "◎",
+  };
+  const pcodePath = "docs/infra/推理优化/pcode-report.md";
+  let articles = [],
+    activeCategory = "全部",
+    readRequest = 0,
+    headingObserver;
+  const textCache = new Map();
+  const escape = (value) =>
+    String(value ?? "").replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+  const href = (path) => "/?doc=" + encodeURIComponent(path);
+  const categoryLabel = (key) => categoryNames[key] || key;
+  const shortDate = (date) => (date ? date.replaceAll("-", ".") : "");
+  const docPath = () => new URLSearchParams(location.search).get("doc");
+  const notice = (message) =>
+    '<div class="empty-state"><strong>' +
+    escape(message) +
+    "</strong><span>你可以返回所有手记，或稍后重试。</span></div>";
 
-    let allFiles = [];
-    let currentTag = '全部';
-
-    function createDocHref(path) {
-        return '/?doc=' + encodeURIComponent(path);
+  function collect(node) {
+    if (node.type === "file" && node.path.endsWith(".md")) {
+      const parts = node.path.split("/");
+      articles.push({
+        ...node,
+        category: parts.length > 2 ? parts[1] : "其他",
+        title: node.title || node.name.replace(/\.md$/, ""),
+        excerpt: node.excerpt || "打开这篇手记，阅读完整的思考与实践记录。",
+        readingMinutes: node.readingMinutes || 1,
+      });
     }
-
-    function toggleSidebar(force) {
-        const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
-        sidebar.classList.toggle('open', shouldOpen);
-        if (overlay) {
-            overlay.classList.toggle('show', shouldOpen);
-            overlay.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
-        }
+    (node.children || []).forEach(collect);
+  }
+  function publicArticles() {
+    return articles.filter((a) => !/\/README\.md$/i.test(a.path));
+  }
+  function sortArticles(list) {
+    return [...list].sort((a, b) =>
+      $("sort-order").value === "title"
+        ? a.title.localeCompare(b.title, "zh-CN")
+        : (b.updated || "").localeCompare(a.updated || "") ||
+          a.title.localeCompare(b.title, "zh-CN"),
+    );
+  }
+  function articleCard(a) {
+    return `<article class="post-card"><span class="post-category">${escape(categoryLabel(a.category))}</span><h3><a href="${href(a.path)}">${escape(a.title)}</a></h3><p class="post-excerpt">${escape(a.excerpt)}</p><div class="post-bottom">${a.updated ? `<time datetime="${escape(a.updated)}">${shortDate(a.updated)}</time><span>·</span>` : ""}<span>约 ${a.readingMinutes} 分钟</span><span class="post-arrow" aria-hidden="true">↗</span></div></article>`;
+  }
+  function renderPosts() {
+    const filtered = sortArticles(
+      publicArticles().filter(
+        (a) => activeCategory === "全部" || a.category === activeCategory,
+      ),
+    );
+    $("post-list").innerHTML = filtered.length
+      ? filtered.map(articleCard).join("")
+      : notice("这个专题暂时还没有文章");
+    $("result-count").textContent =
+      `${String(filtered.length).padStart(2, "0")} 篇文章`;
+    $("category-filters")
+      .querySelectorAll("button")
+      .forEach((b) => {
+        const active = b.dataset.category === activeCategory;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-pressed", String(active));
+      });
+  }
+  function chooseCategory(category) {
+    activeCategory = category;
+    renderPosts();
+    $("notes").scrollIntoView({ behavior: "smooth" });
+  }
+  function renderHome() {
+    const files = publicArticles();
+    const categories = [...new Set(files.map((a) => a.category))];
+    $("article-count").textContent = String(files.length).padStart(2, "0");
+    $("topic-count").textContent = String(categories.length).padStart(2, "0");
+    $("category-filters").innerHTML = ["全部", ...categories]
+      .map(
+        (c) =>
+          `<button class="filter-button" data-category="${escape(c)}" aria-pressed="false">${escape(c === "全部" ? c : categoryLabel(c))}</button>`,
+      )
+      .join("");
+    $("category-filters")
+      .querySelectorAll("button")
+      .forEach((b) =>
+        b.addEventListener("click", () => {
+          activeCategory = b.dataset.category;
+          renderPosts();
+        }),
+      );
+    $("topic-list").innerHTML = categories
+      .map(
+        (c) =>
+          `<button class="topic-button" data-category="${escape(c)}"><span class="topic-symbol" aria-hidden="true">${categorySymbols[c] || "◇"}</span><span>${escape(categoryLabel(c))}</span><span class="topic-number">${String(files.filter((a) => a.category === c).length).padStart(2, "0")}</span><span class="topic-arrow" aria-hidden="true">↗</span></button>`,
+      )
+      .join("");
+    $("topic-list")
+      .querySelectorAll("button")
+      .forEach((b) =>
+        b.addEventListener("click", () => chooseCategory(b.dataset.category)),
+      );
+    const featured =
+      files.find((a) => a.path === pcodePath) || sortArticles(files)[0];
+    if (featured) {
+      $("spotlight").classList.remove("loading-placeholder");
+      const visual =
+        featured.path === pcodePath
+          ? `<div class="spotlight-visual" aria-label="Pcode 双分类头示意与实验指标"><div class="visual-label"><span>PCODE / PARALLEL READOUT</span><span>896 → 390 × 2</span></div><div class="pcode-flow"><div class="flow-node">Hidden<br>state</div><span class="flow-arrow" aria-hidden="true">→</span><div class="flow-heads"><span>Head A</span><span>Head B</span></div><span class="flow-arrow" aria-hidden="true">→</span><div class="flow-result">Token</div></div><div class="visual-metrics"><div><strong>29.7<span class="metric-unit"> MB</span></strong><small>E3 draft 侧交付</small></div><div><strong>2.70<span class="metric-unit"> ×</span></strong><small>统一 GPU 对照 / 相对 AR</small></div></div></div>`
+          : `<div class="spotlight-visual"><p class="eyebrow">A NOTE WORTH READING</p><span class="about-mark">n·</span><p>保持好奇，持续构建。</p></div>`;
+      $("spotlight").innerHTML =
+        `<div class="spotlight-copy"><span class="category-pill">精选手记 · ${escape(categoryLabel(featured.category))}</span><h2><a href="${href(featured.path)}">${escape(featured.title)}</a></h2><p>${escape(featured.path === pcodePath ? "用并行双码头压缩草稿模型的读出成本。从设计与训练，到 GPU 对照和手机验收，梳理紧凑交付的价值与边界。" : featured.excerpt)}</p><a class="text-link" href="${href(featured.path)}">阅读这篇报告 <span aria-hidden="true">↗</span></a></div>${visual}`;
+    } else {
+      $("spotlight").innerHTML = notice("还没有可展示的文章");
     }
+    renderPosts();
+  }
 
-    toggleBtn.addEventListener('click', function () {
-        toggleSidebar();
+  function renderSearch() {
+    const query = $("search-input").value.trim().toLocaleLowerCase();
+    const matches = sortArticles(publicArticles()).filter(
+      (a) =>
+        !query ||
+        `${a.title} ${a.excerpt} ${a.path} ${categoryLabel(a.category)}`
+          .toLocaleLowerCase()
+          .includes(query),
+    );
+    $("search-count").textContent = query
+      ? `找到 ${matches.length} 篇相关手记`
+      : "输入关键词，或从下面开始阅读。";
+    $("search-results").innerHTML = matches.length
+      ? matches
+          .map(
+            (a) =>
+              `<a class="search-result" href="${href(a.path)}"><strong>${escape(a.title)}</strong><span>${escape(categoryLabel(a.category))} · 约 ${a.readingMinutes} 分钟</span></a>`,
+          )
+          .join("")
+      : '<div class="empty-state"><strong>还没有找到这条线索</strong><span>试试「Pcode」「量化」「TVM」等关键词。</span></div>';
+  }
+  function openSearch() {
+    renderSearch();
+    $("search-dialog").showModal();
+    $("search-input").focus();
+  }
+  function updateTheme() {
+    const dark = document.documentElement.dataset.theme === "dark";
+    $("theme-toggle").setAttribute(
+      "aria-label",
+      dark ? "切换到浅色模式" : "切换到深色模式",
+    );
+    $("theme-icon").textContent = dark ? "☼" : "◐";
+    document.querySelector('meta[name="theme-color"]').content = dark
+      ? "#181e1b"
+      : "#f7f7f2";
+  }
+  async function copyText(button, text, label) {
+    try {
+      await navigator.clipboard.writeText(text);
+      button.textContent = "已复制 ✓";
+    } catch {
+      button.textContent = "复制失败，请手动选择";
+    }
+    setTimeout(() => {
+      button.textContent = label;
+    }, 1800);
+  }
+
+  // Keep TeX out of Markdown's escaping/formatting pass, then render it locally.
+  function renderMarkdown(markdown) {
+    const math = [];
+    const protectedMarkdown = markdown.replace(
+      /(```[\s\S]*?```|`[^`\n]+`)|(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|(?<!\\)\$(?!\s)[^$\n]+?(?<!\s)\$)/g,
+      (match, code, formula) => {
+        if (code) return code;
+        math.push(formula);
+        return `PCODEMATHTOKEN${math.length - 1}ENDTOKEN`;
+      },
+    );
+    let html = DOMPurify.sanitize(
+      marked.parse(protectedMarkdown, { gfm: true }),
+      { USE_PROFILES: { html: true } },
+    );
+    html = html.replace(/PCODEMATHTOKEN(\d+)ENDTOKEN/g, (_, i) =>
+      escape(math[Number(i)]),
+    );
+    return html;
+  }
+  function decorateArticle(path) {
+    const content = $("reader-content");
+    const first = content.firstElementChild;
+    if (first?.tagName === "H1") first.remove();
+    content.querySelectorAll("h1").forEach((h) => {
+      const replacement = document.createElement("h2");
+      replacement.innerHTML = h.innerHTML;
+      h.replaceWith(replacement);
     });
-
-    if (overlay) {
-        overlay.addEventListener('click', function () {
-            toggleSidebar(false);
-        });
-    }
-
-    document.addEventListener('click', function (event) {
-        if (!sidebar.classList.contains('open')) return;
-        const insideSidebar = sidebar.contains(event.target);
-        const isToggleBtn = toggleBtn.contains(event.target);
-        if (!insideSidebar && !isToggleBtn) {
-            toggleSidebar(false);
-        }
+    content.querySelectorAll("img").forEach((img) => {
+      const source = img.getAttribute("src");
+      if (source)
+        img.src = new URL(source, new URL("/" + path, location.origin)).href;
+      img.loading = "lazy";
+      img.decoding = "async";
     });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-            toggleSidebar(false);
+    content.querySelectorAll("a[href]").forEach((a) => {
+      const raw = a.getAttribute("href");
+      if (raw.startsWith("#")) return;
+      const url = new URL(raw, new URL("/" + path, location.origin));
+      if (url.origin === location.origin && url.pathname.endsWith(".md")) {
+        a.href = href(decodeURIComponent(url.pathname.slice(1))) + url.hash;
+      } else {
+        a.href = url.href;
+        if (url.origin !== location.origin) {
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
         }
+      }
     });
-
-    function setupTheme() {
-        const storageKey = 'blog-theme';
-        const saved = localStorage.getItem(storageKey);
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved || (prefersDark ? 'dark' : 'light');
-
-        document.body.setAttribute('data-theme', theme);
-        if (themeToggle) {
-            themeToggle.textContent = theme === 'dark' ? '日间' : '夜间';
-            themeToggle.addEventListener('click', function () {
-                const next = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                document.body.setAttribute('data-theme', next);
-                localStorage.setItem(storageKey, next);
-                themeToggle.textContent = next === 'dark' ? '日间' : '夜间';
-            });
-        }
-    }
-
-    function collectFiles(node, bucket, parentPath) {
-        if (!node) return;
-
-        if (node.type === 'file') {
-            const rawPath = node.path || '';
-            const cleaned = rawPath.replace(/^docs\//, '');
-            const parts = cleaned.split('/').filter(Boolean);
-            const category = parts.length > 1 ? parts[0] : '未分类';
-            bucket.push({
-                name: node.name,
-                path: rawPath,
-                category: category,
-                parentPath: parentPath || 'docs'
-            });
-            return;
-        }
-
-        if (node.type === 'folder' && Array.isArray(node.children)) {
-            node.children.forEach(function (child) {
-                collectFiles(child, bucket, (parentPath ? parentPath + '/' : '') + node.name);
-            });
-        }
-    }
-
-    function createTreeNode(node) {
-        if (node.type === 'folder') {
-            const details = document.createElement('details');
-            const summary = document.createElement('summary');
-            summary.textContent = node.name;
-            details.appendChild(summary);
-
-            if (Array.isArray(node.children) && node.children.length) {
-                const list = document.createElement('ul');
-                node.children.forEach(function (child) {
-                    list.appendChild(createTreeNode(child));
-                });
-                details.appendChild(list);
-            }
-
-            return details;
-        }
-
-        const item = document.createElement('li');
-        const link = document.createElement('a');
-        link.href = createDocHref(node.path);
-        link.textContent = node.name;
-        item.appendChild(link);
-        return item;
-    }
-
-    function updateStats(files, tree) {
-        const folders = countFolders(tree);
-        document.getElementById('stat-files').textContent = String(files.length);
-        document.getElementById('stat-folders').textContent = String(folders);
-        document.getElementById('stat-updated').textContent = new Date().toLocaleDateString('zh-CN');
-    }
-
-    function countFolders(node) {
-        if (!node || node.type !== 'folder') return 0;
-        let total = 1;
-        if (Array.isArray(node.children)) {
-            node.children.forEach(function (child) {
-                total += countFolders(child);
-            });
-        }
-        return total;
-    }
-
-    function renderFeatured(files) {
-        featuredContainer.innerHTML = '';
-        const top = files.slice(0, 6);
-
-        top.forEach(function (file) {
-            const card = document.createElement('article');
-            card.className = 'post-card';
-            card.innerHTML =
-                '<h3 class="post-title"><a href="' + createDocHref(file.path) + '">' + file.name + '</a></h3>' +
-                '<p class="post-meta">分类：' + file.category + '</p>' +
-                '<p class="post-meta">路径：' + file.path + '</p>';
-            featuredContainer.appendChild(card);
-        });
-    }
-
-    function renderTags(files) {
-        const categories = Array.from(new Set(files.map(function (f) {
-            return f.category;
-        }))).sort();
-        const tags = ['全部'].concat(categories);
-        tagFilter.innerHTML = '';
-
-        tags.forEach(function (tag) {
-            const btn = document.createElement('button');
-            btn.className = 'tag-btn' + (tag === currentTag ? ' active' : '');
-            btn.textContent = tag;
-            btn.addEventListener('click', function () {
-                currentTag = tag;
-                renderTags(allFiles);
-                renderAllPosts(filterFiles());
-            });
-            tagFilter.appendChild(btn);
-        });
-    }
-
-    function filterFiles() {
-        const keyword = (searchInput.value || '').trim().toLowerCase();
-
-        return allFiles.filter(function (file) {
-            const matchTag = currentTag === '全部' || file.category === currentTag;
-            const matchText = !keyword ||
-                file.name.toLowerCase().includes(keyword) ||
-                file.path.toLowerCase().includes(keyword);
-            return matchTag && matchText;
-        });
-    }
-
-    function renderAllPosts(files) {
-        allPostsContainer.innerHTML = '';
-        feedCount.textContent = files.length + ' 篇';
-
-        if (!files.length) {
-            allPostsContainer.innerHTML = '<p class="muted">没有匹配的文章。</p>';
-            return;
-        }
-
-        files.forEach(function (file) {
-            const row = document.createElement('article');
-            row.className = 'post-row';
-            row.innerHTML =
-                '<h3 class="post-title"><a href="' + createDocHref(file.path) + '">' + file.name + '</a></h3>' +
-                '<p class="post-meta">' + file.category + ' · ' + file.path + '</p>';
-            allPostsContainer.appendChild(row);
-        });
-    }
-
-    function escapeHtml(text) {
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    function resolveAssetPath(assetPath, docPath) {
-        if (!docPath || assetPath.startsWith('http://') || assetPath.startsWith('https://') || assetPath.startsWith('/')) {
-            return assetPath;
-        }
-        var docDir = docPath.substring(0, docPath.lastIndexOf('/'));
-        return docDir + '/' + assetPath;
-    }
-
-    function renderInline(text, docPath) {
-        var result = text;
-        var images = [];
-        var links = [];
-
-        // Extract images first
-        result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function (match, alt, src) {
-            var resolvedSrc = resolveAssetPath(src, docPath);
-            images.push('<img src="' + resolvedSrc + '" alt="' + alt + '" />');
-            return '\x00IMG' + (images.length - 1) + '\x00';
-        });
-
-        // Extract links
-        result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (match, text, url) {
-            links.push('<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + '</a>');
-            return '\x00LINK' + (links.length - 1) + '\x00';
-        });
-
-        // Escape HTML
-        var escaped = escapeHtml(result);
-
-        // Restore images
-        escaped = escaped.replace(/\x00IMG(\d+)\x00/g, function (match, index) {
-            return images[parseInt(index)];
-        });
-
-        // Restore links
-        escaped = escaped.replace(/\x00LINK(\d+)\x00/g, function (match, index) {
-            return links[parseInt(index)];
-        });
-
-        // Handle inline formatting
-        return escaped
-            .replace(/`([^`]+)`/g, '<code>$1</code>')
-            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    }
-
-    function renderInlineWithoutPath(text) {
-        return renderInline(text, null);
-    }
-
-    function renderMarkdown(markdown, docPath) {
-        const lines = markdown.replace(/\r\n/g, '\n').split('\n');
-        const html = [];
-        let inCode = false;
-        let codeBuffer = [];
-        let listType = null;
-        let tableRows = [];
-
-        function closeList() {
-            if (listType) {
-                html.push(listType === 'ol' ? '</ol>' : '</ul>');
-                listType = null;
-            }
-        }
-
-        function closeTable() {
-            if (!tableRows.length) {
-                return;
-            }
-
-            var rows = tableRows;
-            tableRows = [];
-
-            if (rows.length < 2 || !/^[\s|:\-]+$/.test(rows[1])) {
-                rows.forEach(function (r) {
-                    html.push('<p>' + renderInline(r, docPath) + '</p>');
-                });
-                return;
-            }
-
-            function parseCells(row) {
-                var parts = row.split('|');
-                if (parts[0].trim() === '') {
-                    parts = parts.slice(1);
-                }
-                if (parts.length && parts[parts.length - 1].trim() === '') {
-                    parts = parts.slice(0, -1);
-                }
-                return parts.map(function (c) {
-                    return c.trim();
-                });
-            }
-
-            var headers = parseCells(rows[0]);
-            var thead = '<thead><tr>' + headers.map(function (h) {
-                return '<th>' + renderInline(h, docPath) + '</th>';
-            }).join('') + '</tr></thead>';
-
-            var tbody = rows.length > 2 ? '<tbody>' + rows.slice(2).map(function (row) {
-                return '<tr>' + parseCells(row).map(function (c) {
-                    return '<td>' + renderInline(c, docPath) + '</td>';
-                }).join('') + '</tr>';
-            }).join('') + '</tbody>' : '';
-
-            html.push('<div class="table-wrap"><table>' + thead + tbody + '</table></div>');
-        }
-
-        function closeBlocks() {
-            closeList();
-            closeTable();
-        }
-
-        for (let i = 0; i < lines.length; i += 1) {
-            const line = lines[i];
-
-            if (line.trim().startsWith('```')) {
-                closeBlocks();
-                if (!inCode) {
-                    inCode = true;
-                    codeBuffer = [];
-                } else {
-                    html.push('<pre><code>' + escapeHtml(codeBuffer.join('\n')) + '</code></pre>');
-                    inCode = false;
-                }
-                continue;
-            }
-
-            if (inCode) {
-                codeBuffer.push(line);
-                continue;
-            }
-
-            if (!line.trim()) {
-                closeBlocks();
-                continue;
-            }
-
-            const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
-            if (heading) {
-                closeBlocks();
-                const level = heading[1].length;
-                html.push('<h' + level + '>' + renderInline(heading[2], docPath) + '</h' + level + '>');
-                continue;
-            }
-
-            if (line.trim().startsWith('|')) {
-                closeList();
-                tableRows.push(line.trim());
-                continue;
-            }
-
-            const ordered = line.match(/^\s*\d+[\.)]\s+(.*)$/);
-            if (ordered) {
-                closeTable();
-                if (listType !== 'ol') {
-                    closeList();
-                    listType = 'ol';
-                    html.push('<ol>');
-                }
-                html.push('<li>' + renderInline(ordered[1], docPath) + '</li>');
-                continue;
-            }
-
-            const unordered = line.match(/^\s*[-*+]\s+(.*)$/);
-            if (unordered) {
-                closeTable();
-                if (listType !== 'ul') {
-                    closeList();
-                    listType = 'ul';
-                    html.push('<ul>');
-                }
-                html.push('<li>' + renderInline(unordered[1], docPath) + '</li>');
-                continue;
-            }
-
-            const quote = line.match(/^\s{0,3}>\s?(.*)$/);
-            if (quote) {
-                closeBlocks();
-                html.push('<blockquote><p>' + renderInline(quote[1], docPath) + '</p></blockquote>');
-                continue;
-            }
-
-            closeBlocks();
-            html.push('<p>' + renderInline(line, docPath) + '</p>');
-        }
-
-        closeBlocks();
-        return html.join('');
-    }
-
-    async function renderReaderFromLocation() {
-        const params = new URLSearchParams(window.location.search);
-        const docPath = params.get('doc');
-
-        if (!docPath) {
-            if (readerPanel) {
-                readerPanel.hidden = true;
-            }
-            return;
-        }
-
-        if (!readerPanel || !readerTitle || !readerContent || !readerPath) {
-            return;
-        }
-
-        readerPanel.hidden = false;
-        readerTitle.textContent = '加载中...';
-        readerPath.textContent = docPath;
-        readerContent.innerHTML = '<p class="muted">正在加载文档...</p>';
-
-        try {
-            const response = await fetch(docPath, {cache: 'no-store'});
-            if (!response.ok) {
-                throw new Error('无法加载文档');
-            }
-            const markdown = await response.text();
-            const title = markdown.match(/^\s{0,3}#\s+(.+?)\s*#*\s*$/m);
-            readerTitle.textContent = title ? title[1] : docPath.split('/').pop();
-            readerContent.innerHTML = renderMarkdown(markdown, docPath);
-            requestAnimationFrame(function () {
-                readerPanel.scrollIntoView({behavior: 'smooth', block: 'start'});
-            });
-        } catch (err) {
-            readerTitle.textContent = '加载失败';
-            readerContent.innerHTML = '<p class="muted">文档加载失败：' + err.message + '</p>';
-        }
-    }
-
-    function applyTreeSearch(term) {
-        const keyword = term.trim().toLowerCase();
-        const detailsList = treeContainer.querySelectorAll('details');
-        const items = treeContainer.querySelectorAll('li');
-
-        if (!keyword) {
-            detailsList.forEach(function (d) {
-                d.style.display = '';
-                d.open = false;
-            });
-            items.forEach(function (li) {
-                li.style.display = '';
-            });
-            return;
-        }
-
-        items.forEach(function (li) {
-            const show = li.textContent.toLowerCase().includes(keyword);
-            li.style.display = show ? '' : 'none';
-        });
-
-        detailsList.forEach(function (d) {
-            const show = d.textContent.toLowerCase().includes(keyword);
-            d.style.display = show ? '' : 'none';
-            d.open = show;
-        });
-    }
-
-    searchInput.addEventListener('input', function () {
-        const filtered = filterFiles();
-        renderAllPosts(filtered);
-        renderFeatured(filtered.length ? filtered : allFiles);
-        applyTreeSearch(searchInput.value || '');
+    content.querySelectorAll("table").forEach((table) => {
+      const wrap = document.createElement("div");
+      wrap.className = "table-wrap";
+      wrap.tabIndex = 0;
+      wrap.setAttribute("role", "region");
+      wrap.setAttribute("aria-label", "数据表格，可横向滚动");
+      table.before(wrap);
+      wrap.append(table);
     });
-
-    function setupRandomPost() {
-        if (!randomPostBtn) return;
-
-        randomPostBtn.addEventListener('click', function () {
-            const source = filterFiles();
-            const pool = source.length ? source : allFiles;
-            if (!pool.length) return;
-            const pick = pool[Math.floor(Math.random() * pool.length)];
-            window.location.href = createDocHref(pick.path);
-        });
-    }
-
-    function setupCopyCommand() {
-        if (!copyCmdBtn || !publishCmd) return;
-
-        copyCmdBtn.addEventListener('click', async function () {
-            const text = publishCmd.innerText.trim();
-            try {
-                await navigator.clipboard.writeText(text);
-                if (copyTip) copyTip.textContent = '已复制到剪贴板';
-            } catch (err) {
-                if (copyTip) copyTip.textContent = '复制失败，请手动复制';
-            }
-            setTimeout(function () {
-                if (copyTip) copyTip.textContent = '可直接粘贴到终端执行';
-            }, 1800);
-        });
-    }
-
-    function setupToTop() {
-        if (!toTopBtn) return;
-
-        window.addEventListener('scroll', function () {
-            const show = window.scrollY > 420;
-            toTopBtn.classList.toggle('show', show);
-        });
-
-        toTopBtn.addEventListener('click', function () {
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        });
-    }
-
-    function setupReaderBack() {
-        if (!readerBack) return;
-        readerBack.addEventListener('click', function () {
-            window.history.pushState({}, '', '/');
-            renderReaderFromLocation();
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        });
-    }
-
-    async function init() {
-        setupTheme();
-        setupRandomPost();
-        setupCopyCommand();
-        setupToTop();
-        setupReaderBack();
-
-        window.addEventListener('popstate', function () {
-            renderReaderFromLocation();
-        });
-
-        try {
-            const response = await fetch('docs/index.json', {cache: 'no-store'});
-            if (!response.ok) {
-                throw new Error('无法加载 docs/index.json');
-            }
-
-            const tree = await response.json();
-            treeContainer.innerHTML = '';
-            treeContainer.appendChild(createTreeNode(tree));
-
-            const files = [];
-            collectFiles(tree, files, '');
-            allFiles = files.filter(function (f) {
-                return f.path.toLowerCase().endsWith('.md');
+    content.querySelectorAll("pre").forEach((pre) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "code-block";
+      const toolbar = document.createElement("div");
+      toolbar.className = "code-toolbar";
+      const lang = document.createElement("span");
+      lang.textContent =
+        pre
+          .querySelector("code")
+          ?.className.replace("language-", "")
+          .toUpperCase() || "CODE";
+      const copy = document.createElement("button");
+      copy.textContent = "复制代码";
+      copy.addEventListener("click", () =>
+        copyText(copy, pre.textContent, "复制代码"),
+      );
+      pre.before(wrapper);
+      wrapper.append(toolbar, pre);
+      toolbar.append(lang, copy);
+    });
+    renderMathInElement(content, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false },
+        { left: "$", right: "$", display: false },
+      ],
+      throwOnError: false,
+      trust: false,
+    });
+    const headings = [...content.querySelectorAll("h2,h3")];
+    const ids = new Set();
+    headings.forEach((h, i) => {
+      let id =
+        h.textContent
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^\p{L}\p{N}_-]/gu, "") || `section-${i + 1}`;
+      if (ids.has(id)) id += "-" + (i + 1);
+      ids.add(id);
+      h.id = id;
+    });
+    $("article-toc").innerHTML = headings.length
+      ? headings
+          .map(
+            (h) =>
+              `<a class="toc-link${h.tagName === "H3" ? " sub" : ""}" href="#${encodeURIComponent(h.id)}">${escape(h.textContent)}</a>`,
+          )
+          .join("")
+      : '<span class="toc-link">这是一篇短手记</span>';
+    headingObserver?.disconnect();
+    headingObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort(
+            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+          )[0];
+        if (visible)
+          $("article-toc")
+            .querySelectorAll("a")
+            .forEach((a) => {
+              const active =
+                decodeURIComponent(a.hash.slice(1)) === visible.target.id;
+              a.classList.toggle("active", active);
+              if (active) a.setAttribute("aria-current", "location");
+              else a.removeAttribute("aria-current");
             });
+      },
+      { rootMargin: "-100px 0px -60% 0px" },
+    );
+    headings.forEach((h) => headingObserver.observe(h));
+  }
 
-            updateStats(allFiles, tree);
-            renderTags(allFiles);
-            renderFeatured(allFiles);
-            renderAllPosts(allFiles);
-            renderReaderFromLocation();
-        } catch (err) {
-            treeContainer.innerHTML = '<p class="muted">目录加载失败：' + err.message + '</p>';
-            featuredContainer.innerHTML = '<p class="muted">暂时无法加载文章列表。</p>';
-            allPostsContainer.innerHTML = '<p class="muted">暂时无法加载文章列表。</p>';
-        }
+  async function renderRoute() {
+    const path = docPath();
+    const request = ++readRequest;
+    $("home-view").hidden = Boolean(path);
+    $("reader-view").hidden = !path;
+    $("reading-progress").style.width = "0";
+    document
+      .querySelectorAll(".main-nav a")
+      .forEach((a) =>
+        a.classList.toggle(
+          "active",
+          !path &&
+            (a.hash === location.hash ||
+              (!location.hash && a.dataset.nav === "notes")),
+        ),
+      );
+    if (!path) {
+      document.title = "918822019 · 技术手记";
+      headingObserver?.disconnect();
+      return;
     }
-
-    init();
+    const article = articles.find((a) => a.path === path);
+    $("reader-title").textContent = article?.title || "正在加载…";
+    $("reader-category").textContent = article
+      ? categoryLabel(article.category)
+      : "技术手记";
+    $("reader-date").textContent = article?.updated
+      ? `更新于 ${shortDate(article.updated)}`
+      : "";
+    $("reader-time").textContent = article
+      ? `约 ${article.readingMinutes} 分钟阅读`
+      : "";
+    $("reader-content").innerHTML =
+      '<p class="reader-loading">正在翻开这篇手记…</p>';
+    $("article-toc").innerHTML = "";
+    $("related-posts").innerHTML = "";
+    try {
+      if (!article) throw new Error("文章不存在或尚未收录");
+      let markdown = textCache.get(path);
+      if (!markdown) {
+        const response = await fetch("/" + path);
+        if (!response.ok) throw new Error("文章加载失败");
+        markdown = await response.text();
+        textCache.set(path, markdown);
+      }
+      if (request !== readRequest) return;
+      document.title = article.title + " · 918822019";
+      $("reader-content").innerHTML = renderMarkdown(markdown);
+      decorateArticle(path);
+      const others = sortArticles(
+        publicArticles().filter((a) => a.path !== path),
+      );
+      const related = [
+        ...others.filter((a) => a.category === article.category),
+        ...others.filter((a) => a.category !== article.category),
+      ].slice(0, 2);
+      $("related-posts").innerHTML = related.map(articleCard).join("");
+      if (location.hash) requestAnimationFrame(scrollToHash);
+      updateProgress();
+    } catch (error) {
+      if (request !== readRequest) return;
+      $("reader-title").textContent = "这篇手记暂时无法打开";
+      $("reader-content").innerHTML = notice(error.message);
+    }
+  }
+  function scrollToHash() {
+    if (!location.hash) return;
+    try {
+      document
+        .getElementById(decodeURIComponent(location.hash.slice(1)))
+        ?.scrollIntoView();
+    } catch {
+      /* malformed hashes are ignored */
+    }
+  }
+  function updateProgress() {
+    $("to-top").hidden = scrollY < 500;
+    if (!docPath()) return;
+    const start = $("reader-content").offsetTop - 110;
+    const end = start + $("reader-content").offsetHeight - innerHeight + 160;
+    $("reading-progress").style.width =
+      Math.max(
+        0,
+        Math.min(100, ((scrollY - start) / Math.max(1, end - start)) * 100),
+      ) + "%";
+  }
+  // Preserve ordinary links, modifier-clicks, browser history, and shared ?doc URLs.
+  document.addEventListener("click", (event) => {
+    const a = event.target.closest("a[href]");
+    if (
+      !a ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      a.target === "_blank" ||
+      a.hasAttribute("download")
+    )
+      return;
+    const url = new URL(a.href);
+    if (url.origin !== location.origin || url.pathname !== "/") return;
+    event.preventDefault();
+    const oldPath = docPath();
+    history.pushState({}, "", url.pathname + url.search + url.hash);
+    if ($("search-dialog").open) $("search-dialog").close();
+    if (oldPath !== docPath()) {
+      window.scrollTo(0, 0);
+      renderRoute().then(() => {
+        if (docPath()) $("reader-title").focus({ preventScroll: true });
+        else scrollToHash();
+      });
+    } else {
+      if (!docPath())
+        document
+          .querySelectorAll(".main-nav a")
+          .forEach((link) =>
+            link.classList.toggle(
+              "active",
+              link.hash === location.hash ||
+                (!location.hash && link.dataset.nav === "notes"),
+            ),
+          );
+      if (url.hash) scrollToHash();
+      else window.scrollTo(0, 0);
+    }
+  });
+  window.addEventListener("popstate", () => {
+    renderRoute().then(scrollToHash);
+  });
+  window.addEventListener("scroll", updateProgress, { passive: true });
+  $("theme-toggle").addEventListener("click", () => {
+    const next =
+      document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem("blog-theme", next);
+    } catch {}
+    updateTheme();
+  });
+  $("search-open").addEventListener("click", openSearch);
+  $("search-close").addEventListener("click", () => $("search-dialog").close());
+  $("search-dialog").addEventListener("click", (event) => {
+    const box = $("search-dialog").getBoundingClientRect();
+    if (
+      event.target === $("search-dialog") &&
+      (event.clientX < box.left ||
+        event.clientX > box.right ||
+        event.clientY < box.top ||
+        event.clientY > box.bottom)
+    )
+      $("search-dialog").close();
+  });
+  $("search-input").addEventListener("input", renderSearch);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && $("search-dialog").open) {
+      event.preventDefault();
+      $("search-dialog").close();
+      return;
+    }
+    if (
+      event.key === "/" &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey &&
+      !event.target.closest('input,textarea,[contenteditable="true"]') &&
+      !$("search-dialog").open
+    ) {
+      event.preventDefault();
+      openSearch();
+    }
+  });
+  $("sort-order").addEventListener("change", renderPosts);
+  $("copy-link").addEventListener("click", () =>
+    copyText($("copy-link"), location.href, "复制链接 ↗"),
+  );
+  $("to-top").addEventListener("click", () =>
+    window.scrollTo({ top: 0, behavior: "smooth" }),
+  );
+  $("copyright-year").textContent = new Date().getFullYear();
+  updateTheme();
+  async function init() {
+    try {
+      const response = await fetch("/docs/index.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("文档目录加载失败");
+      collect(await response.json());
+      renderHome();
+      await renderRoute();
+      if (!docPath()) requestAnimationFrame(scrollToHash);
+    } catch {
+      $("post-list").innerHTML = notice("文档目录暂时无法加载");
+      $("spotlight").innerHTML = notice("精选文章暂时无法加载");
+      if (docPath()) {
+        $("home-view").hidden = true;
+        $("reader-view").hidden = false;
+        $("reader-title").textContent = "文章目录暂时无法加载";
+        $("reader-content").innerHTML = notice("请刷新页面重试");
+      }
+    }
+  }
+  init();
 })();

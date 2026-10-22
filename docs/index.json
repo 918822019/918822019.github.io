@@ -9,7 +9,11 @@
         {
           "name": "数据架构.md",
           "type": "file",
-          "path": "docs/架构设计/数据架构.md"
+          "path": "docs/架构设计/数据架构.md",
+          "title": "数据架构",
+          "excerpt": "爬取的书籍数据通过 ModelScope 数据集仓库 wzywuan/Novel-Collection 做云端备份与分发。",
+          "readingMinutes": 8,
+          "updated": "2026-07-04"
         }
       ]
     },
@@ -29,7 +33,11 @@
             {
               "name": "Qwen2.5-Omni.md",
               "type": "file",
-              "path": "docs/模型相关的论文/Qwen2.5-omni/Qwen2.5-Omni.md"
+              "path": "docs/模型相关的论文/Qwen2.5-omni/Qwen2.5-Omni.md",
+              "title": "Qwen2.5-Omni模型介绍",
+              "excerpt": "Qwen2.5主体还是采用的Qwen2.5这一LLM模型。",
+              "readingMinutes": 6,
+              "updated": "2026-06-23"
             }
           ]
         },
@@ -50,7 +58,11 @@
             {
               "name": "Qwen3-TTS.md",
               "type": "file",
-              "path": "docs/模型相关的论文/Qwen3-TTS/Qwen3-TTS.md"
+              "path": "docs/模型相关的论文/Qwen3-TTS/Qwen3-TTS.md",
+              "title": "Qwen3-TTS技术报告",
+              "excerpt": "Qwen3-TTS是阿里云Qwen团队开发的一系列强大的文本转语音模型，具备以下核心能力：",
+              "readingMinutes": 7,
+              "updated": "2026-06-23"
             }
           ]
         }
@@ -63,7 +75,11 @@
         {
           "name": "STE.md",
           "type": "file",
-          "path": "docs/数学/STE.md"
+          "path": "docs/数学/STE.md",
+          "title": "STE",
+          "excerpt": "STE（Straight-Through Estimator）是一种数学方法，主要用于解决离散量化求导问题。它在深度学习中被广泛应用，尤其是在需要对离散变量进行优化的场景中。",
+          "readingMinutes": 2,
+          "updated": "2026-04-13"
         }
       ]
     },
@@ -74,7 +90,11 @@
         {
           "name": "一些方案的比较.md",
           "type": "file",
-          "path": "docs/AI搜索/一些方案的比较.md"
+          "path": "docs/AI搜索/一些方案的比较.md",
+          "title": "起点AI搜书",
+          "excerpt": "通过人工智能（AI）结合用户提问，返回符合用户查询（query）的书籍。用户可以直接点击链接查看，同时返回推荐该书籍的理由。",
+          "readingMinutes": 2,
+          "updated": "2026-04-10"
         }
       ]
     },
@@ -89,7 +109,11 @@
             {
               "name": "1.为什么INT8量化更快.md",
               "type": "file",
-              "path": "docs/infra/量化/1.为什么INT8量化更快.md"
+              "path": "docs/infra/量化/1.为什么INT8量化更快.md",
+              "title": "为什么INT8量化了推理增加了计算量但是计算更快",
+              "excerpt": "INT8量化，是深度学习模型量化的一种方式，将模型中的权重和激活值进行量化，从而减少模型大小，提高模型推理速度。",
+              "readingMinutes": 5,
+              "updated": "2026-06-25"
             }
           ]
         },
@@ -100,7 +124,11 @@
             {
               "name": "pcode-report.md",
               "type": "file",
-              "path": "docs/infra/推理优化/pcode-report.md"
+              "path": "docs/infra/推理优化/pcode-report.md",
+              "title": "Pcode 技术报告（精简版）",
+              "excerpt": "Pcode 用两个并行的小分类头替代 drafter 的全词表输出头，在保留一次块主干前向的同时，显著压缩输出参数与读出成本。E3 进一步压缩输入侧，形成约 29.7 MB 的 draft 侧交付包。",
+              "readingMinutes": 8,
+              "updated": "2026-10-22"
             }
           ]
         },
@@ -111,17 +139,29 @@
             {
               "name": "1.什么是TVM.md",
               "type": "file",
-              "path": "docs/infra/TVM/1.什么是TVM.md"
+              "path": "docs/infra/TVM/1.什么是TVM.md",
+              "title": "什么是TVM",
+              "excerpt": "TVM（Tensor Virtual Machine，张量虚拟机）是一个开源的端到端深度学习编译器框架，旨在将深度学习模型高效地编译为多种硬件后端（如CPU、GPU、FPGA、ASIC等）的可执行代码，显著提升模型部署效率和推理性能。",
+              "readingMinutes": 5,
+              "updated": "2026-04-15"
             },
             {
               "name": "2.安装TVM.md",
               "type": "file",
-              "path": "docs/infra/TVM/2.安装TVM.md"
+              "path": "docs/infra/TVM/2.安装TVM.md",
+              "title": "TVM安装",
+              "excerpt": "阅读「TVM安装」的完整学习与实践记录。",
+              "readingMinutes": 1,
+              "updated": "2026-04-15"
             },
             {
               "name": "3.tvm基础测试.md",
               "type": "file",
-              "path": "docs/infra/TVM/3.tvm基础测试.md"
+              "path": "docs/infra/TVM/3.tvm基础测试.md",
+              "title": "创建一个简单的 MLP 模型，通过TVM",
+              "excerpt": "阅读「创建一个简单的 MLP 模型，通过TVM」的完整学习与实践记录。",
+              "readingMinutes": 1,
+              "updated": "2026-07-02"
             }
           ]
         }
@@ -138,12 +178,20 @@
             {
               "name": "独热编码.md",
               "type": "file",
-              "path": "docs/RAG/embedding/独热编码.md"
+              "path": "docs/RAG/embedding/独热编码.md",
+              "title": "独热编码（One-Hot Encoding）",
+              "excerpt": "独热编码把一个有 k 个互斥类别的分类变量映射为 k 维二元向量，向量中只有对应类别位置为 1，其余为 0。",
+              "readingMinutes": 4,
+              "updated": "2026-04-13"
             },
             {
               "name": "为什么在高维度空间中距离失效.md",
               "type": "file",
-              "path": "docs/RAG/embedding/为什么在高维度空间中距离失效.md"
+              "path": "docs/RAG/embedding/为什么在高维度空间中距离失效.md",
+              "title": "为什么在高维度空间中距离失效",
+              "excerpt": "核心结论：有效信息通常位于低维流形，而常用距离在整个高维空间计算，噪声和无关维度会掩盖有用信号，导致距离失去区分力。",
+              "readingMinutes": 3,
+              "updated": "2026-04-13"
             }
           ]
         }
@@ -162,7 +210,11 @@
     {
       "name": "README.md",
       "type": "file",
-      "path": "docs/README.md"
+      "path": "docs/README.md",
+      "title": "技术文档总览",
+      "excerpt": "docs/index.json 由 scripts/build-docs-index.py 自动生成，供前端导航使用。",
+      "readingMinutes": 1,
+      "updated": "2026-10-22"
     }
   ]
 }
