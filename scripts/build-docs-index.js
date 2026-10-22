@@ -171,10 +171,11 @@ function buildPublicIndexes(tree) {
         })[c],
     );
   const site = "https://918822019.github.io";
+  // Keep equal-date items stable across Windows and Linux locale settings.
+  const compare = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
   const sorted = [...files].sort(
     (a, b) =>
-      (b.updated || "").localeCompare(a.updated || "") ||
-      a.path.localeCompare(b.path),
+      compare(b.updated || "", a.updated || "") || compare(a.path, b.path),
   );
   const items = sorted.map((file) => {
     const link = site + "/?doc=" + encodeURIComponent(file.path);
