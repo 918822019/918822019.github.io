@@ -18,6 +18,33 @@
     AI搜索: "↗",
     RAG: "◎",
   };
+  const categoryDetails = {
+    infra: {
+      description: "从计算成本到运行效率，把模型落到真实系统中。",
+      tags: ["TVM", "量化", "投机解码"],
+    },
+    模型相关的论文: {
+      description: "拆解模型结构与关键设计，留下论文阅读的思考。",
+      tags: ["多模态", "语音合成", "论文精读"],
+    },
+    RAG: {
+      description: "理解向量表示与相似度，梳理检索背后的基础。",
+      tags: ["Embedding", "向量空间", "检索"],
+    },
+    AI搜索: {
+      description: "从搜索需求出发，对照方案、流程与实现取舍。",
+      tags: ["语义搜索", "方案比较"],
+    },
+    数学: {
+      description: "回到公式与直觉，理解模型方法背后的数学。",
+      tags: ["梯度估计", "离散优化"],
+    },
+    架构设计: {
+      description: "整理数据组织与系统边界，让工程思路更清楚。",
+      tags: ["数据架构", "系统设计"],
+    },
+  };
+  const categoryOrder = Object.keys(categoryDetails);
   const pcodePath = "docs/infra/推理优化/pcode-report.md";
   let articles = [],
     activeCategory = "全部",
@@ -38,6 +65,17 @@
     );
   const href = (path) => "/?doc=" + encodeURIComponent(path);
   const categoryLabel = (key) => categoryNames[key] || key;
+  const categoryDetail = (key) =>
+    categoryDetails[key] || {
+      description: "记录这个方向的学习、思考与实践。",
+      tags: ["学习记录"],
+    };
+  const topicHref = (key, sort = "recent") => {
+    const params = new URLSearchParams();
+    if (key !== "全部") params.set("topic", key);
+    if (sort === "title") params.set("sort", sort);
+    return "/" + (params.size ? "?" + params.toString() : "") + "#notes";
+  };
   const shortDate = (date) => (date ? date.replaceAll("-", ".") : "");
   const docPath = () => new URLSearchParams(location.search).get("doc");
   const notice = (message) =>
@@ -83,6 +121,18 @@
       : notice("这个专题暂时还没有文章");
     $("result-count").textContent =
       `${String(filtered.length).padStart(2, "0")} 篇文章`;
+    $("notes-heading").textContent =
+      activeCategory === "全部" ? "所有手记" : categoryLabel(activeCategory);
+    $("topic-description").textContent =
+      activeCategory === "全部"
+        ? "从最近的记录开始，或选择一个板块深入阅读。"
+        : categoryDetail(activeCategory).description;
+    $("topic-reset").hidden = activeCategory === "全部";
+    $("topic-reset").href = topicHref("全部", $("sort-order").value);
+    $("topic-context").classList.toggle(
+      "is-filtered",
+      activeCategory !== "全部",
+    );
     $("category-filters")
       .querySelectorAll("button")
       .forEach((b) => {
@@ -90,42 +140,67 @@
         b.classList.toggle("active", active);
         b.setAttribute("aria-pressed", String(active));
       });
+    $("topic-list")
+      .querySelectorAll(".topic-card")
+      .forEach((card) => {
+        const active = card.dataset.category === activeCategory;
+        card.href = topicHref(card.dataset.category, $("sort-order").value);
+        card.classList.toggle("active", active);
+        if (active) card.setAttribute("aria-current", "true");
+        else card.removeAttribute("aria-current");
+      });
   }
   function chooseCategory(category) {
-    activeCategory = category;
-    renderPosts();
-    $("notes").scrollIntoView({ behavior: "smooth" });
+    const target = topicHref(category, $("sort-order").value);
+    if (target !== location.pathname + location.search + location.hash)
+      history.pushState({}, "", target);
+    renderRoute().then(() => {
+      $("notes").scrollIntoView();
+      const filters = $("category-filters");
+      const selected = filters.querySelector('[aria-pressed="true"]');
+      if (selected && filters.scrollWidth > filters.clientWidth)
+        filters.scrollLeft +=
+          selected.getBoundingClientRect().left -
+          filters.getBoundingClientRect().left -
+          12;
+    });
   }
   function renderHome() {
     const files = publicArticles();
-    const categories = [...new Set(files.map((a) => a.category))];
+    const categories = [...new Set(files.map((a) => a.category))].sort(
+      (a, b) => {
+        const rank = (key) =>
+          categoryOrder.includes(key)
+            ? categoryOrder.indexOf(key)
+            : categoryOrder.length;
+        return rank(a) - rank(b) || a.localeCompare(b, "zh-CN");
+      },
+    );
     $("article-count").textContent = String(files.length).padStart(2, "0");
     $("topic-count").textContent = String(categories.length).padStart(2, "0");
     $("category-filters").innerHTML = ["全部", ...categories]
       .map(
         (c) =>
-          `<button class="filter-button" data-category="${escape(c)}" aria-pressed="false">${escape(c === "全部" ? c : categoryLabel(c))}</button>`,
+          `<button class="filter-button" data-category="${escape(c)}" aria-pressed="false" aria-controls="post-list">${escape(c === "全部" ? c : categoryLabel(c))}<span class="filter-count">${c === "全部" ? files.length : files.filter((a) => a.category === c).length}</span></button>`,
       )
       .join("");
     $("category-filters")
       .querySelectorAll("button")
       .forEach((b) =>
-        b.addEventListener("click", () => {
-          activeCategory = b.dataset.category;
-          renderPosts();
-        }),
-      );
-    $("topic-list").innerHTML = categories
-      .map(
-        (c) =>
-          `<button class="topic-button" data-category="${escape(c)}"><span class="topic-symbol" aria-hidden="true">${categorySymbols[c] || "◇"}</span><span>${escape(categoryLabel(c))}</span><span class="topic-number">${String(files.filter((a) => a.category === c).length).padStart(2, "0")}</span><span class="topic-arrow" aria-hidden="true">↗</span></button>`,
-      )
-      .join("");
-    $("topic-list")
-      .querySelectorAll("button")
-      .forEach((b) =>
         b.addEventListener("click", () => chooseCategory(b.dataset.category)),
       );
+    $("topic-list").innerHTML = categories
+      .map((c, i) => {
+        const group = files.filter((a) => a.category === c);
+        const latest = [...group].sort(
+          (a, b) =>
+            (b.updated || "").localeCompare(a.updated || "") ||
+            a.path.localeCompare(b.path, "zh-CN"),
+        )[0];
+        const detail = categoryDetail(c);
+        return `<a class="topic-card" data-category="${escape(c)}" href="${topicHref(c)}" aria-labelledby="topic-name-${i}"><div class="topic-card-top"><span class="topic-symbol" aria-hidden="true">${categorySymbols[c] || "◇"}</span><span class="topic-number">${String(group.length).padStart(2, "0")} 篇手记</span></div><h3 id="topic-name-${i}">${escape(categoryLabel(c))}<span class="topic-arrow" aria-hidden="true">↗</span></h3><p class="topic-summary">${escape(detail.description)}</p><div class="topic-tags">${detail.tags.map((tag) => `<span>${escape(tag)}</span>`).join("")}</div><div class="topic-latest"><span>最近更新${latest.updated ? ` <time datetime="${escape(latest.updated)}">${shortDate(latest.updated)}</time>` : ""}</span><span class="topic-latest-title">${escape(latest.title)}</span></div></a>`;
+      })
+      .join("");
     const featured =
       files.find((a) => a.path === pcodePath) || sortArticles(files)[0];
     if (featured) {
@@ -370,7 +445,19 @@
       return;
     }
     if (!path) {
-      document.title = "918822019 · 技术手记";
+      const requestedCategory = params.get("topic");
+      activeCategory = publicArticles().some(
+        (a) => a.category === requestedCategory,
+      )
+        ? requestedCategory
+        : "全部";
+      $("sort-order").value =
+        params.get("sort") === "title" ? "title" : "recent";
+      renderPosts();
+      document.title =
+        (activeCategory === "全部"
+          ? ""
+          : categoryLabel(activeCategory) + " · ") + "918822019 · 技术手记";
       headingObserver?.disconnect();
       return;
     }
@@ -471,7 +558,11 @@
         if (docPath()) $("reader-title").focus({ preventScroll: true });
         else if (!$("collection-view").hidden)
           $("collection-title").focus({ preventScroll: true });
-        else scrollToHash();
+        else {
+          scrollToHash();
+          if (url.hash === "#notes")
+            $("notes-title").focus({ preventScroll: true });
+        }
       });
     } else {
       if (!docPath())
@@ -533,7 +624,9 @@
       openSearch();
     }
   });
-  $("sort-order").addEventListener("change", renderPosts);
+  $("sort-order").addEventListener("change", () =>
+    chooseCategory(activeCategory),
+  );
   $("copy-link").addEventListener("click", () =>
     copyText($("copy-link"), location.href, "复制链接 ↗"),
   );

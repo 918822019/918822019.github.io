@@ -7,7 +7,7 @@
     "update-docs": "sh scripts/update-docs.sh",
     "publish-doc": "sh scripts/publish-doc.sh",
     "test": "node --test tests/notebook-core.test.cjs",
-    "test:ui": "node tests/blog-ui.cjs"
+    "test:ui": "node tests/blog-ui.cjs && node tests/home-sections.cjs"
   },
   "devDependencies": {
     "playwright": "^1.64.1"

@@ -17,7 +17,7 @@
     </script>
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/assets/vendor/katex/katex.min.css" />
-    <link rel="stylesheet" href="/assets/styles.css?v=20261022-1" />
+    <link rel="stylesheet" href="/assets/styles.css?v=20261023-2" />
     <link rel="stylesheet" href="/assets/features.css?v=20261023-1" />
     <link
       rel="alternate"
@@ -33,7 +33,7 @@
     <script defer src="/assets/notebook-core.js?v=20261023-1"></script>
     <script defer src="/assets/notebook.js?v=20261023-1"></script>
     <script defer src="/assets/experiments.js?v=20261023-1"></script>
-    <script defer src="/assets/app.js?v=20261023-1"></script>
+    <script defer src="/assets/app.js?v=20261023-2"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">跳到正文</a>
@@ -52,7 +52,7 @@
             <div class="nav-popover">
               <a href="/?view=series">系列路线</a
               ><a href="/?view=archive">文章归档</a
-              ><a href="/#topics">全部专题</a><a href="/#about">关于作者</a
+              ><a href="/#topics">专题板块</a><a href="/#about">关于作者</a
               ><a href="/feed.xml" target="_blank">RSS 订阅 ↗</a>
             </div>
           </details>
@@ -94,9 +94,14 @@
                 class="desktop-break"
               />这里记录学习的过程，也留下实践的痕迹。
             </p>
-            <a class="text-link" href="#notes"
-              >翻开技术手记 <span aria-hidden="true">↗</span></a
-            >
+            <div class="hero-links">
+              <a class="text-link" href="#notes"
+                >翻开技术手记 <span aria-hidden="true">↗</span></a
+              >
+              <a class="hero-topic-link" href="#topics"
+                >按板块浏览 <span aria-hidden="true">↓</span></a
+              >
+            </div>
           </div>
           <div class="hero-art" aria-hidden="true">
             <div class="art-caption">
@@ -165,7 +170,9 @@
         </section>
         <div class="index-strip">
           <span><strong id="article-count">—</strong> 篇技术笔记</span
-          ><span><strong id="topic-count">—</strong> 个探索方向</span
+          ><a href="#topics"
+            ><strong id="topic-count">—</strong> 个探索方向
+            <span aria-hidden="true">↗</span></a
           ><span class="index-strip-end"
             >持续记录，慢慢积累 <span aria-hidden="true">↙</span></span
           >
@@ -179,6 +186,29 @@
             正在翻开精选文章…
           </div>
         </section>
+        <section
+          id="topics"
+          class="topic-directory"
+          aria-labelledby="topics-title"
+        >
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">02 / EXPLORE BY TOPIC</p>
+              <h2 id="topics-title">
+                从一个方向，慢慢深入<span class="heading-dot">.</span>
+              </h2>
+              <p class="section-description">
+                论文、原理与实践，沿着感兴趣的线索阅读。
+              </p>
+            </div>
+            <a class="text-link" href="/?view=series"
+              >跟随系列阅读 <span aria-hidden="true">↗</span></a
+            >
+          </div>
+          <div id="topic-list" class="topic-grid">
+            <p class="loading-placeholder">正在整理探索方向…</p>
+          </div>
+        </section>
         <div class="content-layout">
           <section
             id="notes"
@@ -187,9 +217,10 @@
           >
             <div class="section-heading">
               <div>
-                <p class="eyebrow">02 / THE NOTEBOOK</p>
-                <h2 id="notes-title">
-                  所有手记<span class="heading-dot">.</span>
+                <p class="eyebrow">03 / THE NOTEBOOK</p>
+                <h2 id="notes-title" tabindex="-1">
+                  <span id="notes-heading">所有手记</span
+                  ><span class="heading-dot">.</span>
                 </h2>
               </div>
               <span
@@ -202,7 +233,8 @@
               <div
                 id="category-filters"
                 class="filter-list"
-                aria-label="按专题筛选"
+                role="group"
+                aria-label="按板块筛选"
               ></div>
               <label class="sort-control"
                 ><span class="sr-only">文章排序</span
@@ -212,19 +244,43 @@
                 </select></label
               >
             </div>
+            <div id="topic-context" class="topic-context">
+              <p id="topic-description">
+                从最近的记录开始，或选择一个板块深入阅读。
+              </p>
+              <a id="topic-reset" href="/#notes" hidden
+                >查看全部文章 <span aria-hidden="true">↗</span></a
+              >
+            </div>
             <div id="post-list" class="post-grid" aria-live="polite">
               <p class="loading-placeholder">正在加载文章…</p>
             </div>
           </section>
           <aside class="home-aside">
-            <section
-              id="topics"
-              class="topics-section"
-              aria-labelledby="topics-title"
-            >
-              <p class="eyebrow">EXPLORE BY TOPIC</p>
-              <h2 id="topics-title">沿着兴趣，继续探索</h2>
-              <div id="topic-list"></div>
+            <section class="reading-guide" aria-labelledby="guide-title">
+              <p class="eyebrow">MAKE IT YOUR NOTEBOOK</p>
+              <h2 id="guide-title">换一种方式阅读</h2>
+              <a class="guide-link" href="/?view=series"
+                ><span class="guide-number" aria-hidden="true">01</span
+                ><span
+                  ><strong>跟随系列</strong
+                  ><small>按顺序，串起完整的知识线索</small></span
+                ><span aria-hidden="true">↗</span></a
+              >
+              <a class="guide-link" href="/?view=library"
+                ><span class="guide-number" aria-hidden="true">02</span
+                ><span
+                  ><strong>回到书架</strong
+                  ><small>收藏、稍后阅读与上次的进度</small></span
+                ><span aria-hidden="true">↗</span></a
+              >
+              <a class="guide-link" href="/?view=archive"
+                ><span class="guide-number" aria-hidden="true">03</span
+                ><span
+                  ><strong>翻阅归档</strong
+                  ><small>按时间，回看积累的记录</small></span
+                ><span aria-hidden="true">↗</span></a
+              >
             </section>
             <section id="about" class="about-card">
               <div class="about-mark" aria-hidden="true">n·</div>
