@@ -38,4 +38,4 @@ py scripts/build-docs-index.py
 npm run publish-doc -- "docs: update notes"
 ```
 
-脚本会：`git pull` → 生成 `docs/index.json` → `git commit` → `git push` 到 `doc` 分支。
+脚本会：`git pull` → 生成 `docs/index.json` → `git commit` → `git push` 到 `master` 分支。

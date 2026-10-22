@@ -1,9 +1,9 @@
-name: Deploy doc branch to GitHub Pages
+name: Deploy master branch to GitHub Pages
 
 on:
   push:
     branches:
-      - doc
+      - master
   workflow_dispatch: { }
 
 permissions:
@@ -20,6 +20,7 @@ env:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment: github-pages
     steps:

@@ -2,7 +2,7 @@
 set -eu
 
 msg=${1:-"docs: update"}
-branch=${2:-"doc"}
+branch=${2:-"master"}
 
 if ! command -v git >/dev/null 2>&1; then
   echo "错误：未找到 git。"

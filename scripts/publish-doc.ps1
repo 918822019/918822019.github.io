@@ -14,7 +14,7 @@ if ($args.Count -gt 1) {
     $branch = $args[1]
 }
 else {
-    $branch = "doc"
+    $branch = "master"
 }
 
 # 检查git命令

@@ -90,6 +90,8 @@ python -m http.server 8000
 ```
 
 ### 发布文档
+
+统一使用 `master` 分支发布；GitHub Pages Action 在该分支推送后自动部署。
 ```bash
 npm run publish-doc -- "docs: update notes"
 ```

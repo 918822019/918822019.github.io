@@ -2,7 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const docsRoot = path.resolve(__dirname, 'docs');
+const repoRoot = path.resolve(__dirname, '..');
+const docsRoot = path.join(repoRoot, 'docs');
 const outputFile = path.join(docsRoot, 'index.json');
 
 function buildTree(currentPath) {
@@ -40,7 +41,7 @@ function buildTree(currentPath) {
         return {
             name,
             type: 'file',
-            path: path.relative(path.resolve(__dirname), currentPath).replaceAll('\\', '/'),
+            path: path.relative(repoRoot, currentPath).replaceAll('\\', '/'),
         };
     }
 
