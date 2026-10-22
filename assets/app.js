@@ -142,26 +142,24 @@
     renderPosts();
   }
 
-  function renderSearch() {
-    const query = $("search-input").value.trim().toLocaleLowerCase();
-    const matches = sortArticles(publicArticles()).filter(
-      (a) =>
-        !query ||
-        `${a.title} ${a.excerpt} ${a.path} ${categoryLabel(a.category)}`
-          .toLocaleLowerCase()
-          .includes(query),
-    );
-    $("search-count").textContent = query
-      ? `找到 ${matches.length} 篇相关手记`
-      : "输入关键词，或从下面开始阅读。";
+  let searchRequest = 0;
+  async function renderSearch() {
+    const request = ++searchRequest;
+    const query = $("search-input").value.trim();
+    $("search-count").textContent = "正在检索文章正文…";
+    const { matches, fullText } = await Notebook.search(query);
+    if (request !== searchRequest) return;
+    $("search-count").textContent =
+      (fullText ? "全文搜索" : "正文索引暂不可用，仅搜索标题与摘要") +
+      (query ? ` · 找到 ${matches.length} 篇手记` : " · 输入关键词开始检索");
     $("search-results").innerHTML = matches.length
       ? matches
           .map(
-            (a) =>
-              `<a class="search-result" href="${href(a.path)}"><strong>${escape(a.title)}</strong><span>${escape(categoryLabel(a.category))} · 约 ${a.readingMinutes} 分钟</span></a>`,
+            ({ article: a, snippet }) =>
+              `<a class="search-result" href="${href(a.path)}"><strong>${NotebookCore.highlight(a.title, query)}</strong><span>${escape(a.category)} · 约 ${a.readingMinutes} 分钟</span><p class="search-snippet">${NotebookCore.highlight(snippet, query)}</p></a>`,
           )
           .join("")
-      : '<div class="empty-state"><strong>还没有找到这条线索</strong><span>试试「Pcode」「量化」「TVM」等关键词。</span></div>';
+      : '<div class="empty-state"><strong>还没有找到这条线索</strong><span>试试「Pcode」「量化」「TVM」等关键词；多个词以空格分隔。</span></div>';
   }
   function openSearch() {
     renderSearch();
@@ -269,7 +267,23 @@
       pre.before(wrapper);
       wrapper.append(toolbar, pre);
       toolbar.append(lang, copy);
+      const code = pre.querySelector("code");
+      if (code && window.Prism) Prism.highlightElement(code);
+      if (pre.textContent.split("\n").length > 16) {
+        wrapper.classList.add("code-collapsed");
+        const fold = document.createElement("button");
+        fold.className = "code-fold";
+        fold.textContent = "展开完整代码";
+        fold.setAttribute("aria-expanded", "false");
+        fold.addEventListener("click", () => {
+          const folded = wrapper.classList.toggle("code-collapsed");
+          fold.setAttribute("aria-expanded", String(!folded));
+          fold.textContent = folded ? "展开完整代码" : "收起代码";
+        });
+        wrapper.append(fold);
+      }
     });
+    window.Experiments?.enhance(path, content);
     renderMathInElement(content, {
       delimiters: [
         { left: "$$", right: "$$", display: true },
@@ -328,7 +342,13 @@
   async function renderRoute() {
     const path = docPath();
     const request = ++readRequest;
-    $("home-view").hidden = Boolean(path);
+    Notebook.leaveArticle();
+    const params = new URLSearchParams(location.search);
+    const view = ["library", "archive", "series"].includes(params.get("view"))
+      ? params.get("view")
+      : null;
+    $("collection-view").hidden = !!path || !view;
+    $("home-view").hidden = Boolean(path) || !!view;
     $("reader-view").hidden = !path;
     $("reading-progress").style.width = "0";
     document
@@ -341,6 +361,14 @@
               (!location.hash && a.dataset.nav === "notes")),
         ),
       );
+    if (!path && view) {
+      headingObserver?.disconnect();
+      document
+        .querySelectorAll(".main-nav > a")
+        .forEach((a) => a.classList.toggle("active", a.dataset.nav === view));
+      await Notebook.renderCollection(view, params);
+      return;
+    }
     if (!path) {
       document.title = "918822019 · 技术手记";
       headingObserver?.disconnect();
@@ -374,6 +402,7 @@
       document.title = article.title + " · 918822019";
       $("reader-content").innerHTML = renderMarkdown(markdown);
       decorateArticle(path);
+      Notebook.setupArticle(article);
       const others = sortArticles(
         publicArticles().filter((a) => a.path !== path),
       );
@@ -429,13 +458,19 @@
     const url = new URL(a.href);
     if (url.origin !== location.origin || url.pathname !== "/") return;
     event.preventDefault();
-    const oldPath = docPath();
+    const oldRoute = location.search;
+    if (oldRoute !== url.search) Notebook.leaveArticle();
+    document
+      .querySelectorAll(".nav-more[open]")
+      .forEach((el) => (el.open = false));
     history.pushState({}, "", url.pathname + url.search + url.hash);
     if ($("search-dialog").open) $("search-dialog").close();
-    if (oldPath !== docPath()) {
+    if (oldRoute !== location.search) {
       window.scrollTo(0, 0);
       renderRoute().then(() => {
         if (docPath()) $("reader-title").focus({ preventScroll: true });
+        else if (!$("collection-view").hidden)
+          $("collection-title").focus({ preventScroll: true });
         else scrollToHash();
       });
     } else {
@@ -492,7 +527,7 @@
       !event.metaKey &&
       !event.altKey &&
       !event.target.closest('input,textarea,[contenteditable="true"]') &&
-      !$("search-dialog").open
+      !document.querySelector("dialog[open]")
     ) {
       event.preventDefault();
       openSearch();
@@ -512,6 +547,7 @@
       const response = await fetch("/docs/index.json", { cache: "no-store" });
       if (!response.ok) throw new Error("文档目录加载失败");
       collect(await response.json());
+      Notebook.init({ articles, href, categoryLabel, articleCard });
       renderHome();
       await renderRoute();
       if (!docPath()) requestAnimationFrame(scrollToHash);

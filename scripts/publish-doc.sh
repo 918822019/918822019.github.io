@@ -21,7 +21,7 @@ fi
 
 echo "[2/5] 生成 docs/index.json ..."
 if command -v node >/dev/null 2>&1; then
-  node build-docs-index.js
+  node scripts/build-docs-index.js
 elif command -v python3 >/dev/null 2>&1; then
   python3 scripts/build-docs-index.py
 else

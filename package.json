@@ -5,6 +5,11 @@
   "scripts": {
     "build-docs-index": "node scripts/build-docs-index.js",
     "update-docs": "sh scripts/update-docs.sh",
-    "publish-doc": "sh scripts/publish-doc.sh"
+    "publish-doc": "sh scripts/publish-doc.sh",
+    "test": "node --test tests/notebook-core.test.cjs",
+    "test:ui": "node tests/blog-ui.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
   }
 }

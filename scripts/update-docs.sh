@@ -5,7 +5,7 @@ echo "生成 docs/index.json ..."
 
 # 优先使用 node，其次回退到 python3，如果都不可用则报错
 if command -v node >/dev/null 2>&1; then
-  node build-docs-index.js
+  node scripts/build-docs-index.js
 elif command -v python3 >/dev/null 2>&1; then
   python3 scripts/build-docs-index.py
 else
@@ -14,7 +14,7 @@ else
 fi
 
 echo "将 docs/index.json 添加到暂存区 ..."
-git add docs/index.json
+git add docs/index.json assets/content/search.json assets/content/series.json feed.xml
 
 echo "检查是否有变更..."
 if git diff --cached --quiet; then

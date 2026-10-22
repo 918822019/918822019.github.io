@@ -72,3 +72,7 @@ frontend/data/*_full.ndjson
 # Git submodule config (no active submodules)
 .gitmodules
 project/on_device_quant/train/output/
+
+# Local frontend dependencies and test artifacts
+node_modules/
+.test-artifacts/

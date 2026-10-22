@@ -1,0 +1,40 @@
+[
+  {
+    "id": "tvm",
+    "title": "TVM：从原理到运行",
+    "description": "了解机器学习编译器，配置开发环境，再编译并运行一个 MLP。",
+    "paths": [
+      "docs/infra/TVM/1.什么是TVM.md",
+      "docs/infra/TVM/2.安装TVM.md",
+      "docs/infra/TVM/3.tvm基础测试.md"
+    ]
+  },
+  {
+    "id": "inference",
+    "title": "推理优化与紧凑模型",
+    "description": "从 INT8 量化的计算成本出发，阅读 Pcode 的并行读出设计与端到端实验。",
+    "paths": [
+      "docs/infra/量化/1.为什么INT8量化更快.md",
+      "docs/infra/推理优化/pcode-report.md"
+    ]
+  },
+  {
+    "id": "representation",
+    "title": "理解表示与检索",
+    "description": "从独热编码到高维空间距离，再看 AI 搜书的工程方案。",
+    "paths": [
+      "docs/RAG/embedding/独热编码.md",
+      "docs/RAG/embedding/为什么在高维度空间中距离失效.md",
+      "docs/AI搜索/一些方案的比较.md"
+    ]
+  },
+  {
+    "id": "multimodal",
+    "title": "多模态与语音模型笔记",
+    "description": "整理 Qwen2.5-Omni 与 Qwen3-TTS 的模型结构和关键设计。",
+    "paths": [
+      "docs/模型相关的论文/Qwen2.5-omni/Qwen2.5-Omni.md",
+      "docs/模型相关的论文/Qwen3-TTS/Qwen3-TTS.md"
+    ]
+  }
+]

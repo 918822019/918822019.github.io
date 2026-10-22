@@ -104,7 +104,89 @@ function main() {
 
   const tree = buildTree(docsRoot);
   fs.writeFileSync(outputFile, JSON.stringify(tree, null, 2), "utf-8");
+  buildPublicIndexes(tree);
   console.log(`已生成 ${outputFile}`);
+}
+
+function buildPublicIndexes(tree) {
+  const files = [];
+  function visit(node) {
+    if (
+      node.type === "file" &&
+      node.path.endsWith(".md") &&
+      !/\/README\.md$/i.test(node.path)
+    )
+      files.push(node);
+    (node.children || []).forEach(visit);
+  }
+  visit(tree);
+  const output = path.join(repoRoot, "assets", "content");
+  fs.mkdirSync(output, { recursive: true });
+  const search = files.map((file) => ({
+    path: file.path,
+    title: file.title,
+    text: fs
+      .readFileSync(path.join(repoRoot, file.path), "utf8")
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/```[^\n]*\n/g, "\n")
+      .replace(/[#*`>|]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  }));
+  fs.writeFileSync(
+    path.join(output, "search.json"),
+    JSON.stringify({ version: 1, articles: search }, null, 2),
+  );
+  const series = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "series.json"), "utf8"),
+  );
+  const validPaths = new Set(files.map((f) => f.path));
+  const seriesIds = new Set();
+  for (const item of series) {
+    if (seriesIds.has(item.id) || !/^[a-z0-9-]+$/.test(item.id))
+      throw new Error(`Invalid series ID: ${item.id}`);
+    seriesIds.add(item.id);
+    for (const file of item.paths)
+      if (!validPaths.has(file))
+        throw new Error(`Missing series article: ${file}`);
+    if (new Set(item.paths).size !== item.paths.length)
+      throw new Error(`Duplicate article in series: ${item.id}`);
+  }
+  fs.writeFileSync(
+    path.join(output, "series.json"),
+    JSON.stringify(series, null, 2),
+  );
+  const xml = (value) =>
+    String(value).replace(
+      /[<>&"']/g,
+      (c) =>
+        ({
+          "<": "&lt;",
+          ">": "&gt;",
+          "&": "&amp;",
+          '"': "&quot;",
+          "'": "&apos;",
+        })[c],
+    );
+  const site = "https://918822019.github.io";
+  const sorted = [...files].sort(
+    (a, b) =>
+      (b.updated || "").localeCompare(a.updated || "") ||
+      a.path.localeCompare(b.path),
+  );
+  const items = sorted.map((file) => {
+    const link = site + "/?doc=" + encodeURIComponent(file.path);
+    return `    <item>\n      <title>${xml(file.title)}</title>\n      <link>${xml(link)}</link>\n      <guid isPermaLink="true">${xml(link)}</guid>\n      <description>${xml(file.excerpt)}</description>\n${file.updated ? "      <pubDate>" + new Date(file.updated + "T00:00:00+08:00").toUTCString() + "</pubDate>\n" : ""}    </item>`;
+  });
+  fs.writeFileSync(
+    path.join(repoRoot, "feed.xml"),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n  <channel>\n    <title>918822019 · 技术手记</title>\n    <link>${site}/</link>\n    <description>AI、数学与工程实践的学习记录，按文章更新日期订阅。</description>\n    <language>zh-cn</language>\n    <atom:link href="${site}/feed.xml" rel="self" type="application/rss+xml"/>\n${items.join("\n")}\n  </channel>\n</rss>\n`,
+  );
+  console.log(
+    `已生成全文索引、${series.length} 个系列和 ${files.length} 篇 RSS 条目`,
+  );
 }
 
 main();

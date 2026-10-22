@@ -30,10 +30,8 @@ jobs:
           node -v
           npm -v
 
-      - name: Install dependencies (if any)
-        run: |
-          # 目前脚本不依赖额外 npm 包，仅预留接口
-          npm ci || true
+      - name: Validate notebook logic
+        run: node --test tests/notebook-core.test.cjs
 
       - name: Build docs index
         run: |
@@ -43,7 +41,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/index.json
+          git add docs/index.json assets/content/search.json assets/content/series.json feed.xml
           if git diff --cached --quiet; then
             echo "No changes in docs/index.json"
             exit 0

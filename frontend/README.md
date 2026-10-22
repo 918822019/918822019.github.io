@@ -4,6 +4,29 @@
 
 在仓库根目录运行 `python -m http.server 8000`，访问 `http://localhost:8000/` 即可预览。数据观察器仍为独立页面。
 
+## 博客功能与维护
+
+- 全文搜索：读取 `assets/content/search.json`，支持空格分隔的多个关键词、正文命中片段与高亮。首次搜索时加载索引。
+- 我的书架：`/?view=library` 包含收藏、稍后阅读和最近阅读。数据保存在当前浏览器的 `field-notes-library-v1`；支持 JSON 导入、导出。导入会合并收藏，保留较新的阅读进度，忽略已不存在的文章。
+- 阅读设置：字号、行距、宽度与专注模式保存在 `field-notes-reading-v1`。续读优先定位到章节及其偏移，章节变更时回退为整体进度。
+- 图片查看器支持缩放、上一张／下一张及键盘方向键；代码使用本地 Prism，长代码默认折叠但可完整展开和复制。
+- 系列路线：编辑 `scripts/series.json`，按顺序列出文章路径。生成器会拒绝无效路径和重复条目。
+- 归档按文章最近一次 Git 提交日期分组；`feed.xml` 为 RSS 2.0，以同一日期生成更新条目。
+- Pcode 交互图表在 `assets/experiments.js` 中维护，必须与原报告一致；统一 GPU、历史 E2、手机 CPU 和交付体积分开展示。不要用不同口径的数据生成跨组结论。
+
+修改文章或系列配置后运行 `npm run build-docs-index`，将 `docs/index.json`、`assets/content/search.json`、`assets/content/series.json` 和 `feed.xml` 一并提交。Pages 部署也会重新生成这些文件。`assets/notebook-core.js` 包含可独立测试的搜索、备份校验和合并逻辑。
+
+```bash
+npm ci
+npm test
+npx playwright install chromium
+# 在另一个终端，从仓库根目录启动服务器
+python -m http.server 8765 --bind 127.0.0.1
+npm run test:ui
+```
+
+浏览器测试可以用 `TEST_BASE_URL` 指向其他测试地址，或用 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` 指定现有 Chromium。截图与测试备份只写入被忽略的 `.test-artifacts/`。
+
 ## 数据观察器 (Data Inspector)
 
 当前页面已经升级成偏 PC 端的数据中台观察台，目标不是只看样本，而是快速判断抓取数据的规模、质量和异常位置：

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>918822019 · 技术手记</title>
+    <link>https://918822019.github.io/</link>
+    <description>AI、数学与工程实践的学习记录，按文章更新日期订阅。</description>
+    <language>zh-cn</language>
+    <atom:link href="https://918822019.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Pcode 技术报告（精简版）</title>
+      <link>https://918822019.github.io/?doc=docs%2Finfra%2F%E6%8E%A8%E7%90%86%E4%BC%98%E5%8C%96%2Fpcode-report.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2Finfra%2F%E6%8E%A8%E7%90%86%E4%BC%98%E5%8C%96%2Fpcode-report.md</guid>
+      <description>Pcode 用两个并行的小分类头替代 drafter 的全词表输出头，在保留一次块主干前向的同时，显著压缩输出参数与读出成本。E3 进一步压缩输入侧，形成约 29.7 MB 的 draft 侧交付包。</description>
+      <pubDate>Wed, 21 Oct 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>数据架构</title>
+      <link>https://918822019.github.io/?doc=docs%2F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%2F%E6%95%B0%E6%8D%AE%E6%9E%B6%E6%9E%84.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%2F%E6%95%B0%E6%8D%AE%E6%9E%B6%E6%9E%84.md</guid>
+      <description>爬取的书籍数据通过 ModelScope 数据集仓库 wzywuan/Novel-Collection 做云端备份与分发。</description>
+      <pubDate>Fri, 03 Jul 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>创建一个简单的 MLP 模型，通过TVM</title>
+      <link>https://918822019.github.io/?doc=docs%2Finfra%2FTVM%2F3.tvm%E5%9F%BA%E7%A1%80%E6%B5%8B%E8%AF%95.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2Finfra%2FTVM%2F3.tvm%E5%9F%BA%E7%A1%80%E6%B5%8B%E8%AF%95.md</guid>
+      <description>阅读「创建一个简单的 MLP 模型，通过TVM」的完整学习与实践记录。</description>
+      <pubDate>Wed, 01 Jul 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>为什么INT8量化了推理增加了计算量但是计算更快</title>
+      <link>https://918822019.github.io/?doc=docs%2Finfra%2F%E9%87%8F%E5%8C%96%2F1.%E4%B8%BA%E4%BB%80%E4%B9%88INT8%E9%87%8F%E5%8C%96%E6%9B%B4%E5%BF%AB.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2Finfra%2F%E9%87%8F%E5%8C%96%2F1.%E4%B8%BA%E4%BB%80%E4%B9%88INT8%E9%87%8F%E5%8C%96%E6%9B%B4%E5%BF%AB.md</guid>
+      <description>INT8量化，是深度学习模型量化的一种方式，将模型中的权重和激活值进行量化，从而减少模型大小，提高模型推理速度。</description>
+      <pubDate>Wed, 24 Jun 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Qwen2.5-Omni模型介绍</title>
+      <link>https://918822019.github.io/?doc=docs%2F%E6%A8%A1%E5%9E%8B%E7%9B%B8%E5%85%B3%E7%9A%84%E8%AE%BA%E6%96%87%2FQwen2.5-omni%2FQwen2.5-Omni.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2F%E6%A8%A1%E5%9E%8B%E7%9B%B8%E5%85%B3%E7%9A%84%E8%AE%BA%E6%96%87%2FQwen2.5-omni%2FQwen2.5-Omni.md</guid>
+      <description>Qwen2.5主体还是采用的Qwen2.5这一LLM模型。</description>
+      <pubDate>Mon, 22 Jun 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Qwen3-TTS技术报告</title>
+      <link>https://918822019.github.io/?doc=docs%2F%E6%A8%A1%E5%9E%8B%E7%9B%B8%E5%85%B3%E7%9A%84%E8%AE%BA%E6%96%87%2FQwen3-TTS%2FQwen3-TTS.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2F%E6%A8%A1%E5%9E%8B%E7%9B%B8%E5%85%B3%E7%9A%84%E8%AE%BA%E6%96%87%2FQwen3-TTS%2FQwen3-TTS.md</guid>
+      <description>Qwen3-TTS是阿里云Qwen团队开发的一系列强大的文本转语音模型，具备以下核心能力：</description>
+      <pubDate>Mon, 22 Jun 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>什么是TVM</title>
+      <link>https://918822019.github.io/?doc=docs%2Finfra%2FTVM%2F1.%E4%BB%80%E4%B9%88%E6%98%AFTVM.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2Finfra%2FTVM%2F1.%E4%BB%80%E4%B9%88%E6%98%AFTVM.md</guid>
+      <description>TVM（Tensor Virtual Machine，张量虚拟机）是一个开源的端到端深度学习编译器框架，旨在将深度学习模型高效地编译为多种硬件后端（如CPU、GPU、FPGA、ASIC等）的可执行代码，显著提升模型部署效率和推理性能。</description>
+      <pubDate>Tue, 14 Apr 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>TVM安装</title>
+      <link>https://918822019.github.io/?doc=docs%2Finfra%2FTVM%2F2.%E5%AE%89%E8%A3%85TVM.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2Finfra%2FTVM%2F2.%E5%AE%89%E8%A3%85TVM.md</guid>
+      <description>阅读「TVM安装」的完整学习与实践记录。</description>
+      <pubDate>Tue, 14 Apr 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>STE</title>
+      <link>https://918822019.github.io/?doc=docs%2F%E6%95%B0%E5%AD%A6%2FSTE.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2F%E6%95%B0%E5%AD%A6%2FSTE.md</guid>
+      <description>STE（Straight-Through Estimator）是一种数学方法，主要用于解决离散量化求导问题。它在深度学习中被广泛应用，尤其是在需要对离散变量进行优化的场景中。</description>
+      <pubDate>Sun, 12 Apr 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>独热编码（One-Hot Encoding）</title>
+      <link>https://918822019.github.io/?doc=docs%2FRAG%2Fembedding%2F%E7%8B%AC%E7%83%AD%E7%BC%96%E7%A0%81.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2FRAG%2Fembedding%2F%E7%8B%AC%E7%83%AD%E7%BC%96%E7%A0%81.md</guid>
+      <description>独热编码把一个有 k 个互斥类别的分类变量映射为 k 维二元向量，向量中只有对应类别位置为 1，其余为 0。</description>
+      <pubDate>Sun, 12 Apr 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>为什么在高维度空间中距离失效</title>
+      <link>https://918822019.github.io/?doc=docs%2FRAG%2Fembedding%2F%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E9%AB%98%E7%BB%B4%E5%BA%A6%E7%A9%BA%E9%97%B4%E4%B8%AD%E8%B7%9D%E7%A6%BB%E5%A4%B1%E6%95%88.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2FRAG%2Fembedding%2F%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8%E9%AB%98%E7%BB%B4%E5%BA%A6%E7%A9%BA%E9%97%B4%E4%B8%AD%E8%B7%9D%E7%A6%BB%E5%A4%B1%E6%95%88.md</guid>
+      <description>核心结论：有效信息通常位于低维流形，而常用距离在整个高维空间计算，噪声和无关维度会掩盖有用信号，导致距离失去区分力。</description>
+      <pubDate>Sun, 12 Apr 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>起点AI搜书</title>
+      <link>https://918822019.github.io/?doc=docs%2FAI%E6%90%9C%E7%B4%A2%2F%E4%B8%80%E4%BA%9B%E6%96%B9%E6%A1%88%E7%9A%84%E6%AF%94%E8%BE%83.md</link>
+      <guid isPermaLink="true">https://918822019.github.io/?doc=docs%2FAI%E6%90%9C%E7%B4%A2%2F%E4%B8%80%E4%BA%9B%E6%96%B9%E6%A1%88%E7%9A%84%E6%AF%94%E8%BE%83.md</guid>
+      <description>通过人工智能（AI）结合用户提问，返回符合用户查询（query）的书籍。用户可以直接点击链接查看，同时返回推荐该书籍的理由。</description>
+      <pubDate>Thu, 09 Apr 2026 16:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
