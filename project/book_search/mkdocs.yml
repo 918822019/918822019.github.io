@@ -1,0 +1,99 @@
+site_name: 起点搜书 - 小说智能搜索系统文档
+site_description: 基于向量检索和大语言模型的小说推荐与搜索系统完整文档
+site_author: book_search Team
+site_url: https://github.com/918822019.github.io/project/book_search
+
+repo_name: 918822019.github.io/project/book_search
+repo_url: https://github.com/918822019.github.io/tree/main/project/book_search
+edit_uri: edit/main/project/book_search/docs/
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换到深色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换到浅色模式
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - toc.integrate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+      baselevel: 2
+
+plugins:
+  - search:
+      lang: zh
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+      fallback_to_build_date: true
+
+nav:
+  - 首页: index.md
+  - 快速开始:
+      - 安装指南: getting-started/installation.md
+      - 快速上手: getting-started/quickstart.md
+  - 系统架构:
+      - 架构概览: architecture/overview.md
+      - 数据流向: architecture/data-flow.md
+  - 核心模块:
+      - Agent 智能代理: modules/agent.md
+      - LLM 客户端: modules/llm-clients.md
+      - 预处理流水线: modules/preprocess.md
+      - 向量化与检索: modules/vectorization.md
+      - 数据爬取: modules/data-crawling.md
+  - API 参考:
+      - 接口文档: api/reference.md
+  - 使用指南:
+      - 预处理指南: guides/preprocessing-guide.md
+      - 搜索问答指南: guides/search-guide.md
+      - ModelScope 数据上传: guides/modelscope-upload.md
+  - 配置说明:
+      - 环境变量: configuration/environment.md
+      - 模型配置: configuration/models.md
+  - 部署运维:
+      - 生产环境部署: deployment/production.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/918822019.github.io
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2024 book_search Team

@@ -1,0 +1,34 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*.so
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+
+# Logs and temporary
+*.log
+*.tmp
+
+# Crawler debug response dumps
+src/crawler/debug_responses/
+
+# ModelScope / caches
+.modelscope-cache/
+*.modelscope-upload-manifest.json
+
+# SQLite databases (generated)
+data/*.db
+data/shards/*.db
+
+# Python packaging
+dist/
+build/
+*.egg-info/
+
+# Editors
+.vscode/
+.idea/

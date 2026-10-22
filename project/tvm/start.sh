@@ -1,0 +1,125 @@
+#!/bin/bash
+
+# 一键设置 TVM 环境变量脚本（改进版）
+# 用法: source setup_tvm.sh
+# 或者: . setup_tvm.sh
+
+# 获取当前目录（TVM 源码根目录）
+TVM_ROOT=$(pwd)
+
+# 颜色输出
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo "🔧 Setting up TVM environment..."
+
+# 检查必要的目录和文件是否存在
+if [ ! -d "$TVM_ROOT/python" ]; then
+    echo -e "${RED}❌ Error: Cannot find $TVM_ROOT/python${NC}"
+    echo "Please run this script from the TVM source root directory"
+    return 1 2>/dev/null || exit 1
+fi
+
+if [ ! -d "$TVM_ROOT/build" ]; then
+    echo -e "${RED}❌ Error: Cannot find $TVM_ROOT/build${NC}"
+    echo "TVM not compiled yet. Please run:"
+    echo "  mkdir build && cd build"
+    echo "  cp ../cmake/config.cmake ."
+    echo "  cmake .. && make -j4"
+    return 1 2>/dev/null || exit 1
+fi
+
+# 检查编译产物（支持 macOS 和 Linux）
+if [ ! -f "$TVM_ROOT/build/libtvm.dylib" ] && [ ! -f "$TVM_ROOT/build/libtvm.so" ]; then
+    echo -e "${RED}❌ Error: Cannot find libtvm.dylib or libtvm.so in $TVM_ROOT/build${NC}"
+    echo "TVM not compiled yet. Please compile first."
+    return 1 2>/dev/null || exit 1
+fi
+
+# 清除可能冲突的旧环境变量（可选，取消注释以启用）
+# echo "🧹 Cleaning old TVM environment variables..."
+# export PYTHONPATH=$(echo $PYTHONPATH | tr ':' '\n' | grep -v "tvm" | tr '\n' ':')
+# export DYLD_LIBRARY_PATH=$(echo $DYLD_LIBRARY_PATH | tr ':' '\n' | grep -v "tvm" | tr '\n' ':')
+
+# 设置环境变量
+export TVM_HOME=$TVM_ROOT
+export PYTHONPATH=$TVM_HOME/python${PYTHONPATH:+:$PYTHONPATH}
+export LD_LIBRARY_PATH=$TVM_HOME/build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}  # Linux
+export DYLD_LIBRARY_PATH=$TVM_HOME/build${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}  # macOS
+
+# 解决 OpenMP 冲突
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+echo -e "${GREEN}✅ Environment variables set:${NC}"
+echo "📁 TVM_HOME: $TVM_HOME"
+echo "🐍 PYTHONPATH: $PYTHONPATH"
+echo "🔧 DYLD_LIBRARY_PATH: $DYLD_LIBRARY_PATH"
+
+# 验证导入
+echo ""
+echo "🔍 Testing TVM import..."
+
+# 更详细的测试
+TVM_TEST=$(python -c "
+try:
+    import tvm
+    print(f'SUCCESS|{tvm.__version__}|{tvm.__file__}')
+except Exception as e:
+    print(f'FAILED|{str(e)}')
+" 2>&1)
+
+if echo "$TVM_TEST" | grep -q "SUCCESS"; then
+    VERSION=$(echo "$TVM_TEST" | cut -d'|' -f2)
+    PATH_FILE=$(echo "$TVM_TEST" | cut -d'|' -f3)
+    echo -e "${GREEN}✅ TVM version: $VERSION${NC}"
+    echo -e "${GREEN}✅ TVM path: $PATH_FILE${NC}"
+    echo -e "${GREEN}🎉 TVM is ready to use!${NC}"
+
+    # 可选：询问是否永久保存
+    echo ""
+    echo -e "${YELLOW}💡 Do you want to make these settings permanent? (y/n)${NC}"
+    read -r -t 10 answer
+    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+        # 检测当前 shell 配置文件
+        if [ -n "$ZSH_VERSION" ]; then
+            RC_FILE="$HOME/.zshrc"
+        elif [ -n "$BASH_VERSION" ]; then
+            RC_FILE="$HOME/.bashrc"
+        else
+            RC_FILE="$HOME/.profile"
+        fi
+
+        # 检查是否已经配置过
+        if ! grep -q "TVM_HOME=$TVM_ROOT" "$RC_FILE" 2>/dev/null; then
+            echo "" >> "$RC_FILE"
+            echo "# TVM 环境配置 (添加于 $(date))" >> "$RC_FILE"
+            echo "export TVM_HOME=$TVM_ROOT" >> "$RC_FILE"
+            echo 'export PYTHONPATH=$TVM_HOME/python${PYTHONPATH:+:$PYTHONPATH}' >> "$RC_FILE"
+            echo 'export DYLD_LIBRARY_PATH=$TVM_HOME/build${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}' >> "$RC_FILE"
+            echo 'export LD_LIBRARY_PATH=$TVM_HOME/build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}' >> "$RC_FILE"
+            echo 'export KMP_DUPLICATE_LIB_OK=TRUE' >> "$RC_FILE"
+            echo -e "${GREEN}✅ Configuration saved to $RC_FILE${NC}"
+            echo "⚠️  Please run 'source $RC_FILE' or restart terminal to apply changes permanently"
+        else
+            echo -e "${YELLOW}⚠️ TVM configuration already exists in $RC_FILE${NC}"
+        fi
+    fi
+else
+    ERROR_MSG=$(echo "$TVM_TEST" | cut -d'|' -f2)
+    echo -e "${RED}❌ TVM import failed${NC}"
+    echo -e "${RED}Error: $ERROR_MSG${NC}"
+    echo ""
+    echo "📋 Troubleshooting suggestions:"
+    echo "1. Check if TVM is properly compiled: ls -la $TVM_ROOT/build/libtvm*"
+    echo "2. Check Python version: python --version"
+    echo "3. Try installing TVM as Python package: cd $TVM_ROOT/python && pip install -e ."
+    return 1 2>/dev/null || exit 1
+fi
+
+echo ""
+echo "✨ You can now use TVM in this terminal"
+echo "💡 To use TVM in new terminals, either:"
+echo "   - Run 'source $0' in each terminal"
+echo "   - Or add the configuration to your ~/.zshrc (answered 'y' above)"
