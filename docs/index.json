@@ -94,6 +94,17 @@
           ]
         },
         {
+          "name": "推理优化",
+          "type": "folder",
+          "children": [
+            {
+              "name": "pcode-report.md",
+              "type": "file",
+              "path": "docs/infra/推理优化/pcode-report.md"
+            }
+          ]
+        },
+        {
           "name": "TVM",
           "type": "folder",
           "children": [
